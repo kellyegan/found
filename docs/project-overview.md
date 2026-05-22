@@ -23,7 +23,7 @@ This tool should focus on discovery, inspiration and visual research as opposed 
 
 The tool should consist of a core engine which manages the collection and a graphical interface with multiple ways to interact with the images. The tool should maintain a lightweight linked database leaving the images in their source location. In a later phase the tool may have extensions and additional tools for integration with other applications (browsers), visualization and AI analysis.
 
-### Phase 1: Core API engine
+### Phase 1: Core API engine (COMPLETE)
 
 - **Model and database:** A lightweight, local database to store image paths, hashes (for duplicate detection), and metadata.
 - **Image not stored centrally:** Original image files remain in their existing locations
