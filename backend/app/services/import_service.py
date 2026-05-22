@@ -9,7 +9,9 @@ from app.models.image import Image
 from app.models.job import ImportJob, ImportJobStatus
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
+from app.core.config import settings
 from app.services.metadata_service import UnsupportedFileTypeError, extract_metadata
+from app.services.thumbnail_service import generate_thumbnail
 from app.utils.hashing import sha256
 
 
@@ -67,6 +69,11 @@ class ImportService:
 
             meta = extract_metadata(path)
 
+            try:
+                thumb_path = generate_thumbnail(path, hash_value, settings.thumbnail_dir)
+            except Exception:
+                thumb_path = None
+
             image = Image(
                 filename=Path(path).name,
                 path=path,
@@ -75,6 +82,7 @@ class ImportService:
                 file_size=meta.file_size,
                 mime_type=meta.mime_type,
                 sha256_hash=hash_value,
+                thumbnail_path=thumb_path,
             )
             self.image_repo.create(image)
             return "success"

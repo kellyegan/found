@@ -2,9 +2,11 @@ from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
 
+from app.core.config import settings
 from app.models.image import FileStatus, Image
 from app.repositories.image_repository import ImageRepository
 from app.schemas.image import ImageCreate
+from app.services.thumbnail_service import get_or_generate_thumbnail
 
 
 class ImageService:
@@ -27,6 +29,16 @@ class ImageService:
             return False
         self.repo.delete(image)
         return True
+
+    def get_or_create_thumbnail(self, image: Image) -> str:
+        """Return the thumbnail path, generating and persisting it if the file is missing."""
+        thumb_path = get_or_generate_thumbnail(
+            image.path, image.sha256_hash, settings.thumbnail_dir
+        )
+        if image.thumbnail_path != thumb_path:
+            image.thumbnail_path = thumb_path
+            self.repo.update(image)
+        return thumb_path
 
     def verify_file(self, image_id: UUID) -> Optional[Image]:
         image = self.repo.get_by_id(image_id)

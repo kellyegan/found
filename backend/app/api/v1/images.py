@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlmodel import Session
 
 from app.core.database import get_session
@@ -68,6 +69,23 @@ def delete_image(image_id: UUID, service: ImageService = Depends(_get_service)):
             detail={"code": "not_found", "message": "Image not found."},
         )
     return {"success": True, "data": None}
+
+
+@router.get("/images/{image_id}/thumbnail")
+def get_thumbnail(image_id: UUID, service: ImageService = Depends(_get_service)):
+    image = service.get_image(image_id)
+    if not image:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "not_found", "message": "Image not found."},
+        )
+    if not image.sha256_hash:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "no_hash", "message": "Image has no hash; cannot generate thumbnail."},
+        )
+    thumb_path = service.get_or_create_thumbnail(image)
+    return FileResponse(thumb_path, media_type="image/jpeg")
 
 
 @router.post("/images/{image_id}/verify")
