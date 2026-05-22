@@ -22,6 +22,12 @@ class ImageRepository:
     def list(self, offset: int = 0, limit: int = 100) -> List[Image]:
         return list(self.session.exec(select(Image).offset(offset).limit(limit)).all())
 
+    def update(self, image: Image) -> Image:
+        self.session.add(image)
+        self.session.commit()
+        self.session.refresh(image)
+        return image
+
     def delete(self, image: Image) -> None:
         self.session.delete(image)
         self.session.commit()

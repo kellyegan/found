@@ -1,7 +1,8 @@
+from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
 
-from app.models.image import Image
+from app.models.image import FileStatus, Image
 from app.repositories.image_repository import ImageRepository
 from app.schemas.image import ImageCreate
 
@@ -26,3 +27,12 @@ class ImageService:
             return False
         self.repo.delete(image)
         return True
+
+    def verify_file(self, image_id: UUID) -> Optional[Image]:
+        image = self.repo.get_by_id(image_id)
+        if not image:
+            return None
+        image.file_status = (
+            FileStatus.available if Path(image.path).exists() else FileStatus.missing
+        )
+        return self.repo.update(image)

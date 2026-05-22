@@ -50,3 +50,14 @@ def delete_image(image_id: UUID, service: ImageService = Depends(_get_service)):
             detail={"code": "not_found", "message": "Image not found."},
         )
     return {"success": True, "data": None}
+
+
+@router.post("/images/{image_id}/verify")
+def verify_image(image_id: UUID, service: ImageService = Depends(_get_service)):
+    image = service.verify_file(image_id)
+    if not image:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "not_found", "message": "Image not found."},
+        )
+    return {"success": True, "data": ImageRead.model_validate(image)}
