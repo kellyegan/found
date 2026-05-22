@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project overview
+
+Found is a local image reference and inspiration library desktop application designed for artists, designers, and creators who collect large numbers of images for research and creative work.
+
 ## Environment
 
 Python 3.13+ via pyenv virtualenv `found_env`. Activate with:
