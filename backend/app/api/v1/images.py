@@ -1,18 +1,36 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlmodel import Session
 
 from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
+from app.repositories.job_repository import JobRepository
 from app.schemas.image import ImageCreate, ImageRead
+from app.schemas.job import ImportRequest
 from app.services.image_service import ImageService
+from app.services.import_service import ImportService
 
 router = APIRouter()
 
 
 def _get_service(session: Session = Depends(get_session)) -> ImageService:
     return ImageService(ImageRepository(session))
+
+
+def _get_import_service(session: Session = Depends(get_session)) -> ImportService:
+    return ImportService(session)
+
+
+@router.post("/images/import")
+def import_images(
+    request: ImportRequest,
+    background_tasks: BackgroundTasks,
+    service: ImportService = Depends(_get_import_service),
+):
+    job = service.create_job(len(request.paths))
+    background_tasks.add_task(service.process_import, job.id, request.paths)
+    return {"success": True, "data": {"job_id": str(job.id)}}
 
 
 @router.post("/images", status_code=201)
