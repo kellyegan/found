@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -44,9 +45,15 @@ def create_image(data: ImageCreate, service: ImageService = Depends(_get_service
 def list_images(
     offset: int = 0,
     limit: int = 100,
+    tag: Optional[str] = None,
+    category: Optional[str] = None,
+    collection: Optional[UUID] = None,
     service: ImageService = Depends(_get_service),
 ):
-    images = service.list_images(offset=offset, limit=limit)
+    images = service.list_images(
+        offset=offset, limit=limit,
+        tag=tag, category=category, collection_id=collection,
+    )
     return {"success": True, "data": [ImageRead.model_validate(i) for i in images]}
 
 

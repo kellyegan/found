@@ -20,8 +20,18 @@ class ImageService:
     def get_image(self, image_id: UUID) -> Optional[Image]:
         return self.repo.get_by_id(image_id)
 
-    def list_images(self, offset: int = 0, limit: int = 100) -> List[Image]:
-        return self.repo.list(offset=offset, limit=limit)
+    def list_images(
+        self,
+        offset: int = 0,
+        limit: int = 100,
+        tag: Optional[str] = None,
+        category: Optional[str] = None,
+        collection_id: Optional[UUID] = None,
+    ) -> List[Image]:
+        return self.repo.list(
+            offset=offset, limit=limit,
+            tag=tag, category=category, collection_id=collection_id,
+        )
 
     def delete_image(self, image_id: UUID) -> bool:
         image = self.repo.get_by_id(image_id)
