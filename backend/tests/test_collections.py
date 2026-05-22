@@ -1,0 +1,101 @@
+import pytest
+
+_COLLECTION = {"name": "Favourites", "description": "My best picks"}
+
+
+@pytest.fixture
+def image_ids(client):
+    ids = []
+    for i in range(3):
+        ids.append(
+            client.post(
+                "/api/v1/images",
+                json={"filename": f"img{i}.jpg", "path": f"/photos/img{i}.jpg"},
+            ).json()["data"]["id"]
+        )
+    return ids
+
+
+@pytest.fixture
+def collection_id(client):
+    return client.post("/api/v1/collections", json=_COLLECTION).json()["data"]["id"]
+
+
+def test_create_collection(client):
+    response = client.post("/api/v1/collections", json=_COLLECTION)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["success"] is True
+    assert data["data"]["name"] == "Favourites"
+    assert data["data"]["id"] is not None
+
+
+def test_list_collections(client):
+    client.post("/api/v1/collections", json=_COLLECTION)
+    client.post("/api/v1/collections", json={"name": "Moodboard", "description": ""})
+    response = client.get("/api/v1/collections")
+    assert response.status_code == 200
+    assert len(response.json()["data"]) == 2
+
+
+def test_update_collection(client, collection_id):
+    response = client.put(
+        f"/api/v1/collections/{collection_id}",
+        json={"name": "Best Of", "description": "Updated"},
+    )
+    assert response.status_code == 200
+    assert response.json()["data"]["name"] == "Best Of"
+
+
+def test_delete_collection(client, collection_id):
+    response = client.delete(f"/api/v1/collections/{collection_id}")
+    assert response.status_code == 200
+    assert len(client.get("/api/v1/collections").json()["data"]) == 0
+
+
+def test_add_images_to_collection(client, collection_id, image_ids):
+    response = client.post(
+        f"/api/v1/collections/{collection_id}/images",
+        json={"image_ids": image_ids},
+    )
+    assert response.status_code == 200
+    assert response.json()["success"] is True
+
+
+def test_get_collection_images_ordered(client, collection_id, image_ids):
+    client.post(
+        f"/api/v1/collections/{collection_id}/images",
+        json={"image_ids": image_ids},
+    )
+    response = client.get(f"/api/v1/collections/{collection_id}/images")
+    assert response.status_code == 200
+    returned_ids = [img["id"] for img in response.json()["data"]]
+    assert returned_ids == image_ids
+
+
+def test_remove_image_from_collection(client, collection_id, image_ids):
+    client.post(
+        f"/api/v1/collections/{collection_id}/images",
+        json={"image_ids": image_ids},
+    )
+    client.delete(f"/api/v1/collections/{collection_id}/images/{image_ids[0]}")
+    remaining = client.get(f"/api/v1/collections/{collection_id}/images").json()["data"]
+    assert len(remaining) == 2
+    assert all(img["id"] != image_ids[0] for img in remaining)
+
+
+def test_reorder_collection_images(client, collection_id, image_ids):
+    client.post(
+        f"/api/v1/collections/{collection_id}/images",
+        json={"image_ids": image_ids},
+    )
+    reversed_ids = list(reversed(image_ids))
+    client.put(
+        f"/api/v1/collections/{collection_id}/order",
+        json={"image_ids": reversed_ids},
+    )
+    returned_ids = [
+        img["id"]
+        for img in client.get(f"/api/v1/collections/{collection_id}/images").json()["data"]
+    ]
+    assert returned_ids == reversed_ids
