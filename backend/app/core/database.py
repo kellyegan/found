@@ -15,7 +15,18 @@ def _build_engine():
 engine = _build_engine()
 
 
+def run_migrations() -> None:
+    """Apply all pending Alembic migrations. Called on app startup."""
+    from alembic.config import Config
+    from alembic import command
+
+    ini_path = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
+    cfg = Config(str(ini_path))
+    command.upgrade(cfg, "head")
+
+
 def create_db_and_tables() -> None:
+    """Create all tables directly via SQLModel. Used by the test suite only."""
     SQLModel.metadata.create_all(engine)
 
 

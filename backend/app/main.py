@@ -15,12 +15,12 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1 import router as v1_router
-from app.core.database import create_db_and_tables
+from app.core.database import run_migrations
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    run_migrations()
     yield
 
 
