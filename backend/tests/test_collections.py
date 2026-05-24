@@ -4,16 +4,8 @@ _COLLECTION = {"name": "Favourites", "description": "My best picks"}
 
 
 @pytest.fixture
-def image_ids(client):
-    ids = []
-    for i in range(3):
-        ids.append(
-            client.post(
-                "/api/v1/images",
-                json={"filename": f"img{i}.jpg", "path": f"/photos/img{i}.jpg"},
-            ).json()["data"]["id"]
-        )
-    return ids
+def image_ids(make_image):
+    return [str(make_image(f"/photos/img{i}.jpg").id) for i in range(3)]
 
 
 @pytest.fixture

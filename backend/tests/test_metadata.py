@@ -39,11 +39,10 @@ def test_unsupported_file_type_rejected(tmp_path):
         extract_metadata(str(bad_path))
 
 
-def test_missing_file_detection(client):
-    payload = {"filename": "ghost.jpg", "path": "/nonexistent/ghost.jpg"}
-    image_id = client.post("/api/v1/images", json=payload).json()["data"]["id"]
+def test_missing_file_detection(client, make_image):
+    image = make_image("/nonexistent/ghost.jpg")
 
-    response = client.post(f"/api/v1/images/{image_id}/verify")
+    response = client.post(f"/api/v1/images/{image.id}/verify")
 
     assert response.status_code == 200
     data = response.json()
@@ -51,14 +50,13 @@ def test_missing_file_detection(client):
     assert data["data"]["file_status"] == "missing"
 
 
-def test_available_file_detection(client, tmp_path):
+def test_available_file_detection(client, make_image, tmp_path):
     img_path = tmp_path / "real.jpg"
     PILImage.new("RGB", (100, 100)).save(img_path, "JPEG")
 
-    payload = {"filename": "real.jpg", "path": str(img_path)}
-    image_id = client.post("/api/v1/images", json=payload).json()["data"]["id"]
+    image = make_image(str(img_path))
 
-    response = client.post(f"/api/v1/images/{image_id}/verify")
+    response = client.post(f"/api/v1/images/{image.id}/verify")
 
     assert response.status_code == 200
     assert response.json()["data"]["file_status"] == "available"

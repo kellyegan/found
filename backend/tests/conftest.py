@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import SQLModel, Session, create_engine
@@ -5,6 +7,7 @@ from sqlmodel.pool import StaticPool
 
 from app.main import app
 from app.core.database import get_session
+from app.models.image import Image
 
 
 @pytest.fixture(name="engine")
@@ -23,6 +26,17 @@ def engine_fixture():
 def session_fixture(engine):
     with Session(engine) as session:
         yield session
+
+
+@pytest.fixture
+def make_image(session):
+    def _factory(path: str, filename: str = None, **kwargs) -> Image:
+        img = Image(filename=filename or Path(path).name, path=path, **kwargs)
+        session.add(img)
+        session.commit()
+        session.refresh(img)
+        return img
+    return _factory
 
 
 @pytest.fixture(name="client")

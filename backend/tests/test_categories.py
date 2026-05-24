@@ -1,12 +1,11 @@
 import pytest
 
-_IMAGE = {"filename": "b.jpg", "path": "/photos/b.jpg"}
 _CATEGORY = {"name": "Architecture", "description": "Buildings and structures"}
 
 
 @pytest.fixture
-def image_id(client):
-    return client.post("/api/v1/images", json=_IMAGE).json()["data"]["id"]
+def image_id(make_image):
+    return str(make_image("/photos/b.jpg").id)
 
 
 @pytest.fixture

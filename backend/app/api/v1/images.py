@@ -8,7 +8,7 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
-from app.schemas.image import ImageCreate, ImageRead
+from app.schemas.image import ImageRead
 from app.schemas.job import ImportRequest
 from app.services.image_service import ImageService
 from app.services.import_service import ImportService
@@ -36,13 +36,6 @@ def import_images(
     job = service.create_job(len(request.paths))
     background_tasks.add_task(service.process_import, job.id, request.paths)
     return {"success": True, "data": {"job_id": str(job.id)}}
-
-
-@router.post("/images", status_code=201, summary="Register image")
-def create_image(data: ImageCreate, service: ImageService = Depends(_get_service)):
-    """Manually register a single image record by file path. The file must already exist on disk."""
-    image = service.create_image(data)
-    return {"success": True, "data": ImageRead.model_validate(image)}
 
 
 @router.get("/images", summary="List images")

@@ -5,17 +5,12 @@ from uuid import UUID
 from app.core.config import settings
 from app.models.image import FileStatus, Image
 from app.repositories.image_repository import ImageRepository
-from app.schemas.image import ImageCreate
 from app.services.thumbnail_service import get_or_generate_thumbnail
 
 
 class ImageService:
     def __init__(self, repo: ImageRepository):
         self.repo = repo
-
-    def create_image(self, data: ImageCreate) -> Image:
-        image = Image(**data.model_dump())
-        return self.repo.create(image)
 
     def get_image(self, image_id: UUID) -> Optional[Image]:
         return self.repo.get_by_id(image_id)

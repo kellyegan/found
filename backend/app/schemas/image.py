@@ -7,18 +7,6 @@ from pydantic import BaseModel
 from app.models.image import FileStatus
 
 
-class ImageCreate(BaseModel):
-    filename: str
-    path: str
-    width: Optional[int] = None
-    height: Optional[int] = None
-    file_size: Optional[int] = None
-    mime_type: Optional[str] = None
-    created_date: Optional[datetime] = None
-    modified_date: Optional[datetime] = None
-    sha256_hash: Optional[str] = None
-
-
 class ImageRead(BaseModel):
     id: UUID
     filename: str
