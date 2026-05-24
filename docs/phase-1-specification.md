@@ -200,6 +200,9 @@ Primary image record.
 | sha256_hash    | String   |
 | thumbnail_path | String   |
 | file_status    | Enum     |
+| import_job_id  | UUID     |
+
+`import_job_id` references the ImportJob that created this record. Null for manually created records. Used to retrieve all images from a specific import run.
 
 ---
 
@@ -215,6 +218,12 @@ Hash should be indexed.
 
 ```text
 INDEX(sha256_hash)
+```
+
+Import job should be indexed.
+
+```text
+INDEX(import_job_id)
 ```
 
 ---
@@ -376,6 +385,41 @@ cancelled
 
 ---
 
+## ImportResult
+
+Per-path outcome record for import jobs. Only created for `duplicate_hash` and `failed` outcomes. Successful imports and duplicate paths are tallied on the job only.
+
+### Fields
+
+| Field             | Type   |
+| ----------------- | ------ |
+| id                | UUID   |
+| job_id            | UUID   |
+| path              | String |
+| outcome           | Enum   |
+| existing_image_id | UUID   |
+
+`existing_image_id` is populated for `duplicate_hash` outcomes and references the existing image that shares the same SHA-256 hash.
+
+---
+
+### Constraints
+
+```text
+INDEX(job_id)
+```
+
+---
+
+### Outcome Enum
+
+```text
+duplicate_hash
+failed
+```
+
+---
+
 # Thumbnail Cache Design
 
 ## Storage
@@ -447,9 +491,9 @@ sha256 already exists
 
 Result:
 
-Flag for user review.
+An ImportResult record is created with `outcome: duplicate_hash` and `existing_image_id` pointing to the conflicting record. The duplicate tally on the job is incremented. No new image record is created.
 
-Import record not created until resolved.
+The client can resolve the conflict by calling `PATCH /images/{existing_image_id}` to update the existing record's path to the new location.
 
 ---
 
@@ -480,6 +524,9 @@ GET /images
 | tag        | string |
 | category   | string |
 | collection | UUID   |
+| import_job | UUID   |
+
+`import_job` filters to images imported by a specific job. Useful for displaying new arrivals after an import completes.
 
 ---
 
@@ -524,6 +571,22 @@ Content-Type:
 ```text
 image/jpeg
 ```
+
+---
+
+## Update Image Path
+
+```http
+PATCH /images/{image_id}
+```
+
+### Request
+
+```json
+{ "path": "/new/location/photo.jpg" }
+```
+
+Updates the file path and derives the filename from it. Sets `file_status` to `available`. Does not re-extract metadata. Primary use case is resolving a `duplicate_hash` conflict by pointing the existing record at its new location on disk.
 
 ---
 
@@ -613,6 +676,16 @@ DELETE /tags/{tag_id}
 
 ---
 
+## Get Image Tags
+
+```http
+GET /images/{image_id}/tags
+```
+
+Returns all tags assigned to an image.
+
+---
+
 ## Add Tags To Image
 
 ```http
@@ -668,6 +741,16 @@ PUT /categories/{category_id}
 ```http
 DELETE /categories/{category_id}
 ```
+
+---
+
+## Get Image Categories
+
+```http
+GET /images/{image_id}/categories
+```
+
+Returns all categories assigned to an image.
 
 ---
 
@@ -795,76 +878,76 @@ Error:
 # Project Structure
 
 ```text
-backend/
-│
-├── app/
-│   │
-│   ├── api/
-│   │   └── v1/
-│   │       ├── images.py
-│   │       ├── tags.py
-│   │       ├── categories.py
-│   │       ├── collections.py
-│   │       └── jobs.py
-│   │
-│   ├── core/
-│   │   ├── config.py
-│   │   ├── constants.py
-│   │   └── database.py
-│   │
-│   ├── models/
-│   │   ├── image.py
-│   │   ├── tag.py
-│   │   ├── category.py
-│   │   ├── collection.py
-│   │   └── job.py
-│   │
-│   ├── schemas/
-│   │   ├── image.py
-│   │   ├── tag.py
-│   │   ├── category.py
-│   │   ├── collection.py
-│   │   └── job.py
-│   │
-│   ├── services/
-│   │   ├── image_service.py
-│   │   ├── tag_service.py
-│   │   ├── category_service.py
-│   │   ├── collection_service.py
-│   │   ├── import_service.py
-│   │   ├── thumbnail_service.py
-│   │   └── metadata_service.py
-│   │
-│   ├── repositories/
-│   │   ├── image_repository.py
-│   │   ├── tag_repository.py
-│   │   ├── category_repository.py
-│   │   ├── collection_repository.py
-│   │   └── job_repository.py
-│   │
-│   ├── workers/
-│   │   └── import_worker.py
-│   │
-│   ├── utils/
-│   │   ├── hashing.py
-│   │   ├── filesystem.py
-│   │   └── thumbnails.py
-│   │
-│   └── main.py
-│
-├── data/
-│   ├── database.db
-│   └── thumbnails/
-│
-├── migrations/
-│
-├── tests/
-│
-├── .env
+found/                          ← project root
 │
 ├── requirements.txt
+├── requirements-dev.txt
+├── pyproject.toml
 │
-└── README.md
+└── backend/
+    │
+    ├── app/
+    │   │
+    │   ├── api/
+    │   │   └── v1/
+    │   │       ├── images.py
+    │   │       ├── tags.py
+    │   │       ├── categories.py
+    │   │       ├── collections.py
+    │   │       └── jobs.py
+    │   │
+    │   ├── core/
+    │   │   ├── config.py
+    │   │   └── database.py
+    │   │
+    │   ├── models/
+    │   │   ├── image.py
+    │   │   ├── tag.py
+    │   │   ├── category.py
+    │   │   ├── collection.py
+    │   │   ├── job.py
+    │   │   └── import_result.py
+    │   │
+    │   ├── schemas/
+    │   │   ├── image.py
+    │   │   ├── tag.py
+    │   │   ├── category.py
+    │   │   ├── collection.py
+    │   │   └── job.py
+    │   │
+    │   ├── services/
+    │   │   ├── image_service.py
+    │   │   ├── import_service.py
+    │   │   ├── thumbnail_service.py
+    │   │   └── metadata_service.py
+    │   │
+    │   ├── repositories/
+    │   │   ├── image_repository.py
+    │   │   ├── tag_repository.py
+    │   │   ├── category_repository.py
+    │   │   ├── collection_repository.py
+    │   │   ├── job_repository.py
+    │   │   └── import_result_repository.py
+    │   │
+    │   ├── utils/
+    │   │   └── hashing.py
+    │   │
+    │   └── main.py
+    │
+    ├── data/                   ← gitignored, created at runtime
+    │   ├── database.db
+    │   └── thumbnails/
+    │
+    ├── migrations/
+    │   ├── env.py
+    │   ├── script.py.mako
+    │   └── versions/
+    │
+    ├── tests/
+    │
+    ├── alembic.ini
+    │
+    └── .env                    ← optional, gitignored
 ```
 
 # Non-Functional Requirements
@@ -901,3 +984,33 @@ Database and API design must support future addition of:
 - Browser extension integration
 - Canvas/moodboard functionality
 - Additional asset formats (SVG, PSD, PDF)
+
+---
+
+# Revision History
+
+## 2026-05-24
+
+### Added
+
+- **`import_job_id` field on Image** — FK to ImportJob. Set on all successfully imported images. Enables `GET /images?import_job={id}` to retrieve images from a specific import run as a "new imports" view.
+
+- **`ImportResult` model** — Per-path outcome record created for `duplicate_hash` and `failed` import outcomes only. Carries `path`, `outcome`, `existing_image_id` (populated for hash duplicates). Successful imports and duplicate paths are tallied on the job and not stored per-path.
+
+- **`PATCH /images/{image_id}`** — Updates the file path of an existing image record (and derives filename). Primary use case: resolving a `duplicate_hash` conflict by pointing the existing record at its new location. Does not re-extract metadata.
+
+- **`GET /images/{image_id}/tags`** — Returns all tags assigned to an image.
+
+- **`GET /images/{image_id}/categories`** — Returns all categories assigned to an image.
+
+- **`import_job` query parameter on `GET /images`** — Filters the image list to a specific import job.
+
+- **Alembic migrations** — `backend/alembic.ini` and `backend/migrations/` added. `alembic upgrade head` is run automatically on app startup. The `alembic revision --autogenerate` workflow is used for future schema changes.
+
+### Changed
+
+- **Duplicate hash resolution** — Original spec said "import record not created until resolved." Actual behaviour: no import record is created; instead an `ImportResult` record is written and the client uses `PATCH /images/{existing_image_id}` to repath the existing record.
+
+- **Project structure** — Requirements files and `pyproject.toml` live at the project root (`found/`), not inside `backend/`. `workers/` directory and `constants.py` were not implemented; import orchestration lives in `import_service.py`. `utils/` contains only `hashing.py`; thumbnail and metadata logic live in `services/`.
+
+- **Import job progress** — Job counters (`processed_files`, status) are now updated incrementally after each file is processed, not only at completion. This makes `GET /jobs/{job_id}` suitable for live polling during an import.
