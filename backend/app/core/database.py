@@ -6,7 +6,7 @@ from app.core.config import settings
 
 def _build_engine():
     url = settings.database_url
-    if url.startswith("sqlite:///") and not url.startswith("sqlite:////"):
+    if url.startswith("sqlite:///"):
         db_path = Path(url.removeprefix("sqlite:///"))
         db_path.parent.mkdir(parents=True, exist_ok=True)
     return create_engine(url, connect_args={"check_same_thread": False})
