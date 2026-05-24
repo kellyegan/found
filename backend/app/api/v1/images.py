@@ -8,7 +8,7 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
-from app.schemas.image import ImageRead
+from app.schemas.image import ImagePatch, ImageRead
 from app.schemas.job import ImportRequest
 from app.services.image_service import ImageService
 from app.services.import_service import ImportService
@@ -45,12 +45,14 @@ def list_images(
     tag: Optional[str] = None,
     category: Optional[str] = None,
     collection: Optional[UUID] = None,
+    import_job: Optional[UUID] = None,
     service: ImageService = Depends(_get_service),
 ):
-    """Return a paginated list of images. Optionally filter by tag name, category name, or collection ID."""
+    """Return a paginated list of images. Optionally filter by tag name, category name, collection ID, or import job ID."""
     images = service.list_images(
         offset=offset, limit=limit,
         tag=tag, category=category, collection_id=collection,
+        import_job_id=import_job,
     )
     return {"success": True, "data": [ImageRead.model_validate(i) for i in images]}
 
@@ -59,6 +61,23 @@ def list_images(
 def get_image(image_id: UUID, service: ImageService = Depends(_get_service)):
     """Retrieve a single image record by ID."""
     image = service.get_image(image_id)
+    if not image:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "not_found", "message": "Image not found."},
+        )
+    return {"success": True, "data": ImageRead.model_validate(image)}
+
+
+@router.patch("/images/{image_id}", summary="Update image path")
+def patch_image(
+    image_id: UUID,
+    data: ImagePatch,
+    service: ImageService = Depends(_get_service),
+):
+    """Update the file path of an existing image record. Derives filename from the new path.
+    Use this to point a duplicate-hash record at its new location on disk."""
+    image = service.patch_path(image_id, data.path)
     if not image:
         raise HTTPException(
             status_code=404,

@@ -28,3 +28,4 @@ class Image(SQLModel, table=True):
     sha256_hash: Optional[str] = Field(default=None, index=True)
     thumbnail_path: Optional[str] = None
     file_status: FileStatus = FileStatus.available
+    import_job_id: Optional[UUID] = Field(default=None, foreign_key="importjob.id", index=True)

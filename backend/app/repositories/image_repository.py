@@ -37,8 +37,9 @@ class ImageRepository:
         tag: Optional[str] = None,
         category: Optional[str] = None,
         collection_id: Optional[UUID] = None,
+        import_job_id: Optional[UUID] = None,
     ) -> List[Image]:
-        """Return images with optional filtering by tag name, category name, or collection ID. Results are ordered by imported_date."""
+        """Return images with optional filtering by tag name, category name, collection ID, or import job ID. Results are ordered by imported_date."""
         query = select(Image)
 
         if tag:
@@ -63,6 +64,9 @@ class ImageRepository:
                 .join(CollectionImage, CollectionImage.image_id == Image.id)
                 .where(CollectionImage.collection_id == collection_id)
             )
+
+        if import_job_id:
+            query = query.where(Image.import_job_id == import_job_id)
 
         query = query.distinct().order_by(Image.imported_date).offset(offset).limit(limit)
         return list(self.session.exec(query).all())

@@ -22,11 +22,23 @@ class ImageService:
         tag: Optional[str] = None,
         category: Optional[str] = None,
         collection_id: Optional[UUID] = None,
+        import_job_id: Optional[UUID] = None,
     ) -> List[Image]:
         return self.repo.list(
             offset=offset, limit=limit,
             tag=tag, category=category, collection_id=collection_id,
+            import_job_id=import_job_id,
         )
+
+    def patch_path(self, image_id: UUID, new_path: str) -> Optional[Image]:
+        """Update the file path (and derived filename) of an existing image record."""
+        image = self.repo.get_by_id(image_id)
+        if not image:
+            return None
+        image.path = new_path
+        image.filename = Path(new_path).name
+        image.file_status = FileStatus.available
+        return self.repo.update(image)
 
     def delete_image(self, image_id: UUID) -> bool:
         image = self.repo.get_by_id(image_id)

@@ -11,6 +11,14 @@ class ImportRequest(BaseModel):
     paths: List[str]
 
 
+class ImportResultRead(BaseModel):
+    path: str
+    outcome: str
+    existing_image_id: Optional[UUID]
+
+    model_config = {"from_attributes": True}
+
+
 class ImportJobRead(BaseModel):
     id: UUID
     status: ImportJobStatus
@@ -22,5 +30,6 @@ class ImportJobRead(BaseModel):
     failed_imports: int
     created_date: datetime
     completed_date: Optional[datetime]
+    results: List[ImportResultRead] = []
 
     model_config = {"from_attributes": True}

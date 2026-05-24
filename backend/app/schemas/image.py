@@ -21,5 +21,10 @@ class ImageRead(BaseModel):
     sha256_hash: Optional[str]
     thumbnail_path: Optional[str]
     file_status: FileStatus
+    import_job_id: Optional[UUID]
 
     model_config = {"from_attributes": True}
+
+
+class ImagePatch(BaseModel):
+    path: str
