@@ -29,6 +29,34 @@ def test_extract_metadata_png(tmp_path):
     assert meta.mime_type == "image/png"
 
 
+def test_extract_metadata_webp(tmp_path):
+    img_path = tmp_path / "sample.webp"
+    PILImage.new("RGB", (640, 480)).save(img_path, "WEBP")
+
+    from app.services.metadata_service import extract_metadata
+
+    meta = extract_metadata(str(img_path))
+
+    assert meta.width == 640
+    assert meta.height == 480
+    assert meta.mime_type == "image/webp"
+    assert meta.file_size > 0
+
+
+def test_extract_metadata_tiff(tmp_path):
+    img_path = tmp_path / "sample.tiff"
+    PILImage.new("RGB", (320, 240)).save(img_path, "TIFF")
+
+    from app.services.metadata_service import extract_metadata
+
+    meta = extract_metadata(str(img_path))
+
+    assert meta.width == 320
+    assert meta.height == 240
+    assert meta.mime_type == "image/tiff"
+    assert meta.file_size > 0
+
+
 def test_unsupported_file_type_rejected(tmp_path):
     bad_path = tmp_path / "document.txt"
     bad_path.write_text("not an image")
