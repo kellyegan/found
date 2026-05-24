@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="IMGORG API", lifespan=lifespan)
+app = FastAPI(title="Found API", lifespan=lifespan)
 
 # Allow any localhost origin so the desktop GUI and browser extension can reach
 # the API without CORS errors. The server binds to 127.0.0.1 so this is safe.

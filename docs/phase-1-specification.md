@@ -1,8 +1,8 @@
-# [[IMGORG]] - Phase 1 Specification
+# Found - Phase 1 Specification
 
 ---
 
-[[IMGORG - Phase 1 TDD Build Plan]]
+[[Found - Phase 1 TDD Build Plan]]
 
 ## Core API engine (backend)
 

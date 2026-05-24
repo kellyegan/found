@@ -1,4 +1,4 @@
-# IMGORG - Phase 1 Test Slices
+# Found - Phase 1 Test Slices
 
 Below is a **Test-Driven Development (TDD) build order for Phase 1**, designed specifically for your system (FastAPI + SQLModel + SQLite + filesystem thumbnails + import jobs).
 
@@ -437,4 +437,4 @@ So Slice 3 is intentionally the most detailed and important.
 
 ---
 
-[[IMGORG - Test list]]
+[[Found - Test list]]
