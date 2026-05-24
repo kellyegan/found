@@ -13,7 +13,7 @@ from app.schemas.job import ImportRequest
 from app.services.image_service import ImageService
 from app.services.import_service import ImportService
 
-router = APIRouter()
+router = APIRouter(tags=["Images"])
 
 
 def _get_service(session: Session = Depends(get_session)) -> ImageService:
@@ -24,24 +24,28 @@ def _get_import_service(session: Session = Depends(get_session)) -> ImportServic
     return ImportService(session)
 
 
-@router.post("/images/import")
+@router.post("/images/import", summary="Bulk import images")
 def import_images(
     request: ImportRequest,
     background_tasks: BackgroundTasks,
     service: ImportService = Depends(_get_import_service),
 ):
+    """Queue a background job to index a list of file paths.
+    Files are indexed in-place — never copied or moved.
+    Returns a job ID that can be polled via `GET /jobs/{job_id}`."""
     job = service.create_job(len(request.paths))
     background_tasks.add_task(service.process_import, job.id, request.paths)
     return {"success": True, "data": {"job_id": str(job.id)}}
 
 
-@router.post("/images", status_code=201)
+@router.post("/images", status_code=201, summary="Register image")
 def create_image(data: ImageCreate, service: ImageService = Depends(_get_service)):
+    """Manually register a single image record by file path. The file must already exist on disk."""
     image = service.create_image(data)
     return {"success": True, "data": ImageRead.model_validate(image)}
 
 
-@router.get("/images")
+@router.get("/images", summary="List images")
 def list_images(
     offset: int = 0,
     limit: int = 100,
@@ -50,6 +54,7 @@ def list_images(
     collection: Optional[UUID] = None,
     service: ImageService = Depends(_get_service),
 ):
+    """Return a paginated list of images. Optionally filter by tag name, category name, or collection ID."""
     images = service.list_images(
         offset=offset, limit=limit,
         tag=tag, category=category, collection_id=collection,
@@ -57,8 +62,9 @@ def list_images(
     return {"success": True, "data": [ImageRead.model_validate(i) for i in images]}
 
 
-@router.get("/images/{image_id}")
+@router.get("/images/{image_id}", summary="Get image")
 def get_image(image_id: UUID, service: ImageService = Depends(_get_service)):
+    """Retrieve a single image record by ID."""
     image = service.get_image(image_id)
     if not image:
         raise HTTPException(
@@ -68,8 +74,9 @@ def get_image(image_id: UUID, service: ImageService = Depends(_get_service)):
     return {"success": True, "data": ImageRead.model_validate(image)}
 
 
-@router.delete("/images/{image_id}")
+@router.delete("/images/{image_id}", summary="Delete image")
 def delete_image(image_id: UUID, service: ImageService = Depends(_get_service)):
+    """Remove an image record from the library. The source file is never deleted from disk."""
     if not service.delete_image(image_id):
         raise HTTPException(
             status_code=404,
@@ -78,8 +85,10 @@ def delete_image(image_id: UUID, service: ImageService = Depends(_get_service)):
     return {"success": True, "data": None}
 
 
-@router.get("/images/{image_id}/thumbnail")
+@router.get("/images/{image_id}/thumbnail", summary="Get thumbnail")
 def get_thumbnail(image_id: UUID, service: ImageService = Depends(_get_service)):
+    """Return a JPEG thumbnail for the image, generating and caching it on first request.
+    Requires the image to have been hashed (i.e. fully indexed)."""
     image = service.get_image(image_id)
     if not image:
         raise HTTPException(
@@ -95,8 +104,9 @@ def get_thumbnail(image_id: UUID, service: ImageService = Depends(_get_service))
     return FileResponse(thumb_path, media_type="image/jpeg")
 
 
-@router.post("/images/{image_id}/verify")
+@router.post("/images/{image_id}/verify", summary="Verify image file")
 def verify_image(image_id: UUID, service: ImageService = Depends(_get_service)):
+    """Check that the source file still exists at its recorded path and refresh its metadata."""
     image = service.verify_file(image_id)
     if not image:
         raise HTTPException(
