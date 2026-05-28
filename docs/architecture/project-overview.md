@@ -1,4 +1,4 @@
-# [[Found]]: Overview
+# Found: Overview
 
 ## Problem
 
