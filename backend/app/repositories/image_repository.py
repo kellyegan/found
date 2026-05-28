@@ -109,3 +109,11 @@ class ImageRepository:
     def delete(self, image: Image) -> None:
         self.session.delete(image)
         self.session.commit()
+
+    def bulk_delete(self, image_ids: List[UUID]) -> None:
+        """Remove multiple image records in a single transaction. Ignores IDs not found."""
+        for image_id in image_ids:
+            image = self.session.get(Image, image_id)
+            if image:
+                self.session.delete(image)
+        self.session.commit()

@@ -28,3 +28,7 @@ class ImageRead(BaseModel):
 
 class ImagePatch(BaseModel):
     path: str
+
+
+class BulkDeleteRequest(BaseModel):
+    image_ids: list[UUID]

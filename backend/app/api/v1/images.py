@@ -9,7 +9,7 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
-from app.schemas.image import ImagePatch, ImageRead
+from app.schemas.image import BulkDeleteRequest, ImagePatch, ImageRead
 from app.schemas.job import ImportPreviewResponse, ImportRequest
 from app.schemas.category import BulkCategoryRequest
 from app.schemas.tag import BulkTagRequest
@@ -62,6 +62,17 @@ def import_images(
     job = service.create_job(len(request.paths))
     background_tasks.add_task(service.process_import, job.id, request.paths)
     return {"success": True, "data": {"job_id": str(job.id)}}
+
+
+@router.post("/images/bulk/delete", summary="Bulk delete images")
+def bulk_delete_images(
+    request: BulkDeleteRequest,
+    service: ImageService = Depends(_get_service),
+):
+    """Remove multiple image records from the library in a single atomic operation.
+    Source files are never deleted. Non-existent IDs are silently ignored."""
+    service.repo.bulk_delete(request.image_ids)
+    return {"success": True, "data": None}
 
 
 @router.post("/images/bulk/categories", summary="Bulk category operations")
