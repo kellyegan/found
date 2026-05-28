@@ -9,7 +9,7 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
-from app.schemas.image import BulkDeleteRequest, ImagePatch, ImageRead
+from app.schemas.image import ImageIdsRequest, ImagePatch, ImageRead
 from app.schemas.job import ImportPreviewResponse, ImportRequest
 from app.schemas.category import BulkCategoryRequest
 from app.schemas.tag import BulkTagRequest
@@ -64,9 +64,20 @@ def import_images(
     return {"success": True, "data": {"job_id": str(job.id)}}
 
 
+@router.post("/images/verify", summary="Batch verify images")
+def batch_verify_images(
+    request: ImageIdsRequest,
+    service: ImageService = Depends(_get_service),
+):
+    """Verify file existence and refresh metadata for multiple images in one call.
+    Sets file_status to missing when the file is gone, available when it is present."""
+    service.batch_verify(request.image_ids)
+    return {"success": True, "data": None}
+
+
 @router.post("/images/bulk/delete", summary="Bulk delete images")
 def bulk_delete_images(
-    request: BulkDeleteRequest,
+    request: ImageIdsRequest,
     service: ImageService = Depends(_get_service),
 ):
     """Remove multiple image records from the library in a single atomic operation.

@@ -5,6 +5,7 @@ from uuid import UUID
 from app.core.config import settings
 from app.models.image import FileStatus, Image
 from app.repositories.image_repository import ImageRepository
+from app.services.metadata_service import UnsupportedFileTypeError, extract_metadata
 from app.services.thumbnail_service import get_or_generate_thumbnail
 
 
@@ -61,6 +62,27 @@ class ImageService:
             image.thumbnail_path = thumb_path
             self.repo.update(image)
         return thumb_path
+
+    def batch_verify(self, image_ids: List[UUID]) -> None:
+        """Verify file existence and refresh metadata for multiple images."""
+        for image_id in image_ids:
+            image = self.repo.get_by_id(image_id)
+            if not image:
+                continue
+            path = Path(image.path)
+            if not path.exists():
+                image.file_status = FileStatus.missing
+            else:
+                try:
+                    meta = extract_metadata(image.path)
+                    image.width = meta.width
+                    image.height = meta.height
+                    image.mime_type = meta.mime_type
+                    image.file_size = meta.file_size
+                    image.file_status = FileStatus.available
+                except (UnsupportedFileTypeError, OSError):
+                    image.file_status = FileStatus.inaccessible
+            self.repo.update(image)
 
     def verify_file(self, image_id: UUID) -> Optional[Image]:
         image = self.repo.get_by_id(image_id)

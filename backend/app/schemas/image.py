@@ -30,5 +30,5 @@ class ImagePatch(BaseModel):
     path: str
 
 
-class BulkDeleteRequest(BaseModel):
+class ImageIdsRequest(BaseModel):
     image_ids: list[UUID]
