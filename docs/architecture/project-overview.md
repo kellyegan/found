@@ -50,11 +50,11 @@ The frontend desktop GUI application is intended to support:
 - **Thumbnail browsing:** The desktop GUI's main interface is a grid of thumbnails for browsing with the ability to filter, and preview individual images.
 - **Image viewer:** Large image viewer to look at individual images.
 - **Importing interface:** It will also provide support for managing imports, making decisions about duplicates and providing bulk actions on imports like tagging and metadata.
-- **Mood board:** An "infinite canvas" (similar to PureRef) where users can drag indexed images to create spatial arrangements.
-- **Slideshow:** For general viewing or timed for drawing reference
 
 ### Phase 3: AI, extensions & visualization
 
+- **Mood board:** An "infinite canvas" (similar to PureRef) where users can drag indexed images to create spatial arrangements.
+- **Slideshow:** For general viewing or timed for drawing reference
 - **Inspiration logic:** A randomization algorithm that can be weighted by "stale" images (those not viewed recently) or specific tag clusters.
 - **Embeddings engine:** Use a local CLIP (OpenCLIP) model to generate high-dimensional vectors for every image. LanceDB for storing data.
 - **Semantic search:** Ability to query by natural language (e.g., "blue brutalist architecture") via vector similarity.
