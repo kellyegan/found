@@ -56,17 +56,28 @@ def import_images(
 def list_images(
     offset: int = 0,
     limit: int = 100,
-    tag: Optional[str] = None,
-    category: Optional[str] = None,
+    tags: Optional[str] = None,
+    categories: Optional[str] = None,
+    exclude_tags: Optional[str] = None,
+    exclude_categories: Optional[str] = None,
     collection: Optional[UUID] = None,
     import_job: Optional[UUID] = None,
     service: ImageService = Depends(_get_service),
 ):
-    """Return a paginated list of images. Optionally filter by tag name, category name, collection ID, or import job ID."""
+    """Return a paginated list of images with optional filtering.
+
+    `tags` and `categories` accept comma-separated values; images must match ALL (AND logic).
+    `exclude_tags` and `exclude_categories` remove images matching ANY of the values.
+    Tags are matched case-insensitively; categories are case-sensitive.
+    """
+    def _split(value: Optional[str]) -> Optional[list[str]]:
+        return [v.strip() for v in value.split(",")] if value else None
+
     images = service.list_images(
         offset=offset, limit=limit,
-        tag=tag, category=category, collection_id=collection,
-        import_job_id=import_job,
+        tags=_split(tags), categories=_split(categories),
+        exclude_tags=_split(exclude_tags), exclude_categories=_split(exclude_categories),
+        collection_id=collection, import_job_id=import_job,
     )
     return {"success": True, "data": [ImageRead.model_validate(i) for i in images]}
 

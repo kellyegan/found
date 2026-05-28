@@ -65,7 +65,7 @@ def test_filter_by_tag(client, make_image):
     tag_id = client.post("/api/v1/tags", json={"name": "nature"}).json()["data"]["id"]
     client.post(f"/api/v1/images/{img_a}/tags", json={"tag_ids": [tag_id]})
 
-    result = client.get("/api/v1/images?tag=nature").json()["data"]
+    result = client.get("/api/v1/images?tags=nature").json()["data"]
     assert len(result) == 1
     assert result[0]["id"] == img_a
 
@@ -75,7 +75,7 @@ def test_filter_by_tag_is_case_insensitive(client, make_image):
     tag_id = client.post("/api/v1/tags", json={"name": "urban"}).json()["data"]["id"]
     client.post(f"/api/v1/images/{img_a}/tags", json={"tag_ids": [tag_id]})
 
-    result = client.get("/api/v1/images?tag=URBAN").json()["data"]
+    result = client.get("/api/v1/images?tags=URBAN").json()["data"]
     assert len(result) == 1
     assert result[0]["id"] == img_a
 
@@ -89,7 +89,7 @@ def test_filter_by_category(client, make_image):
     ).json()["data"]["id"]
     client.post(f"/api/v1/images/{img_a}/categories", json={"category_ids": [cat_id]})
 
-    result = client.get("/api/v1/images?category=Architecture").json()["data"]
+    result = client.get("/api/v1/images?categories=Architecture").json()["data"]
     assert len(result) == 1
     assert result[0]["id"] == img_a
 

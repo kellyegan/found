@@ -34,29 +34,52 @@ class ImageRepository:
         self,
         offset: int = 0,
         limit: int = 100,
-        tag: Optional[str] = None,
-        category: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        categories: Optional[List[str]] = None,
+        exclude_tags: Optional[List[str]] = None,
+        exclude_categories: Optional[List[str]] = None,
         collection_id: Optional[UUID] = None,
         import_job_id: Optional[UUID] = None,
     ) -> List[Image]:
-        """Return images with optional filtering by tag name, category name, collection ID, or import job ID. Results are ordered by imported_date."""
+        """Return images with optional filtering. Results are ordered by imported_date.
+
+        Include filters use AND logic (image must satisfy all).
+        Exclude filters remove images that match any excluded value.
+        Tags are matched case-insensitively; categories are case-sensitive.
+        """
         query = select(Image)
 
-        if tag:
-            query = (
-                query
-                .join(ImageTag, ImageTag.image_id == Image.id)
+        for tag_name in (tags or []):
+            subq = (
+                select(ImageTag.image_id)
                 .join(Tag, Tag.id == ImageTag.tag_id)
-                .where(Tag.name == tag.lower())
+                .where(Tag.name == tag_name.lower())
             )
+            query = query.where(Image.id.in_(subq))
 
-        if category:
-            query = (
-                query
-                .join(ImageCategory, ImageCategory.image_id == Image.id)
-                .join(Category, Category.id == ImageCategory.category_id)
-                .where(Category.name == category)
+        for tag_name in (exclude_tags or []):
+            subq = (
+                select(ImageTag.image_id)
+                .join(Tag, Tag.id == ImageTag.tag_id)
+                .where(Tag.name == tag_name.lower())
             )
+            query = query.where(~Image.id.in_(subq))
+
+        for cat_name in (categories or []):
+            subq = (
+                select(ImageCategory.image_id)
+                .join(Category, Category.id == ImageCategory.category_id)
+                .where(Category.name == cat_name)
+            )
+            query = query.where(Image.id.in_(subq))
+
+        for cat_name in (exclude_categories or []):
+            subq = (
+                select(ImageCategory.image_id)
+                .join(Category, Category.id == ImageCategory.category_id)
+                .where(Category.name == cat_name)
+            )
+            query = query.where(~Image.id.in_(subq))
 
         if collection_id:
             query = (
