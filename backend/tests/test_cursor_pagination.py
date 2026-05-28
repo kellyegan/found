@@ -16,6 +16,17 @@ def _make_images_ordered(make_image, count):
     return images
 
 
+# ── Stable ordering ───────────────────────────────────────────────────────────
+
+def test_list_images_stable_ordering(client, make_image):
+    for i in range(5):
+        make_image(f"/photos/img{i}.jpg")
+
+    first  = [img["id"] for img in client.get("/api/v1/images").json()["data"]]
+    second = [img["id"] for img in client.get("/api/v1/images").json()["data"]]
+    assert first == second
+
+
 # ── Basic cursor structure ─────────────────────────────────────────────────────
 
 def test_first_page_returns_has_more_and_next_cursor(client, make_image):

@@ -11,6 +11,38 @@ def image_file(tmp_path):
     return path
 
 
+# ── Job lifecycle ─────────────────────────────────────────────────────────────
+
+def test_job_lifecycle(client, tmp_path):
+    img = tmp_path / "photo.jpg"
+    PILImage.new("RGB", (100, 100)).save(img, "JPEG")
+
+    job_id = client.post(
+        "/api/v1/images/import", json={"paths": [str(img)]}
+    ).json()["data"]["job_id"]
+
+    job = client.get(f"/api/v1/jobs/{job_id}").json()["data"]
+    assert job["status"] == "completed"
+    assert job["processed_files"] == job["total_files"]
+    assert job["successful_imports"] + job["duplicate_paths"] + job["duplicate_hashes"] + job["failed_imports"] == job["total_files"]
+
+
+def test_failed_files_do_not_affect_job_completion(client, tmp_path):
+    good = tmp_path / "good.jpg"
+    PILImage.new("RGB", (100, 100)).save(good, "JPEG")
+    bad = tmp_path / "bad.txt"
+    bad.write_text("not an image")
+
+    job_id = client.post(
+        "/api/v1/images/import", json={"paths": [str(good), str(bad)]}
+    ).json()["data"]["job_id"]
+
+    job = client.get(f"/api/v1/jobs/{job_id}").json()["data"]
+    assert job["status"] == "completed"
+    assert job["successful_imports"] == 1
+    assert job["failed_imports"] == 1
+
+
 # ── Job results ───────────────────────────────────────────────────────────────
 
 def test_successful_import_sets_import_job_id(client, image_file):

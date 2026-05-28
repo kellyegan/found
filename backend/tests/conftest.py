@@ -46,7 +46,7 @@ def client_fixture(session):
         yield session
 
     app.dependency_overrides[get_session] = get_session_override
-    with patch("app.core.database.run_migrations"):
+    with patch("app.main.run_migrations"):
         with TestClient(app) as client:
             yield client
     app.dependency_overrides.clear()

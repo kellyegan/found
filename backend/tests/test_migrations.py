@@ -20,6 +20,7 @@ def alembic_cfg(tmp_path):
     db_path = tmp_path / "migration_test.db"
     cfg = Config(str(ALEMBIC_INI))
     cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
+    cfg.set_main_option("script_location", str(ALEMBIC_INI.parent / "migrations"))
     return cfg, db_path
 
 
