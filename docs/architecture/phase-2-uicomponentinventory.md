@@ -858,22 +858,3 @@ Future alternate layout.
 ## AdjustableThumbnailSlider
 
 Future thumbnail size control.
-
----
-
-# Recommended Next Step
-
-The next document I would create is:
-
-# State Model Specification
-
-Because the most difficult part of Found is not rendering images — it is managing:
-
-- navigation state
-- filter state
-- selection state
-- scroll restoration
-- async loading state
-- import state
-
-Once the state model exists, the QML architecture becomes much easier to design cleanly.

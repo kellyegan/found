@@ -1,879 +1,655 @@
-# FOUND — Phase 2 Component Inventory
+# FOUND — Phase 2 State Model Specification
 
 [[IMGORG]]
 
-This inventory is organized by:
+## Purpose
 
-- application-level systems
-- reusable UI components
-- view-specific components
-- interaction systems
+This document defines the application state architecture for Found.
 
-The goal is to:
+The purpose of the state model is to:
 
-- avoid duplicated QML components
-- encourage composable UI architecture
-- identify shared interaction patterns early
-- separate logic components from visual components
+- centralize UI behavior
+- preserve navigation consistency
+- support browser-style history
+- maintain responsive async workflows
+- simplify QML architecture
+- support restoration of browsing context
 
-This inventory intentionally focuses on **conceptual components**, not implementation details.
+This specification defines:
+
+- global application state
+- view state
+- selection state
+- filtering state
+- loading state
+- navigation state
+- import state
+
+This is a conceptual architecture document and does not prescribe implementation details.
 
 ---
 
-# 1. Application-Level Components
+# 1. State Architecture Principles
 
-These components exist at the top level of the application and manage major application state.
+## Single Source of Truth
+
+Each major application system should maintain a single authoritative state source.
+
+Examples:
+
+| System     | State Owner        |
+| ---------- | ------------------ |
+| Navigation | NavigationManager  |
+| Selection  | SelectionManager   |
+| Filters    | FilterStateManager |
+| Imports    | ImportJobManager   |
 
 ---
 
-## AppWindow
+## State Persistence
 
-### Purpose
+Navigation should preserve:
 
-Root application window.
+- filters
+- scroll position
+- selection
+- current collection
+- browsing context
+
+Returning to a previous view should restore the exact prior state.
+
+---
+
+## Asynchronous State Updates
+
+All backend communication is asynchronous.
+
+The UI must remain responsive during:
+
+- thumbnail loading
+- filtering
+- imports
+- metadata updates
+- image loading
+
+---
+
+## View Independence
+
+Views should derive their displayed state from centralized state managers rather than storing duplicate local state.
+
+---
+
+# 2. Global Application State
+
+## AppState
+
+Top-level application lifecycle state.
+
+---
+
+### States
+
+| State           | Description                        |
+| --------------- | ---------------------------------- |
+| Launching       | Application process starting       |
+| BackendStarting | Backend initialization in progress |
+| BackendRetrying | Backend failed, retrying           |
+| Ready           | Application operational            |
+| BackendError    | Backend unavailable                |
+| ShuttingDown    | Application exiting                |
+
+---
 
 ### Responsibilities
 
-- Initialize application shell
-- Manage top-level layouts
-- Manage global overlays/modals
-- Handle application-wide keyboard shortcuts
+Controls:
 
-### Contains
-
-- SplashScreen
-- MainRouter
-- GlobalNotificationOverlay
-- ModalLayer
+- splash screen visibility
+- backend retry flow
+- fatal error handling
+- startup completion
 
 ---
 
-## MainRouter
-
-### Purpose
-
-Controls active application view/state.
-
-### Responsibilities
-
-- Route between major views
-- Maintain navigation history
-- Restore previous state
-
-### Routes
-
-- Splash
-- LibraryView
-- ImageView
-- ImportModal
-- Future views
-
----
+# 3. Navigation State
 
 ## NavigationManager
 
-### Purpose
-
-Browser-style navigation history management.
-
-### Responsibilities
-
-- Push navigation state
-- Pop navigation state
-- Restore filters
-- Restore selections
-- Restore scroll positions
+Controls browser-style navigation history.
 
 ---
 
-## ThemeManager
+## Navigation Entry Structure
 
-### Purpose
+Each navigation entry stores:
 
-Centralized theme/style definitions.
-
-### Responsibilities
-
-- Color palette
-- Typography
-- Spacing constants
-- Animation timing
-
----
-
-## ApiClient
-
-### Purpose
-
-Frontend communication layer.
-
-### Responsibilities
-
-- API requests
-- Async request handling
-- Retry handling
-- Error normalization
-- Import job tracking
+| Property        | Purpose                 |
+| --------------- | ----------------------- |
+| route           | Current view            |
+| filters         | Active filters          |
+| selection       | Selected image IDs      |
+| scrollPosition  | Thumbnail grid position |
+| collectionId    | Current collection      |
+| focusedImageId  | Active image            |
+| fullscreenState | Image view fullscreen   |
+| timestamp       | History ordering        |
 
 ---
 
-# 2. Shared Layout Components
+## Routes
 
-Reusable structural UI components.
-
----
-
-## TitleBar
-
-### Purpose
-
-Top navigation/title region.
-
-### Used In
-
-- LibraryView
-- ImageView
-
-### Contains
-
-- page title
-- back navigation
-- optional actions
+| Route       | Description           |
+| ----------- | --------------------- |
+| Splash      | Startup screen        |
+| Library     | Main library browsing |
+| Collection  | Collection browsing   |
+| ImageView   | Full image viewer     |
+| ImportModal | Import conflict flow  |
 
 ---
 
-## SidebarOverlay
+## Navigation Behavior
 
-### Purpose
+### Push Navigation
 
-Collapsible overlay sidebar.
+Occurs when:
 
-### Used In
-
-- LibraryView
-
-### Responsibilities
-
-- open/close animation
-- overlay interaction
-- collection browsing
+- entering image view
+- entering collection view
+- opening modal flows
 
 ---
 
-## BottomInfoPanel
+### Pop Navigation
 
-### Purpose
+Occurs when:
 
-Metadata display/edit region.
-
-### Used In
-
-- LibraryView
-- ImageView
-
-### Contains
-
-- metadata fields
-- tag editor
-- category editor
-- collection editor
+- back navigation activated
+- modal closed
 
 ---
 
-## OverlayContainer
+### Restoration Behavior
 
-### Purpose
+Returning to previous route restores:
 
-Reusable dimmed overlay background layer.
-
-### Used For
-
-- modals
-- sidebars
-- future dialogs
+- filters
+- selection
+- scroll position
+- browsing context
 
 ---
 
-# 3. Thumbnail Browsing Components
+# 4. Library Browsing State
 
-Core image-browsing system.
+## LibraryViewState
 
----
-
-## ThumbnailGrid
-
-### Purpose
-
-Main image browsing surface.
-
-### Responsibilities
-
-- virtualized rendering
-- lazy loading
-- horizontal scrolling
-- selection rendering
-
-### Contains
-
-- ThumbnailTile instances
+Controls the main thumbnail browsing experience.
 
 ---
 
-## ThumbnailTile
+## Stored State
 
-### Purpose
-
-Individual image tile.
-
-### Responsibilities
-
-- render thumbnail
-- display selection state
-- display missing state
-- display loading state
-
-### States
-
-- normal
-- selected
-- loading
-- missing
-- failed thumbnail
+| Property           | Purpose                    |
+| ------------------ | -------------------------- |
+| visibleImageIds    | Current result set         |
+| scrollOffset       | Horizontal scroll position |
+| selectedImageIds   | Current selection          |
+| activeCollectionId | Current collection         |
+| activeFilters      | Applied filters            |
+| sidebarOpen        | Sidebar visibility         |
+| loadingState       | Current loading state      |
 
 ---
 
-## ThumbnailImage
+## Loading States
 
-### Purpose
-
-Actual thumbnail rendering element.
-
-### Responsibilities
-
-- preserve aspect ratio
-- apply letterboxing
-- async image loading
+| State              | Description                   |
+| ------------------ | ----------------------------- |
+| Idle               | No active loading             |
+| Loading            | Initial load                  |
+| IncrementalLoading | Loading additional thumbnails |
+| Empty              | No images available           |
+| Error              | Failed request                |
 
 ---
 
-## ThumbnailPlaceholder
-
-### Purpose
-
-Fallback placeholder.
-
-### Used For
-
-- loading
-- missing thumbnails
-- failed generation
-
----
-
-## SelectionOverlay
-
-### Purpose
-
-Visual selection indicator.
-
-### Used In
-
-- ThumbnailTile
-
-### States
-
-- selected
-- multiselect
-- active/focused
-
----
-
-## HorizontalScrollViewport
-
-### Purpose
-
-Custom scrolling viewport.
-
-### Responsibilities
-
-- horizontal scrolling
-- drag panning
-- momentum handling
-
----
-
-# 4. Filtering Components
-
-Filtering and discovery system.
-
----
-
-## FilterBar
-
-### Purpose
-
-Top-level filtering controls.
-
-### Contains
-
-- CategoryFilterDropdown
-- TagSearchField
-- MissingImageToggle
-
----
-
-## CategoryFilterDropdown
-
-### Purpose
-
-Category filter selector.
-
-### Features
-
-- tri-state filtering
-- multiple category support
-
-### States
-
-- Off
-- On
-- Exclude
-
----
-
-## TagSearchField
-
-### Purpose
-
-Tag lookup/filter field.
-
-### Responsibilities
-
-- text input
-- autocomplete suggestions
-- selected filter display
-
----
-
-## TagSuggestionList
-
-### Purpose
-
-Displays matching tags.
-
-### Behavior
-
-Appears while typing.
-
----
-
-## FilterChip
-
-### Purpose
-
-Displays active filters.
-
-### Used For
-
-- tags
-- categories
-- future filters
-
-### States
-
-- include
-- exclude
-
----
-
-## MissingImageToggle
-
-### Purpose
-
-Toggle missing-image visibility.
-
----
-
-# 5. Metadata Editing Components
-
-Shared metadata editing system.
-
----
-
-## MetadataField
-
-### Purpose
-
-Generic metadata display row.
-
-### Used For
-
-- filename
-- filesize
-- dimensions
-- path
-- dates
-
----
-
-## TagEditor
-
-### Purpose
-
-Tag management UI.
-
-### Features
-
-- add/remove tags
-- bulk editing support
-- autocomplete integration
-
----
-
-## CategoryEditor
-
-### Purpose
-
-Category management UI.
-
-### Features
-
-- add/remove categories
-- multi-selection editing
-
----
-
-## CollectionEditor
-
-### Purpose
-
-Collection membership editor.
-
-### Features
-
-- add/remove collections
-- multi-selection support
-
----
-
-## MetadataSection
-
-### Purpose
-
-Logical metadata grouping.
-
-### Example Groups
-
-- File Info
-- Organization
-- Status
-
----
-
-# 6. Collection Components
-
-Collection browsing system.
-
----
-
-## CollectionList
-
-### Purpose
-
-Displays collections in sidebar.
-
-### Responsibilities
-
-- alphabetical ordering
-- empty-state styling
-- drag/drop targets
-
----
-
-## CollectionListItem
-
-### Purpose
-
-Single collection entry.
-
-### States
-
-- normal
-- active
-- empty
-- drag-hover
-
----
-
-## NewCollectionField
-
-### Purpose
-
-Create new collection UI.
-
-### Features
-
-- inline creation
-- validation
-
----
-
-## CollectionCoverImage
-
-### Purpose
-
-Displays collection preview image.
-
-### Future Use
-
-- collection cards
-- collection overview pages
-
----
-
-# 7. Image View Components
-
-Full-resolution image viewer system.
-
----
-
-## ImageViewport
-
-### Purpose
-
-Displays full-resolution image.
-
-### Responsibilities
-
-- zoom
-- pan
-- centering
-
----
-
-## FullscreenOverlay
-
-### Purpose
-
-Fullscreen image presentation.
-
-### Responsibilities
-
-- hide chrome
-- immersive viewing
-
----
-
-## ImageNavigationControls
-
-### Purpose
-
-Navigate within current browsing context.
-
-### Features
-
-- previous image
-- next image
-
----
-
-## ZoomController
-
-### Purpose
-
-Centralized zoom behavior.
-
-### Responsibilities
-
-- zoom level
-- zoom limits
-- zoom focus
-
----
-
-# 8. Import Workflow Components
-
-Import pipeline UI.
-
----
-
-## ImportConflictModal
-
-### Purpose
-
-Resolve import conflicts.
-
-### Contains
-
-- ImportPreviewSection
-- ConflictResolutionList
-- ImportActionBar
-
----
-
-## ImportPreviewSection
-
-### Purpose
-
-Preview import result categories.
-
-### Used For
-
-- ready-to-import
-- already-in-library
-
----
-
-## ConflictResolutionList
-
-### Purpose
-
-Displays import conflicts.
-
-### Contains
-
-- ConflictCard instances
-
----
-
-## ConflictCard
-
-### Purpose
-
-Single import conflict display.
-
-### Contains
-
-- preview image
-- existing path
-- incoming path
-- resolution selector
-
----
-
-## ImportProgressOverlay
-
-### Purpose
-
-Displays active import progress.
-
-### Future Enhancement
-
-Background import monitoring.
-
----
-
-## ImportCompletionNotification
-
-### Purpose
-
-Displays successful import completion.
-
----
-
-# 9. Notification Components
-
-Application feedback system.
-
----
-
-## NotificationToast
-
-### Purpose
-
-Transient notification display.
-
-### Used For
-
-- import complete
-- errors
-- warnings
-
----
-
-## ErrorBanner
-
-### Purpose
-
-Persistent error display.
-
-### Used For
-
-- backend unavailable
-- API failures
-
----
-
-# 10. Empty State Components
-
-Reusable empty-state system.
-
----
-
-## EmptyLibraryState
-
-### Purpose
-
-Displayed when library contains no images.
-
----
-
-## EmptyCollectionState
-
-### Purpose
-
-Displayed for empty collections.
-
----
-
-## EmptyFilterResultState
-
-### Purpose
-
-Displayed when filters return no images.
-
----
-
-# 11. Interaction System Components
-
-Non-visual interaction logic systems.
-
----
-
-## SelectionManager
-
-### Purpose
-
-Centralized selection state.
-
-### Responsibilities
-
-- single selection
-- multi-selection
-- range selection
-
----
-
-## DragDropManager
-
-### Purpose
-
-Centralized drag/drop handling.
-
-### Responsibilities
-
-- drag sources
-- drop targets
-- hover feedback
-
----
+# 5. Filter State
 
 ## FilterStateManager
 
-### Purpose
-
-Centralized filter state.
-
-### Responsibilities
-
-- active tags
-- categories
-- missing-image filter
-- future filters
+Centralized filter management.
 
 ---
 
-## ThumbnailLoader
+## Filter Types
 
-### Purpose
+### Tag Filters
 
-Thumbnail request management.
+Structure:
 
-### Responsibilities
+| Property | Example         |
+| -------- | --------------- |
+| tag      | architecture    |
+| mode     | include/exclude |
 
-- async loading
-- retries
-- prioritization
+---
+
+### Category Filters
+
+Structure:
+
+| Property | Example         |
+| -------- | --------------- |
+| category | reference       |
+| mode     | include/exclude |
 
 ---
 
-## ImageLoader
+### Missing Image Filter
 
-### Purpose
+Boolean state.
 
-Full-resolution image loading.
-
-### Responsibilities
-
-- async loading
-- cancellation
-- failure handling
+| State | Meaning           |
+| ----- | ----------------- |
+| Off   | Show all images   |
+| On    | Show missing only |
 
 ---
+
+## Filter Combination Rules
+
+### Tags
+
+Multiple tag filters may be active simultaneously.
+
+---
+
+### Categories
+
+Multiple category filters may be active simultaneously.
+
+---
+
+### Collections
+
+Only one collection may be active at a time.
+
+Collections behave like virtual folders.
+
+---
+
+## Filter Persistence
+
+Filters persist during:
+
+- image navigation
+- collection navigation
+- back navigation
+
+---
+
+# 6. Selection State
+
+## SelectionManager
+
+Centralized image selection system.
+
+---
+
+## Selection Data
+
+| Property            | Purpose                    |
+| ------------------- | -------------------------- |
+| selectedImageIds    | Current selected images    |
+| primarySelectionId  | Focused image              |
+| selectionAnchor     | Shift-select anchor        |
+| lastInteractionType | Mouse/keyboard interaction |
+
+---
+
+## Selection Modes
+
+| Mode     | Description              |
+| -------- | ------------------------ |
+| Single   | One selected image       |
+| Multiple | Multiple selected images |
+| Range    | Shift-selected range     |
+| Empty    | No selection             |
+
+---
+
+## Selection Persistence
+
+Selection state persists when:
+
+- entering image view
+- returning from image view
+- navigating browser history
+
+Selection resets only when:
+
+- explicitly cleared
+- incompatible navigation occurs
+
+---
+
+# 7. Thumbnail Grid State
+
+## ThumbnailGridState
+
+Controls rendering behavior of thumbnail browsing.
+
+---
+
+## Stored State
+
+| Property       | Purpose                      |
+| -------------- | ---------------------------- |
+| visibleRange   | Currently rendered range     |
+| preloadRange   | Buffered thumbnails          |
+| thumbnailSize  | Current thumbnail dimensions |
+| rowCount       | Fixed row count              |
+| viewportWidth  | Current visible width        |
+| scrollVelocity | Scroll momentum              |
+
+---
+
+## Rendering Rules
+
+### Virtualization
+
+Only visible thumbnails and nearby buffer thumbnails should render.
+
+---
+
+### Lazy Loading
+
+Thumbnail requests occur incrementally during scrolling.
+
+---
+
+### Placeholder States
+
+Thumbnail tiles may enter:
+
+| State   | Description                 |
+| ------- | --------------------------- |
+| Loading | Thumbnail request active    |
+| Loaded  | Thumbnail available         |
+| Missing | Source image missing        |
+| Failed  | Thumbnail generation failed |
+
+---
+
+# 8. Image View State
+
+## ImageViewState
+
+Controls full-resolution viewing experience.
+
+---
+
+## Stored State
+
+| Property       | Purpose                 |
+| -------------- | ----------------------- |
+| currentImageId | Displayed image         |
+| currentContext | Source browsing context |
+| zoomLevel      | Current zoom            |
+| panOffset      | Current pan position    |
+| fullscreen     | Fullscreen enabled      |
+| uiVisible      | Overlay visibility      |
+| loadingState   | Image loading status    |
+
+---
+
+## Context Navigation
+
+Image navigation occurs within:
+
+- current filter set
+- current collection
+- current browsing result set
+
+---
+
+## Loading States
+
+| State   | Description   |
+| ------- | ------------- |
+| Loading | Image loading |
+| Loaded  | Ready         |
+| Missing | File missing  |
+| Failed  | Load failed   |
+
+---
+
+# 9. Metadata Editing State
+
+## MetadataEditorState
+
+Tracks metadata editing interactions.
+
+---
+
+## Stored State
+
+| Property           | Purpose                    |
+| ------------------ | -------------------------- |
+| editingTargetIds   | Affected images            |
+| pendingTags        | Unsaved tag changes        |
+| pendingCategories  | Unsaved category changes   |
+| pendingCollections | Unsaved collection changes |
+| savingState        | Save operation status      |
+
+---
+
+## Save States
+
+| State  | Description       |
+| ------ | ----------------- |
+| Idle   | No active save    |
+| Saving | API update active |
+| Saved  | Update complete   |
+| Failed | Save failed       |
+
+---
+
+# 10. Sidebar State
+
+## SidebarState
+
+Controls collection sidebar behavior.
+
+---
+
+## Stored State
+
+| Property              | Purpose                 |
+| --------------------- | ----------------------- |
+| open                  | Sidebar visible         |
+| activeCollectionId    | Highlighted collection  |
+| dragHoverCollectionId | Current drag target     |
+| creationMode          | Creating new collection |
+
+---
+
+## Visibility Rules
+
+### Visible
+
+- standard library browsing
+
+### Hidden
+
+- collection browsing
+- fullscreen image view
+
+---
+
+# 11. Import System State
 
 ## ImportJobManager
 
-### Purpose
-
-Tracks import jobs.
-
-### Responsibilities
-
-- progress tracking
-- completion events
-- polling
+Controls import workflow and background job tracking.
 
 ---
 
-# 12. Future/Backlog Components
+## Import Job Structure
 
-Not Phase 2 but useful for planning.
-
----
-
-## MoodBoardCanvas
-
-Future infinite canvas system.
-
----
-
-## SlideShowPlayer
-
-Future slideshow system.
+| Property    | Purpose               |
+| ----------- | --------------------- |
+| jobId       | Unique import ID      |
+| status      | Current state         |
+| progress    | Completion percentage |
+| addedImages | Imported images       |
+| conflicts   | Conflict entries      |
+| failures    | Failed imports        |
 
 ---
 
-## SemanticSearchBar
+## Import States
 
-Future AI search system.
-
----
-
-## MasonryThumbnailGrid
-
-Future alternate layout.
-
----
-
-## AdjustableThumbnailSlider
-
-Future thumbnail size control.
+| State     | Description         |
+| --------- | ------------------- |
+| Preparing | Frontend validation |
+| Reviewing | Conflict modal open |
+| Importing | Backend processing  |
+| Completed | Import succeeded    |
+| Failed    | Import failure      |
+| Cancelled | User cancelled      |
 
 ---
 
-# Recommended Next Step
+## Concurrent Imports
 
-The next document I would create is:
+Multiple import jobs may exist simultaneously.
 
-# State Model Specification
+Each job maintains independent state.
 
-Because the most difficult part of Found is not rendering images — it is managing:
+---
 
-- navigation state
-- filter state
-- selection state
-- scroll restoration
-- async loading state
-- import state
+# 12. Notification State
 
-Once the state model exists, the QML architecture becomes much easier to design cleanly.
+## NotificationManager
+
+Controls transient user feedback.
+
+---
+
+## Notification Types
+
+| Type    | Example             |
+| ------- | ------------------- |
+| Success | Import completed    |
+| Warning | Missing image       |
+| Error   | Backend unavailable |
+| Info    | Retry in progress   |
+
+---
+
+## Notification Behavior
+
+Notifications may:
+
+- auto-dismiss
+- persist until acknowledged
+- stack visually
+
+---
+
+# 13. Backend Connection State
+
+## BackendConnectionState
+
+Tracks API availability.
+
+---
+
+## States
+
+| State        | Description           |
+| ------------ | --------------------- |
+| Connected    | API available         |
+| Reconnecting | Retry active          |
+| Disconnected | API unavailable       |
+| Failed       | Fatal startup failure |
+
+---
+
+## Behavior
+
+When disconnected:
+
+- UI remains responsive
+- errors displayed
+- retries occur automatically
+
+---
+
+# 14. Drag & Drop State
+
+## DragDropState
+
+Tracks active drag operations.
+
+---
+
+## Stored State
+
+| Property        | Purpose              |
+| --------------- | -------------------- |
+| dragging        | Active drag          |
+| draggedImageIds | Images being dragged |
+| hoverTarget     | Current drop target  |
+| dragSource      | Origin view          |
+
+---
+
+## Drag Sources
+
+- thumbnail grid
+- external file manager
+
+---
+
+## Drop Targets
+
+- collections
+- application window
+
+---
+
+# 15. Empty State Model
+
+## EmptyStateManager
+
+Controls empty-state UI presentation.
+
+---
+
+## Empty State Types
+
+| State             | Description                   |
+| ----------------- | ----------------------------- |
+| EmptyLibrary      | No images indexed             |
+| EmptyCollection   | Collection contains no images |
+| EmptyFilterResult | No filter matches             |
+| MissingImagesOnly | All visible images missing    |
+
+---
+
+# 16. Future State Expansion
+
+Future phases may add:
+
+- mood board state
+- slideshow playback state
+- AI search state
+- embedding generation state
+- plugin state
+- multi-database state
+
+---
