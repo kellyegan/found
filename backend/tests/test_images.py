@@ -20,7 +20,7 @@ def test_list_images(client, make_image):
     for i in range(3):
         make_image(f"/photos/photo_{i}.jpg")
 
-    response = client.get("/api/v1/images?offset=0&limit=10")
+    response = client.get("/api/v1/images?limit=10")
     assert response.status_code == 200
     data = response.json()
     assert data["success"] is True
@@ -28,12 +28,25 @@ def test_list_images(client, make_image):
 
 
 def test_list_images_pagination(client, make_image):
+    from datetime import datetime, timezone, timedelta
+    base = datetime(2024, 1, 1, tzinfo=timezone.utc)
     for i in range(5):
-        make_image(f"/photos/page_{i}.jpg")
+        make_image(f"/photos/page_{i}.jpg", imported_date=base + timedelta(seconds=i))
 
-    page = client.get("/api/v1/images?offset=2&limit=2").json()
-    assert page["success"] is True
-    assert len(page["data"]) == 2
+    page1 = client.get("/api/v1/images?limit=2").json()
+    assert page1["success"] is True
+    assert len(page1["data"]) == 2
+    assert page1["has_more"] is True
+
+    page2 = client.get(f"/api/v1/images?limit=2&cursor={page1['next_cursor']}").json()
+    assert page2["success"] is True
+    assert len(page2["data"]) == 2
+    assert page2["has_more"] is True
+
+    page3 = client.get(f"/api/v1/images?limit=2&cursor={page2['next_cursor']}").json()
+    assert page3["success"] is True
+    assert len(page3["data"]) == 1
+    assert page3["has_more"] is False
 
 
 def test_delete_image(client, make_image):

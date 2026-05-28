@@ -110,7 +110,7 @@ def bulk_tag_images(
 
 @router.get("/images", summary="List images")
 def list_images(
-    offset: int = 0,
+    cursor: Optional[str] = None,
     limit: int = 100,
     tags: Optional[str] = None,
     categories: Optional[str] = None,
@@ -121,8 +121,9 @@ def list_images(
     missing: Optional[bool] = None,
     service: ImageService = Depends(_get_service),
 ):
-    """Return a paginated list of images with optional filtering.
+    """Return a cursor-paginated list of images with optional filtering.
 
+    Pass `cursor` from a previous response's `next_cursor` to fetch the next page.
     `tags` and `categories` accept comma-separated values; images must match ALL (AND logic).
     `exclude_tags` and `exclude_categories` remove images matching ANY of the values.
     Tags are matched case-insensitively; categories are case-sensitive.
@@ -132,14 +133,19 @@ def list_images(
     def _split(value: Optional[str]) -> Optional[list[str]]:
         return [v.strip() for v in value.split(",")] if value else None
 
-    images = service.list_images(
-        offset=offset, limit=limit,
+    images, next_cursor, has_more = service.list_images(
+        cursor=cursor, limit=limit,
         tags=_split(tags), categories=_split(categories),
         exclude_tags=_split(exclude_tags), exclude_categories=_split(exclude_categories),
         collection_id=collection, import_job_id=import_job,
         missing=missing,
     )
-    return {"success": True, "data": [ImageRead.model_validate(i) for i in images]}
+    return {
+        "success": True,
+        "data": [ImageRead.model_validate(i) for i in images],
+        "next_cursor": next_cursor,
+        "has_more": has_more,
+    }
 
 
 @router.get("/images/{image_id}", summary="Get image")

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from uuid import UUID
 
 from app.core.config import settings
@@ -18,7 +18,7 @@ class ImageService:
 
     def list_images(
         self,
-        offset: int = 0,
+        cursor: Optional[str] = None,
         limit: int = 100,
         tags: Optional[List[str]] = None,
         categories: Optional[List[str]] = None,
@@ -27,9 +27,9 @@ class ImageService:
         collection_id: Optional[UUID] = None,
         import_job_id: Optional[UUID] = None,
         missing: Optional[bool] = None,
-    ) -> List[Image]:
+    ) -> Tuple[List[Image], Optional[str], bool]:
         return self.repo.list(
-            offset=offset, limit=limit,
+            cursor=cursor, limit=limit,
             tags=tags, categories=categories,
             exclude_tags=exclude_tags, exclude_categories=exclude_categories,
             collection_id=collection_id, import_job_id=import_job_id,

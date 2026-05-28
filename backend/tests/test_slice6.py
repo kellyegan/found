@@ -46,12 +46,18 @@ def test_list_images_stable_ordering(client, make_image):
 
 
 def test_pagination_is_consistent_with_ordering(client, make_image):
+    from datetime import datetime, timezone, timedelta
+    base = datetime(2024, 1, 1, tzinfo=timezone.utc)
     for i in range(6):
-        make_image(f"/photos/p{i}.jpg")
+        make_image(f"/photos/p{i}.jpg", imported_date=base + timedelta(seconds=i))
 
-    all_ids   = [img["id"] for img in client.get("/api/v1/images?limit=10").json()["data"]]
-    page_1    = [img["id"] for img in client.get("/api/v1/images?offset=0&limit=3").json()["data"]]
-    page_2    = [img["id"] for img in client.get("/api/v1/images?offset=3&limit=3").json()["data"]]
+    all_ids = [img["id"] for img in client.get("/api/v1/images?limit=10").json()["data"]]
+
+    page1_resp = client.get("/api/v1/images?limit=3").json()
+    page_1 = [img["id"] for img in page1_resp["data"]]
+
+    page2_resp = client.get(f"/api/v1/images?limit=3&cursor={page1_resp['next_cursor']}").json()
+    page_2 = [img["id"] for img in page2_resp["data"]]
 
     assert page_1 + page_2 == all_ids
 

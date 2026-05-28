@@ -1,4 +1,5 @@
-from typing import List, Optional
+from datetime import datetime
+from typing import List, Optional, Tuple
 from uuid import UUID
 
 from sqlmodel import Session, select
@@ -7,6 +8,7 @@ from app.models.category import Category, ImageCategory
 from app.models.collection import CollectionImage
 from app.models.image import FileStatus, Image
 from app.models.tag import ImageTag, Tag
+from app.utils.pagination import decode_cursor, encode_cursor
 
 
 class ImageRepository:
@@ -32,7 +34,7 @@ class ImageRepository:
 
     def list(
         self,
-        offset: int = 0,
+        cursor: Optional[str] = None,
         limit: int = 100,
         tags: Optional[List[str]] = None,
         categories: Optional[List[str]] = None,
@@ -41,11 +43,12 @@ class ImageRepository:
         collection_id: Optional[UUID] = None,
         import_job_id: Optional[UUID] = None,
         missing: Optional[bool] = None,
-    ) -> List[Image]:
-        """Return images with optional filtering. Results are ordered by imported_date.
+    ) -> Tuple[List[Image], Optional[str], bool]:
+        """Return a page of images with cursor-based pagination.
 
-        Include filters use AND logic (image must satisfy all).
-        Exclude filters remove images that match any excluded value.
+        Returns (images, next_cursor, has_more).
+        Sort order is (imported_date, id) for stability.
+        Include filters use AND logic; exclude filters remove any match.
         Tags are matched case-insensitively; categories are case-sensitive.
         """
         query = select(Image)
@@ -97,8 +100,24 @@ class ImageRepository:
         elif missing is False:
             query = query.where(Image.file_status != FileStatus.missing)
 
-        query = query.distinct().order_by(Image.imported_date).offset(offset).limit(limit)
-        return list(self.session.exec(query).all())
+        if cursor:
+            decoded = decode_cursor(cursor)
+            if decoded:
+                cursor_date, cursor_id = decoded
+                query = query.where(
+                    (Image.imported_date > cursor_date)
+                    | ((Image.imported_date == cursor_date) & (Image.id > cursor_id))
+                )
+
+        query = query.distinct().order_by(Image.imported_date, Image.id).limit(limit + 1)
+        rows = list(self.session.exec(query).all())
+
+        has_more = len(rows) > limit
+        if has_more:
+            rows = rows[:limit]
+
+        next_cursor = encode_cursor(rows[-1].imported_date, rows[-1].id) if has_more else None
+        return rows, next_cursor, has_more
 
     def update(self, image: Image) -> Image:
         self.session.add(image)
