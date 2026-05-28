@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -45,6 +46,7 @@ def client_fixture(session):
         yield session
 
     app.dependency_overrides[get_session] = get_session_override
-    with TestClient(app) as client:
-        yield client
+    with patch("app.core.database.run_migrations"):
+        with TestClient(app) as client:
+            yield client
     app.dependency_overrides.clear()

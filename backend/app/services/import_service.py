@@ -56,6 +56,35 @@ class ImportService:
         job.completed_date = datetime.now(timezone.utc)
         self.job_repo.update(job)
 
+    def preview_import(self, paths: list[str]) -> dict:
+        """Scan paths and categorise without writing anything to the database."""
+        new = []
+        already_imported = []
+        conflicts = []
+        invalid = []
+
+        for path in paths:
+            if self.image_repo.get_by_path(path):
+                already_imported.append(path)
+                continue
+            try:
+                hash_value = sha256(path)
+                existing = self.image_repo.get_by_hash(hash_value)
+                if existing:
+                    conflicts.append({
+                        "path": path,
+                        "existing_image_id": existing.id,
+                        "existing_path": existing.path,
+                        "existing_filename": existing.filename,
+                    })
+                else:
+                    extract_metadata(path)
+                    new.append(path)
+            except (UnsupportedFileTypeError, FileNotFoundError, OSError):
+                invalid.append(path)
+
+        return {"new": new, "already_imported": already_imported, "conflicts": conflicts, "invalid": invalid}
+
     def _process_single(self, path: str, job_id: UUID) -> Tuple[str, Optional[Image]]:
         """Import one file. Returns (outcome, existing_image_or_None).
         Outcome is one of: 'success', 'duplicate_path', 'duplicate_hash', 'failed'."""

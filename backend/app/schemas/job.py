@@ -11,6 +11,20 @@ class ImportRequest(BaseModel):
     paths: List[str]
 
 
+class ConflictItem(BaseModel):
+    path: str
+    existing_image_id: UUID
+    existing_path: str
+    existing_filename: str
+
+
+class ImportPreviewResponse(BaseModel):
+    new: List[str]
+    already_imported: List[str]
+    conflicts: List[ConflictItem]
+    invalid: List[str]
+
+
 class ImportResultRead(BaseModel):
     path: str
     outcome: str

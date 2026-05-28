@@ -9,7 +9,7 @@ from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
 from app.schemas.image import ImagePatch, ImageRead
-from app.schemas.job import ImportRequest
+from app.schemas.job import ImportPreviewResponse, ImportRequest
 from app.services.image_service import ImageService
 from app.services.import_service import ImportService
 
@@ -22,6 +22,19 @@ def _get_service(session: Session = Depends(get_session)) -> ImageService:
 
 def _get_import_service(session: Session = Depends(get_session)) -> ImportService:
     return ImportService(session)
+
+
+@router.post("/images/import/preview", summary="Preview a bulk import")
+def preview_import(
+    request: ImportRequest,
+    service: ImportService = Depends(_get_import_service),
+):
+    """Scan a list of paths and categorise them without writing to the database.
+    Returns four buckets: new (ready to import), already_imported (exact path match),
+    conflicts (same content, different path — resolve via PATCH before importing),
+    and invalid (unreadable or unsupported files)."""
+    result = service.preview_import(request.paths)
+    return {"success": True, "data": ImportPreviewResponse(**result)}
 
 
 @router.post("/images/import", summary="Bulk import images")
