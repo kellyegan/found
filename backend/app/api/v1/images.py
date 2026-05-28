@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
@@ -108,6 +109,37 @@ def delete_image(image_id: UUID, service: ImageService = Depends(_get_service)):
             detail={"code": "not_found", "message": "Image not found."},
         )
     return {"success": True, "data": None}
+
+
+@router.get("/images/{image_id}/file", summary="Get full image file")
+def get_image_file(image_id: UUID, service: ImageService = Depends(_get_service)):
+    """Stream the original image file from disk at its recorded path.
+    The file is never copied or moved."""
+    image = service.get_image(image_id)
+    if not image:
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "not_found", "message": "Image not found."},
+        )
+    if not image.mime_type or not image.mime_type.startswith("image/"):
+        raise HTTPException(
+            status_code=415,
+            detail={"code": "unsupported_format", "message": "Image format is not supported."},
+        )
+    path = Path(image.path)
+    if not path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail={"code": "file_not_found", "message": "Image file not found on disk."},
+        )
+    try:
+        path.open("rb").close()
+    except OSError:
+        raise HTTPException(
+            status_code=500,
+            detail={"code": "read_failure", "message": "Failed to read image file."},
+        )
+    return FileResponse(str(path), media_type=image.mime_type)
 
 
 @router.get("/images/{image_id}/thumbnail", summary="Get thumbnail")
