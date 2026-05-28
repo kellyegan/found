@@ -9,7 +9,7 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
-from app.schemas.image import ImageIdsRequest, ImagePatch, ImageRead
+from app.schemas.image import ImageGridRead, ImageIdsRequest, ImagePatch, ImageRead
 from app.schemas.job import ImportPreviewResponse, ImportRequest
 from app.schemas.category import BulkCategoryRequest
 from app.schemas.tag import BulkTagRequest
@@ -112,6 +112,7 @@ def bulk_tag_images(
 def list_images(
     cursor: Optional[str] = None,
     limit: int = 100,
+    view: Optional[str] = None,
     tags: Optional[str] = None,
     categories: Optional[str] = None,
     exclude_tags: Optional[str] = None,
@@ -140,9 +141,10 @@ def list_images(
         collection_id=collection, import_job_id=import_job,
         missing=missing,
     )
+    schema = ImageGridRead if view == "grid" else ImageRead
     return {
         "success": True,
-        "data": [ImageRead.model_validate(i) for i in images],
+        "data": [schema.model_validate(i) for i in images],
         "next_cursor": next_cursor,
         "has_more": has_more,
     }

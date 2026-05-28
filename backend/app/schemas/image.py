@@ -26,6 +26,17 @@ class ImageRead(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ImageGridRead(BaseModel):
+    id: UUID
+    filename: str
+    width: Optional[int]
+    height: Optional[int]
+    thumbnail_path: Optional[str]
+    file_status: FileStatus
+
+    model_config = {"from_attributes": True}
+
+
 class ImagePatch(BaseModel):
     path: str
 
