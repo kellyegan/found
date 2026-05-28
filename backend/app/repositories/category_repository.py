@@ -61,3 +61,20 @@ class CategoryRepository:
         if row:
             self.session.delete(row)
             self.session.commit()
+
+    def bulk_categorise_images(
+        self,
+        image_ids: List[UUID],
+        add_category_ids: List[UUID],
+        remove_category_ids: List[UUID],
+    ) -> None:
+        """Apply category additions and removals to multiple images in a single transaction."""
+        for image_id in image_ids:
+            for category_id in add_category_ids:
+                if not self.session.get(ImageCategory, (image_id, category_id)):
+                    self.session.add(ImageCategory(image_id=image_id, category_id=category_id))
+            for category_id in remove_category_ids:
+                row = self.session.get(ImageCategory, (image_id, category_id))
+                if row:
+                    self.session.delete(row)
+        self.session.commit()

@@ -11,7 +11,9 @@ from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
 from app.schemas.image import ImagePatch, ImageRead
 from app.schemas.job import ImportPreviewResponse, ImportRequest
+from app.schemas.category import BulkCategoryRequest
 from app.schemas.tag import BulkTagRequest
+from app.repositories.category_repository import CategoryRepository
 from app.repositories.tag_repository import TagRepository
 from app.services.image_service import ImageService
 from app.services.import_service import ImportService
@@ -29,6 +31,10 @@ def _get_import_service(session: Session = Depends(get_session)) -> ImportServic
 
 def _get_tag_repo(session: Session = Depends(get_session)) -> TagRepository:
     return TagRepository(session)
+
+
+def _get_category_repo(session: Session = Depends(get_session)) -> CategoryRepository:
+    return CategoryRepository(session)
 
 
 @router.post("/images/import/preview", summary="Preview a bulk import")
@@ -56,6 +62,17 @@ def import_images(
     job = service.create_job(len(request.paths))
     background_tasks.add_task(service.process_import, job.id, request.paths)
     return {"success": True, "data": {"job_id": str(job.id)}}
+
+
+@router.post("/images/bulk/categories", summary="Bulk category operations")
+def bulk_categorise_images(
+    request: BulkCategoryRequest,
+    repo: CategoryRepository = Depends(_get_category_repo),
+):
+    """Add and/or remove categories on multiple images in a single atomic operation.
+    Duplicate assignments and missing assignments are silently ignored."""
+    repo.bulk_categorise_images(request.image_ids, request.add_category_ids, request.remove_category_ids)
+    return {"success": True, "data": None}
 
 
 @router.post("/images/bulk/tags", summary="Bulk tag operations")

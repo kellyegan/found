@@ -24,3 +24,9 @@ class CategoryRead(BaseModel):
 
 class ImageCategoriesRequest(BaseModel):
     category_ids: list[UUID]
+
+
+class BulkCategoryRequest(BaseModel):
+    image_ids: list[UUID]
+    add_category_ids: list[UUID] = []
+    remove_category_ids: list[UUID] = []
