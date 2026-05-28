@@ -27,6 +27,14 @@ class TagRepository:
     def list(self) -> List[Tag]:
         return list(self.session.exec(select(Tag)).all())
 
+    def search(self, q: str) -> List[Tag]:
+        """Return tags whose names contain q (case-insensitive), sorted alphabetically."""
+        return list(
+            self.session.exec(
+                select(Tag).where(Tag.name.ilike(f"%{q}%")).order_by(Tag.name)
+            ).all()
+        )
+
     def update(self, tag: Tag) -> Tag:
         self.session.add(tag)
         self.session.commit()

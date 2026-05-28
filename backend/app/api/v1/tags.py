@@ -43,6 +43,13 @@ def create_tag(data: TagCreate, repo: TagRepository = Depends(_get_repo)):
     return {"success": True, "data": TagRead.model_validate(tag)}
 
 
+@router.get("/tags/search", summary="Search tags")
+def search_tags(q: str = "", repo: TagRepository = Depends(_get_repo)):
+    """Return tags whose names contain q (case-insensitive), sorted alphabetically.
+    An empty q returns all tags. Designed for autocomplete use."""
+    return {"success": True, "data": [TagRead.model_validate(t) for t in repo.search(q)]}
+
+
 @router.put("/tags/{tag_id}", summary="Update tag")
 def update_tag(
     tag_id: UUID, data: TagUpdate, repo: TagRepository = Depends(_get_repo)
