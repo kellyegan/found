@@ -1,7 +1,5 @@
 # FOUND — Phase 2 State Model Specification
 
-[[IMGORG]]
-
 ## Purpose
 
 This document defines the application state architecture for Found.
@@ -84,7 +82,7 @@ Views should derive their displayed state from centralized state managers rather
 
 ## AppState
 
-Top-level application lifecycle state.
+Startup lifecycle state. Active from process launch until `Ready`. Does not model runtime health.
 
 ---
 
@@ -95,8 +93,8 @@ Top-level application lifecycle state.
 | Launching       | Application process starting       |
 | BackendStarting | Backend initialization in progress |
 | BackendRetrying | Backend failed, retrying           |
-| Ready           | Application operational            |
-| BackendError    | Backend unavailable                |
+| Ready           | Startup complete; app operational  |
+| BackendError    | Startup failed after all retries   |
 | ShuttingDown    | Application exiting                |
 
 ---
@@ -106,8 +104,8 @@ Top-level application lifecycle state.
 Controls:
 
 - splash screen visibility
-- backend retry flow
-- fatal error handling
+- backend retry flow (2 retries, 10 seconds apart)
+- fatal startup error handling
 - startup completion
 
 ---
@@ -191,15 +189,18 @@ Controls the main thumbnail browsing experience.
 
 ## Stored State
 
-| Property           | Purpose                    |
-| ------------------ | -------------------------- |
-| visibleImageIds    | Current result set         |
-| scrollOffset       | Horizontal scroll position |
-| selectedImageIds   | Current selection          |
-| activeCollectionId | Current collection         |
-| activeFilters      | Applied filters            |
-| sidebarOpen        | Sidebar visibility         |
-| loadingState       | Current loading state      |
+| Property           | Purpose                           |
+| ------------------ | --------------------------------- |
+| loadedImageIds     | Currently loaded image window     |
+| currentCursor      | Cursor for fetching the next page |
+| scrollOffset       | Horizontal scroll position        |
+| selectedImageIds   | Current selection                 |
+| activeCollectionId | Current collection                |
+| activeFilters      | Applied filters                   |
+| sidebarOpen        | Sidebar visibility                |
+| loadingState       | Current loading state             |
+
+`loadedImageIds` holds only the currently fetched window of images, not the full library. `currentCursor` is used to request the next page from the API as the user scrolls toward the edge of the loaded window.
 
 ---
 
@@ -345,14 +346,20 @@ Controls rendering behavior of thumbnail browsing.
 
 ## Stored State
 
-| Property       | Purpose                      |
-| -------------- | ---------------------------- |
-| visibleRange   | Currently rendered range     |
-| preloadRange   | Buffered thumbnails          |
-| thumbnailSize  | Current thumbnail dimensions |
-| rowCount       | Fixed row count              |
-| viewportWidth  | Current visible width        |
-| scrollVelocity | Scroll momentum              |
+| Property            | Purpose                             |
+| ------------------- | ----------------------------------- |
+| targetThumbnailSize | Target cell size in pixels (stored) |
+| viewportWidth       | Current visible width               |
+| viewportHeight      | Current visible height              |
+| visibleRange        | Currently rendered column range     |
+| preloadRange        | Buffered column range (±3 columns)  |
+| scrollVelocity      | Scroll momentum                     |
+
+`rowCount` and `thumbnailSize` are derived, not stored:
+`rowCount = max(2, round(viewportHeight / targetThumbnailSize))`
+`thumbnailSize = viewportHeight / rowCount`
+
+Storing `targetThumbnailSize` as the authoritative value allows future user-adjustable sizing without restructuring state.
 
 ---
 
@@ -393,15 +400,20 @@ Controls full-resolution viewing experience.
 
 ## Stored State
 
-| Property       | Purpose                 |
-| -------------- | ----------------------- |
-| currentImageId | Displayed image         |
-| currentContext | Source browsing context |
-| zoomLevel      | Current zoom            |
-| panOffset      | Current pan position    |
-| fullscreen     | Fullscreen enabled      |
-| uiVisible      | Overlay visibility      |
-| loadingState   | Image loading status    |
+| Property            | Purpose                                            |
+| ------------------- | -------------------------------------------------- |
+| currentImageId      | Displayed image                                    |
+| contextImageIds     | Loaded image IDs from the source browsing context  |
+| contextCursor       | Cursor for fetching further images in context      |
+| contextFilters      | Active filters from the source browsing context    |
+| contextCollectionId | Active collection from the source browsing context |
+| zoomLevel           | Current zoom                                       |
+| panOffset           | Current pan position                               |
+| fullscreen          | Fullscreen enabled                                 |
+| uiVisible           | Overlay visibility                                 |
+| loadingState        | Image loading status                               |
+
+`contextImageIds` and `contextCursor` together allow next/prev navigation: the adjacent image is served from `contextImageIds` if already loaded; otherwise the next cursor page is fetched from the API.
 
 ---
 
@@ -436,24 +448,24 @@ Tracks metadata editing interactions.
 
 ## Stored State
 
-| Property           | Purpose                    |
-| ------------------ | -------------------------- |
-| editingTargetIds   | Affected images            |
-| pendingTags        | Unsaved tag changes        |
-| pendingCategories  | Unsaved category changes   |
-| pendingCollections | Unsaved collection changes |
-| savingState        | Save operation status      |
+| Property         | Purpose              |
+| ---------------- | -------------------- |
+| editingTargetIds | Affected images      |
+| savingState      | API operation status |
+
+Edits are applied immediately via optimistic updates. There is no pending/unsaved state. `savingState` reflects only the in-flight API call.
 
 ---
 
 ## Save States
 
-| State  | Description       |
-| ------ | ----------------- |
-| Idle   | No active save    |
-| Saving | API update active |
-| Saved  | Update complete   |
-| Failed | Save failed       |
+| State  | Description          |
+| ------ | -------------------- |
+| Idle   | No active API call   |
+| Saving | API update in flight |
+| Failed | API call failed      |
+
+On failure, the UI should revert the optimistic update and display an error.
 
 ---
 
@@ -512,14 +524,14 @@ Controls import workflow and background job tracking.
 
 ## Import States
 
-| State     | Description         |
-| --------- | ------------------- |
-| Preparing | Frontend validation |
-| Reviewing | Conflict modal open |
-| Importing | Backend processing  |
-| Completed | Import succeeded    |
-| Failed    | Import failure      |
-| Cancelled | User cancelled      |
+| State      | Description                                                         |
+| ---------- | ------------------------------------------------------------------- |
+| Previewing | Paths sent to backend preview endpoint; awaiting categorised result |
+| Reviewing  | Import confirm modal open; user reviewing preview and any conflicts |
+| Importing  | Backend processing                                                  |
+| Completed  | Import succeeded                                                    |
+| Failed     | Import failure                                                      |
+| Cancelled  | User cancelled                                                      |
 
 ---
 
@@ -564,28 +576,28 @@ Notifications may:
 
 ## BackendConnectionState
 
-Tracks API availability.
+Tracks runtime API availability. Activates only after `AppState.Ready`. Models mid-session disconnections independently of the startup lifecycle.
 
 ---
 
 ## States
 
-| State        | Description           |
-| ------------ | --------------------- |
-| Connected    | API available         |
-| Reconnecting | Retry active          |
-| Disconnected | API unavailable       |
-| Failed       | Fatal startup failure |
+| State        | Description                            |
+| ------------ | -------------------------------------- |
+| Connected    | API available                          |
+| Reconnecting | Lost connection; retry active          |
+| Disconnected | API unreachable after retry exhaustion |
 
 ---
 
 ## Behavior
 
-When disconnected:
+When disconnected at runtime:
 
 - UI remains responsive
-- errors displayed
-- retries occur automatically
+- errors displayed via ErrorBanner
+- automatic reconnect retries occur
+- on reconnection, pending operations are retried
 
 ---
 

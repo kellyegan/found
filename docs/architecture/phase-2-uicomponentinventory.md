@@ -4,10 +4,9 @@
 
 This inventory is organized by:
 
-- application-level systems
+- application-level and system components
 - reusable UI components
 - view-specific components
-- interaction systems
 
 The goal is to:
 
@@ -20,9 +19,9 @@ This inventory intentionally focuses on **conceptual components**, not implement
 
 ---
 
-# 1. Application-Level Components
+# 1. Application-Level & System Components
 
-These components exist at the top level of the application and manage major application state.
+These components exist at the top level of the application and manage major application state or coordinate system-wide behavior.
 
 ---
 
@@ -36,15 +35,40 @@ Root application window.
 
 - Initialize application shell
 - Manage top-level layouts
-- Manage global overlays/modals
+- Manage global overlays and modals
 - Handle application-wide keyboard shortcuts
 
 ### Contains
 
 - SplashScreen
 - MainRouter
-- GlobalNotificationOverlay
 - ModalLayer
+- GlobalNotificationOverlay
+
+---
+
+## ModalLayer
+
+### Purpose
+
+Z-stacked layer that renders modals above all other application content.
+
+### Used For
+
+- ImportConfirmModal
+- Future dialogs
+
+---
+
+## GlobalNotificationOverlay
+
+### Purpose
+
+Z-stacked layer that renders notification toasts above all other application content, including modals.
+
+### Used For
+
+- NotificationToast instances (import complete, errors, warnings)
 
 ---
 
@@ -65,7 +89,7 @@ Controls active application view/state.
 - Splash
 - LibraryView
 - ImageView
-- ImportModal
+- ImportConfirmModal
 - Future views
 
 ---
@@ -114,6 +138,90 @@ Frontend communication layer.
 - Retry handling
 - Error normalization
 - Import job tracking
+
+---
+
+## SelectionManager
+
+### Purpose
+
+Centralized image selection state.
+
+### Responsibilities
+
+- Single selection
+- Multi-selection
+- Range selection (shift-click anchor)
+
+---
+
+## DragDropManager
+
+### Purpose
+
+Centralized drag/drop coordination.
+
+### Responsibilities
+
+- Drag sources
+- Drop targets
+- Hover feedback
+
+---
+
+## FilterStateManager
+
+### Purpose
+
+Centralized filter state.
+
+### Responsibilities
+
+- Active tag filters (include/exclude list)
+- Active category filters (include/exclude list)
+- Missing-image filter toggle
+
+---
+
+## ThumbnailLoader
+
+### Purpose
+
+Thumbnail request management.
+
+### Responsibilities
+
+- Async thumbnail loading
+- Retries on failure
+- Prioritization: visible tiles before buffer tiles
+
+---
+
+## ImageLoader
+
+### Purpose
+
+Full-resolution image loading.
+
+### Responsibilities
+
+- Async loading
+- Cancellation when navigating away
+- Failure handling
+
+---
+
+## ImportJobManager
+
+### Purpose
+
+Tracks import jobs.
+
+### Responsibilities
+
+- Progress tracking
+- Completion events
+- Polling the backend job endpoint
 
 ---
 
@@ -188,9 +296,25 @@ Reusable dimmed overlay background layer.
 
 ### Used For
 
-- modals
 - sidebars
 - future dialogs
+
+---
+
+## TagSuggestionList
+
+### Purpose
+
+Displays matching tag suggestions as the user types.
+
+### Used In
+
+- TagSearchField (filtering)
+- TagEditor (metadata editing)
+
+### Behavior
+
+Appears while typing; dismissed on selection or blur.
 
 ---
 
@@ -208,10 +332,14 @@ Main image browsing surface.
 
 ### Responsibilities
 
-- virtualized rendering
-- lazy loading
-- horizontal scrolling
-- selection rendering
+- Virtualized rendering
+- Lazy loading
+- Horizontal scrolling
+- Selection rendering
+
+### Implementation Note
+
+Uses QML's `ListView` in horizontal orientation. Row layout is achieved by composing multiple `ListView` instances or a `GridView` configured for horizontal flow.
 
 ### Contains
 
@@ -227,10 +355,10 @@ Individual image tile.
 
 ### Responsibilities
 
-- render thumbnail
-- display selection state
-- display missing state
-- display loading state
+- Render thumbnail
+- Display selection state
+- Display missing state
+- Display loading state
 
 ### States
 
@@ -250,9 +378,9 @@ Actual thumbnail rendering element.
 
 ### Responsibilities
 
-- preserve aspect ratio
-- apply letterboxing
-- async image loading
+- Preserve aspect ratio
+- Apply letterboxing
+- Async image loading
 
 ---
 
@@ -264,7 +392,7 @@ Fallback placeholder.
 
 ### Used For
 
-- loading
+- loading state
 - missing thumbnails
 - failed generation
 
@@ -274,7 +402,7 @@ Fallback placeholder.
 
 ### Purpose
 
-Visual selection indicator.
+Visual selection indicator rendered over a ThumbnailTile.
 
 ### Used In
 
@@ -285,20 +413,6 @@ Visual selection indicator.
 - selected
 - multiselect
 - active/focused
-
----
-
-## HorizontalScrollViewport
-
-### Purpose
-
-Custom scrolling viewport.
-
-### Responsibilities
-
-- horizontal scrolling
-- drag panning
-- momentum handling
 
 ---
 
@@ -330,13 +444,13 @@ Category filter selector.
 
 ### Features
 
-- tri-state filtering
-- multiple category support
+- Tri-state filtering per category
+- Multiple active categories supported
 
 ### States
 
 - Off
-- On
+- On (include)
 - Exclude
 
 ---
@@ -345,25 +459,13 @@ Category filter selector.
 
 ### Purpose
 
-Tag lookup/filter field.
+Tag lookup and filter entry field.
 
 ### Responsibilities
 
-- text input
-- autocomplete suggestions
-- selected filter display
-
----
-
-## TagSuggestionList
-
-### Purpose
-
-Displays matching tags.
-
-### Behavior
-
-Appears while typing.
+- Text input
+- Delegates to TagSuggestionList for autocomplete
+- Displays active filter chips
 
 ---
 
@@ -371,18 +473,19 @@ Appears while typing.
 
 ### Purpose
 
-Displays active filters.
+Represents a single active filter item.
 
 ### Used For
 
-- tags
-- categories
-- future filters
+- Active tag filters
+- Active category filters
+- Bulk-edit metadata items (shared, partial)
 
 ### States
 
 - include
 - exclude
+- mixed (item present on some but not all selected images; used in bulk editing)
 
 ---
 
@@ -390,7 +493,7 @@ Displays active filters.
 
 ### Purpose
 
-Toggle missing-image visibility.
+Toggle to show only missing images.
 
 ---
 
@@ -404,7 +507,7 @@ Shared metadata editing system.
 
 ### Purpose
 
-Generic metadata display row.
+Generic read-only metadata display row.
 
 ### Used For
 
@@ -420,13 +523,13 @@ Generic metadata display row.
 
 ### Purpose
 
-Tag management UI.
+Tag management UI for the info panel.
 
 ### Features
 
-- add/remove tags
-- bulk editing support
-- autocomplete integration
+- Add tags via TagSuggestionList
+- Remove tags with (x) per chip
+- Bulk editing: shows shared tags with remove button; shows partial tags with mixed FilterChip
 
 ---
 
@@ -434,12 +537,12 @@ Tag management UI.
 
 ### Purpose
 
-Category management UI.
+Category management UI for the info panel.
 
 ### Features
 
-- add/remove categories
-- multi-selection editing
+- Add/remove categories
+- Bulk editing: shows shared and partial categories via FilterChip states
 
 ---
 
@@ -447,12 +550,12 @@ Category management UI.
 
 ### Purpose
 
-Collection membership editor.
+Collection membership editor for the info panel.
 
 ### Features
 
-- add/remove collections
-- multi-selection support
+- Add/remove collections
+- Multi-selection support
 
 ---
 
@@ -460,13 +563,13 @@ Collection membership editor.
 
 ### Purpose
 
-Logical metadata grouping.
+Logical metadata grouping container.
 
-### Example Groups
+### Groups
 
-- File Info
-- Organization
-- Status
+- File Info (filename, path, dimensions, filesize, date added)
+- Organization (tags, categories, collections)
+- Status (missing state)
 
 ---
 
@@ -480,13 +583,13 @@ Collection browsing system.
 
 ### Purpose
 
-Displays collections in sidebar.
+Displays all collections in the sidebar.
 
 ### Responsibilities
 
-- alphabetical ordering
-- empty-state styling
-- drag/drop targets
+- Alphabetical ordering
+- Empty-state styling (muted appearance for empty collections)
+- Drag/drop targets
 
 ---
 
@@ -494,13 +597,13 @@ Displays collections in sidebar.
 
 ### Purpose
 
-Single collection entry.
+Single collection entry in the sidebar.
 
 ### States
 
 - normal
-- active
-- empty
+- active (currently browsing this collection)
+- empty (no images; visually muted)
 - drag-hover
 
 ---
@@ -509,12 +612,12 @@ Single collection entry.
 
 ### Purpose
 
-Create new collection UI.
+Inline create-new-collection UI.
 
 ### Features
 
-- inline creation
-- validation
+- Inline text entry
+- Validation
 
 ---
 
@@ -522,12 +625,15 @@ Create new collection UI.
 
 ### Purpose
 
-Displays collection preview image.
+Displays the cover image for a collection.
 
-### Future Use
+### Used In
 
-- collection cards
-- collection overview pages
+- CollectionListItem
+
+### Behavior
+
+Automatically set to the first image added to the collection. Updates when the cover image is removed.
 
 ---
 
@@ -541,13 +647,13 @@ Full-resolution image viewer system.
 
 ### Purpose
 
-Displays full-resolution image.
+Displays the full-resolution image.
 
 ### Responsibilities
 
-- zoom
-- pan
-- centering
+- Zoom
+- Pan
+- Centering
 
 ---
 
@@ -555,12 +661,12 @@ Displays full-resolution image.
 
 ### Purpose
 
-Fullscreen image presentation.
+Fullscreen image presentation mode.
 
 ### Responsibilities
 
-- hide chrome
-- immersive viewing
+- Hide title bar and info panel
+- Immersive image display
 
 ---
 
@@ -568,12 +674,13 @@ Fullscreen image presentation.
 
 ### Purpose
 
-Navigate within current browsing context.
+Navigate previous/next within the current browsing context.
 
 ### Features
 
-- previous image
-- next image
+- Previous image
+- Next image
+- Fetches next cursor page from API when adjacent image is not yet loaded
 
 ---
 
@@ -585,9 +692,9 @@ Centralized zoom behavior.
 
 ### Responsibilities
 
-- zoom level
-- zoom limits
-- zoom focus
+- Zoom level
+- Zoom limits
+- Zoom focus point
 
 ---
 
@@ -597,17 +704,20 @@ Import pipeline UI.
 
 ---
 
-## ImportConflictModal
+## ImportConfirmModal
 
 ### Purpose
 
-Resolve import conflicts.
+Allows the user to review and confirm an import before it begins.
 
 ### Contains
 
 - ImportPreviewSection
-- ConflictResolutionList
-- ImportActionBar
+- ConflictResolutionList (conditional — only shown when conflicts exist)
+
+### Behavior
+
+Always shown on drag-drop import. The conflicts section is omitted when no conflicts are detected.
 
 ---
 
@@ -615,12 +725,12 @@ Resolve import conflicts.
 
 ### Purpose
 
-Preview import result categories.
+Displays a categorized summary of the pending import.
 
-### Used For
+### Shows
 
-- ready-to-import
-- already-in-library
+- Images ready to import (count + first 10 thumbnails)
+- Images already in library (count + first 10 thumbnails)
 
 ---
 
@@ -628,7 +738,7 @@ Preview import result categories.
 
 ### Purpose
 
-Displays import conflicts.
+Displays hash-conflict entries requiring user resolution.
 
 ### Contains
 
@@ -644,10 +754,10 @@ Single import conflict display.
 
 ### Contains
 
-- preview image
-- existing path
-- incoming path
-- resolution selector
+- Preview image
+- Existing path
+- Incoming path
+- Resolution selector (existing path selected by default)
 
 ---
 
@@ -655,11 +765,7 @@ Single import conflict display.
 
 ### Purpose
 
-Displays active import progress.
-
-### Future Enhancement
-
-Background import monitoring.
+Displays active import progress after the user confirms.
 
 ---
 
@@ -667,7 +773,7 @@ Background import monitoring.
 
 ### Purpose
 
-Displays successful import completion.
+Triggers a NotificationToast on successful import completion.
 
 ---
 
@@ -681,13 +787,13 @@ Application feedback system.
 
 ### Purpose
 
-Transient notification display.
+Transient notification displayed via GlobalNotificationOverlay.
 
 ### Used For
 
-- import complete
-- errors
-- warnings
+- Import complete
+- Errors
+- Warnings
 
 ---
 
@@ -699,14 +805,14 @@ Persistent error display.
 
 ### Used For
 
-- backend unavailable
-- API failures
+- Backend unavailable at runtime
+- API failures requiring user awareness
 
 ---
 
 # 10. Empty State Components
 
-Reusable empty-state system.
+Reusable empty-state displays.
 
 ---
 
@@ -714,7 +820,14 @@ Reusable empty-state system.
 
 ### Purpose
 
-Displayed when library contains no images.
+Displayed when no images are indexed.
+
+### Shows
+
+```text
+NO IMAGES YET
+DRAG AND DROP HERE TO ADD
+```
 
 ---
 
@@ -722,7 +835,7 @@ Displayed when library contains no images.
 
 ### Purpose
 
-Displayed for empty collections.
+Displayed when a collection contains no images.
 
 ---
 
@@ -730,104 +843,13 @@ Displayed for empty collections.
 
 ### Purpose
 
-Displayed when filters return no images.
+Displayed when active filters return no results.
 
 ---
 
-# 11. Interaction System Components
+# 11. Future/Backlog Components
 
-Non-visual interaction logic systems.
-
----
-
-## SelectionManager
-
-### Purpose
-
-Centralized selection state.
-
-### Responsibilities
-
-- single selection
-- multi-selection
-- range selection
-
----
-
-## DragDropManager
-
-### Purpose
-
-Centralized drag/drop handling.
-
-### Responsibilities
-
-- drag sources
-- drop targets
-- hover feedback
-
----
-
-## FilterStateManager
-
-### Purpose
-
-Centralized filter state.
-
-### Responsibilities
-
-- active tags
-- categories
-- missing-image filter
-- future filters
-
----
-
-## ThumbnailLoader
-
-### Purpose
-
-Thumbnail request management.
-
-### Responsibilities
-
-- async loading
-- retries
-- prioritization
-
----
-
-## ImageLoader
-
-### Purpose
-
-Full-resolution image loading.
-
-### Responsibilities
-
-- async loading
-- cancellation
-- failure handling
-
----
-
-## ImportJobManager
-
-### Purpose
-
-Tracks import jobs.
-
-### Responsibilities
-
-- progress tracking
-- completion events
-- polling
-
----
-
-# 12. Future/Backlog Components
-
-Not Phase 2 but useful for planning.
+Not Phase 2 scope — retained for planning reference.
 
 ---
 
@@ -857,4 +879,4 @@ Future alternate layout.
 
 ## AdjustableThumbnailSlider
 
-Future thumbnail size control.
+Future user-adjustable thumbnail size control.
