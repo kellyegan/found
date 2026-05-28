@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from app.models.category import Category, ImageCategory
 from app.models.collection import CollectionImage
-from app.models.image import Image
+from app.models.image import FileStatus, Image
 from app.models.tag import ImageTag, Tag
 
 
@@ -40,6 +40,7 @@ class ImageRepository:
         exclude_categories: Optional[List[str]] = None,
         collection_id: Optional[UUID] = None,
         import_job_id: Optional[UUID] = None,
+        missing: Optional[bool] = None,
     ) -> List[Image]:
         """Return images with optional filtering. Results are ordered by imported_date.
 
@@ -90,6 +91,11 @@ class ImageRepository:
 
         if import_job_id:
             query = query.where(Image.import_job_id == import_job_id)
+
+        if missing is True:
+            query = query.where(Image.file_status == FileStatus.missing)
+        elif missing is False:
+            query = query.where(Image.file_status != FileStatus.missing)
 
         query = query.distinct().order_by(Image.imported_date).offset(offset).limit(limit)
         return list(self.session.exec(query).all())

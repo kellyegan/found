@@ -25,12 +25,14 @@ class ImageService:
         exclude_categories: Optional[List[str]] = None,
         collection_id: Optional[UUID] = None,
         import_job_id: Optional[UUID] = None,
+        missing: Optional[bool] = None,
     ) -> List[Image]:
         return self.repo.list(
             offset=offset, limit=limit,
             tags=tags, categories=categories,
             exclude_tags=exclude_tags, exclude_categories=exclude_categories,
             collection_id=collection_id, import_job_id=import_job_id,
+            missing=missing,
         )
 
     def patch_path(self, image_id: UUID, new_path: str) -> Optional[Image]:

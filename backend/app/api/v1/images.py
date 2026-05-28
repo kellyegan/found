@@ -62,6 +62,7 @@ def list_images(
     exclude_categories: Optional[str] = None,
     collection: Optional[UUID] = None,
     import_job: Optional[UUID] = None,
+    missing: Optional[bool] = None,
     service: ImageService = Depends(_get_service),
 ):
     """Return a paginated list of images with optional filtering.
@@ -69,6 +70,8 @@ def list_images(
     `tags` and `categories` accept comma-separated values; images must match ALL (AND logic).
     `exclude_tags` and `exclude_categories` remove images matching ANY of the values.
     Tags are matched case-insensitively; categories are case-sensitive.
+    `missing=true` returns only images whose file is no longer found on disk;
+    `missing=false` returns only images whose file is present.
     """
     def _split(value: Optional[str]) -> Optional[list[str]]:
         return [v.strip() for v in value.split(",")] if value else None
@@ -78,6 +81,7 @@ def list_images(
         tags=_split(tags), categories=_split(categories),
         exclude_tags=_split(exclude_tags), exclude_categories=_split(exclude_categories),
         collection_id=collection, import_job_id=import_job,
+        missing=missing,
     )
     return {"success": True, "data": [ImageRead.model_validate(i) for i in images]}
 
