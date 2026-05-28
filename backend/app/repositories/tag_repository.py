@@ -1,6 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 
+from sqlalchemy import case
 from sqlmodel import Session, select
 
 from app.models.tag import ImageTag, Tag
@@ -28,10 +29,14 @@ class TagRepository:
         return list(self.session.exec(select(Tag)).all())
 
     def search(self, q: str) -> List[Tag]:
-        """Return tags whose names contain q (case-insensitive), sorted alphabetically."""
+        """Return tags whose names contain q (case-insensitive).
+        Prefix matches are returned before mid-word matches; alphabetical within each group."""
+        priority = case((Tag.name.ilike(f"{q}%"), 0), else_=1)
         return list(
             self.session.exec(
-                select(Tag).where(Tag.name.ilike(f"%{q}%")).order_by(Tag.name)
+                select(Tag)
+                .where(Tag.name.ilike(f"%{q}%"))
+                .order_by(priority, Tag.name)
             ).all()
         )
 

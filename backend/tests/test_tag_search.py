@@ -35,10 +35,29 @@ def test_search_matches_middle_of_word(client):
     assert "photography" not in result
 
 
-def test_search_results_ordered_alphabetically(client):
+def test_search_prefix_matches_before_mid_word_matches(client):
+    # "ology" is a prefix match but alphabetically follows "archaeology" and "ecology"
+    # (both mid-word matches). Without prefix-first ordering the test would fail.
+    _create_tags(client, "archaeology", "ecology", "ology")
+
+    result = _names(client.get("/api/v1/tags/search?q=ology").json()["data"])
+    assert result[0] == "ology"
+    assert set(result[1:]) == {"archaeology", "ecology"}
+
+
+def test_search_alphabetical_within_each_group(client):
+    # All three start with "u" (prefix group), should be alphabetical within that group
     _create_tags(client, "urban", "underground", "ultramodern")
 
     result = _names(client.get("/api/v1/tags/search?q=u").json()["data"])
+    assert result == sorted(result)
+
+
+def test_search_mid_word_group_also_alphabetical(client):
+    # "ism" is mid-word in all three; within that group they should be alphabetical
+    _create_tags(client, "minimalism", "brutalism", "futurism")
+
+    result = _names(client.get("/api/v1/tags/search?q=ism").json()["data"])
     assert result == sorted(result)
 
 
