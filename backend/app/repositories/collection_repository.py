@@ -45,13 +45,15 @@ class CollectionRepository:
         return [self.session.get(Image, r.image_id) for r in rows]
 
     def add_images(self, collection_id: UUID, image_ids: List[UUID]) -> None:
-        """Append images to a collection, assigning sort_order after existing entries."""
+        """Append images to a collection, assigning sort_order after existing entries.
+        Auto-sets cover_image_id to the first image if the collection has no cover."""
         existing = self.session.exec(
             select(CollectionImage).where(CollectionImage.collection_id == collection_id)
         ).all()
         existing_ids = {r.image_id for r in existing}
         next_order = max((r.sort_order for r in existing), default=-1) + 1
 
+        first_new: Optional[UUID] = None
         for image_id in image_ids:
             if image_id not in existing_ids:
                 self.session.add(
@@ -61,13 +63,34 @@ class CollectionRepository:
                         sort_order=next_order,
                     )
                 )
+                if first_new is None:
+                    first_new = image_id
                 next_order += 1
         self.session.commit()
 
+        if first_new is not None:
+            collection = self.session.get(Collection, collection_id)
+            if collection and collection.cover_image_id is None:
+                collection.cover_image_id = first_new
+                self.session.add(collection)
+                self.session.commit()
+
     def remove_image(self, collection_id: UUID, image_id: UUID) -> None:
+        """Remove an image from a collection. If it was the cover, promote the next image."""
         row = self.session.get(CollectionImage, (collection_id, image_id))
         if row:
             self.session.delete(row)
+            self.session.commit()
+
+        collection = self.session.get(Collection, collection_id)
+        if collection and collection.cover_image_id == image_id:
+            remaining = self.session.exec(
+                select(CollectionImage)
+                .where(CollectionImage.collection_id == collection_id)
+                .order_by(CollectionImage.sort_order)
+            ).all()
+            collection.cover_image_id = remaining[0].image_id if remaining else None
+            self.session.add(collection)
             self.session.commit()
 
     def reorder(self, collection_id: UUID, image_ids: List[UUID]) -> None:

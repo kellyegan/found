@@ -50,6 +50,15 @@ def create_collection(
     return {"success": True, "data": CollectionRead.model_validate(col)}
 
 
+@router.get("/collections/{collection_id}", summary="Get collection")
+def get_collection(
+    collection_id: UUID, repo: CollectionRepository = Depends(_get_repo)
+):
+    """Retrieve a single collection by ID."""
+    col = _require_collection(collection_id, repo)
+    return {"success": True, "data": CollectionRead.model_validate(col)}
+
+
 @router.put("/collections/{collection_id}", summary="Update collection")
 def update_collection(
     collection_id: UUID,

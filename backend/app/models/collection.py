@@ -12,6 +12,7 @@ class Collection(SQLModel, table=True):
     created_date: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+    cover_image_id: Optional[UUID] = None
 
 
 class CollectionImage(SQLModel, table=True):

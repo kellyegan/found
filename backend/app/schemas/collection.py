@@ -20,6 +20,7 @@ class CollectionRead(BaseModel):
     name: str
     description: Optional[str]
     created_date: datetime
+    cover_image_id: Optional[UUID]
 
     model_config = {"from_attributes": True}
 
