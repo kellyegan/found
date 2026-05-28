@@ -65,3 +65,20 @@ class TagRepository:
         if row:
             self.session.delete(row)
             self.session.commit()
+
+    def bulk_tag_images(
+        self,
+        image_ids: List[UUID],
+        add_tag_ids: List[UUID],
+        remove_tag_ids: List[UUID],
+    ) -> None:
+        """Apply tag additions and removals to multiple images in a single transaction."""
+        for image_id in image_ids:
+            for tag_id in add_tag_ids:
+                if not self.session.get(ImageTag, (image_id, tag_id)):
+                    self.session.add(ImageTag(image_id=image_id, tag_id=tag_id))
+            for tag_id in remove_tag_ids:
+                row = self.session.get(ImageTag, (image_id, tag_id))
+                if row:
+                    self.session.delete(row)
+        self.session.commit()

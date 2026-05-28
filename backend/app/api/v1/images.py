@@ -11,6 +11,8 @@ from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
 from app.schemas.image import ImagePatch, ImageRead
 from app.schemas.job import ImportPreviewResponse, ImportRequest
+from app.schemas.tag import BulkTagRequest
+from app.repositories.tag_repository import TagRepository
 from app.services.image_service import ImageService
 from app.services.import_service import ImportService
 
@@ -23,6 +25,10 @@ def _get_service(session: Session = Depends(get_session)) -> ImageService:
 
 def _get_import_service(session: Session = Depends(get_session)) -> ImportService:
     return ImportService(session)
+
+
+def _get_tag_repo(session: Session = Depends(get_session)) -> TagRepository:
+    return TagRepository(session)
 
 
 @router.post("/images/import/preview", summary="Preview a bulk import")
@@ -50,6 +56,17 @@ def import_images(
     job = service.create_job(len(request.paths))
     background_tasks.add_task(service.process_import, job.id, request.paths)
     return {"success": True, "data": {"job_id": str(job.id)}}
+
+
+@router.post("/images/bulk/tags", summary="Bulk tag operations")
+def bulk_tag_images(
+    request: BulkTagRequest,
+    repo: TagRepository = Depends(_get_tag_repo),
+):
+    """Add and/or remove tags on multiple images in a single atomic operation.
+    Duplicate assignments and missing assignments are silently ignored."""
+    repo.bulk_tag_images(request.image_ids, request.add_tag_ids, request.remove_tag_ids)
+    return {"success": True, "data": None}
 
 
 @router.get("/images", summary="List images")

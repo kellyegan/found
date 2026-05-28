@@ -20,3 +20,9 @@ class TagRead(BaseModel):
 
 class ImageTagsRequest(BaseModel):
     tag_ids: list[UUID]
+
+
+class BulkTagRequest(BaseModel):
+    image_ids: list[UUID]
+    add_tag_ids: list[UUID] = []
+    remove_tag_ids: list[UUID] = []
