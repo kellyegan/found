@@ -66,6 +66,22 @@ backend/
 └── requirements-dev.txt
 ```
 
+## Development workflow
+
+### Test Driven Development
+
+This project uses TDD. Always write failing tests before writing implementation code:
+
+1. Write a test that captures the intended behaviour — confirm it fails for the right reason (missing feature, not a setup error)
+2. Write the minimum implementation to make it pass
+3. Run the full suite (`python -m pytest tests/ -v`) to confirm nothing regressed
+
+Tests use an in-memory SQLite engine. The `run_migrations` call in the app lifespan is patched out in `conftest.py`; schema is created directly via `SQLModel.metadata.create_all()`.
+
+### Git practices
+
+Commits should be small and focused — one logical change per commit. Prefer a commit per feature slice or bug fix rather than batching unrelated changes together. Write commit messages in the imperative mood that describe *why*, not just *what* (e.g. `Add import preview endpoint` rather than `Changed images.py`). Keep work-in-progress off `main`; use feature branches for anything non-trivial.
+
 ## Key conventions
 
 - All API routes live under `/api/v1`. The `/health` endpoint is root-level.
