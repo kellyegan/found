@@ -179,9 +179,9 @@ Return to same state
 
 ## 5. Core UI Views
 
-# 5.1 Splash Screen
+### 5.1 Splash Screen
 
-### Purpose
+#### Purpose
 
 Displayed while backend services initialize.
 
@@ -189,17 +189,17 @@ The splash screen occupies the full application window.
 
 ---
 
-### Components
+#### Components
 
-#### Title
+**Title**
 
 Centered horizontally and vertically.
 
-#### Version
+**Version**
 
 Displayed near bottom-left area.
 
-#### Status
+**Status**
 
 Centered near bottom area.
 
@@ -209,11 +209,11 @@ Displays:
 - retry status
 - backend errors
 
-#### License & Copyright
+**License & Copyright**
 
 Displayed near bottom-right area.
 
-#### Background Image
+**Background Image**
 
 Future enhancement:
 
@@ -222,28 +222,28 @@ Future enhancement:
 
 ---
 
-### Backend Failure Behavior
+#### Backend Failure Behavior
 
 If backend startup fails:
 
 - splash screen displays error message
-- automatic retry attempts occur
-- user may quit application manually
+- 2 automatic retry attempts occur, spaced 10 seconds apart
+- after retries are exhausted the error state is displayed
+- user may quit application manually at any point
 
 ---
 
-### User Flow
+#### User Flow
 
 1. Application launches
 2. Backend initializes
-3. Splash screen remains visible
-4. User clicks anywhere to continue once initialization succeeds
+3. Splash screen remains visible until the backend is ready and the user clicks to continue
 
 ---
 
-# 5.2 Library View
+### 5.2 Library View
 
-### Purpose
+#### Purpose
 
 Primary browsing interface for the image library.
 
@@ -251,7 +251,7 @@ This is the central workspace of the application.
 
 ---
 
-### Layout Structure
+#### Layout Structure
 
 ```text
 +--------------------------------------------------+
@@ -269,9 +269,7 @@ This is the central workspace of the application.
 
 ---
 
-### Components
-
-## Title Bar
+#### Title Bar
 
 Located at top-left.
 
@@ -283,7 +281,7 @@ Contains:
 
 ---
 
-## Filter Panel
+#### Filter Panel
 
 Located at top-right.
 
@@ -291,11 +289,11 @@ Contains:
 
 - category filtering
 - tag filtering
-- missing-image filtering (this is only visible when there are missing images)
+- missing-image filtering (only visible when there are missing images)
 
 ---
 
-## Sidebar Overlay
+#### Sidebar Overlay
 
 Collapsible overlay panel.
 
@@ -308,36 +306,27 @@ Contains:
 
 Collections are displayed alphabetically.
 
-Collections with no images may appear visually muted.
+Collections with no images appear visually muted.
 
 The sidebar is hidden while browsing a collection.
 
 ---
 
-## Thumbnail Grid
+#### Thumbnail Grid
 
 Primary browsing area.
 
-### Layout
+**Layout**
 
 - Uniform square thumbnail cells
 - Original image aspect ratio preserved
 - Letterboxing applied where necessary
 - Multi-row horizontal scrolling layout
-- Initial layout contains four rows
+- Row count derived from window height and a target thumbnail size of 180px:
+  `rowCount = max(2, round(viewportHeight / 180))`
+  `actualThumbnailSize = viewportHeight / rowCount`
 
-Example layout:
-
-```text
-[img][img][img][img] →
-[img][img][img][img] →
-[img][img][img][img] →
-[img][img][img][img] →
-```
-
----
-
-### Scrolling Behavior
+**Scrolling Behavior**
 
 Scrolling occurs horizontally from left to right.
 
@@ -348,9 +337,7 @@ Supported interactions:
 
 The grid must preserve scroll position during navigation.
 
----
-
-### Thumbnail Behavior
+**Thumbnail Loading**
 
 Thumbnails:
 
@@ -358,11 +345,11 @@ Thumbnails:
 - render virtually
 - request data incrementally
 
-Only visible thumbnails and nearby buffer thumbnails should render.
+QML tile objects are instantiated for the visible columns plus a ±3 column buffer.
+API data is prefetched 3 cursor pages (300 images) ahead of the visible right edge.
+A LRU thumbnail cache of ~500 entries is maintained in memory.
 
----
-
-### Missing Images
+**Missing Images**
 
 If source image no longer exists:
 
@@ -372,9 +359,7 @@ If source image no longer exists:
 
 Missing images can be filtered from the filter panel.
 
----
-
-### Failed Thumbnail Generation
+**Failed Thumbnail Generation**
 
 If thumbnail generation fails:
 
@@ -384,15 +369,13 @@ If thumbnail generation fails:
 
 ---
 
-## Information Panel
+#### Information Panel
 
 Located along bottom of window.
 
 Displays metadata for current selection.
 
-### Metadata Fields
-
-#### Read-only
+**Read-only fields**
 
 - filename
 - path
@@ -401,17 +384,23 @@ Displays metadata for current selection.
 - date added
 - missing state
 
-#### Editable
+**Editable fields**
 
 - tags
 - categories
 - collections
 
-Metadata editing supports bulk operations for multiple selected images.
+**Bulk editing behavior**
+
+When multiple images are selected, editable fields show the intersection of their metadata:
+
+- Items shared by all selected images appear with an (x) to remove from all.
+- Items held by some but not all images appear with a mixed/partial indicator. Clicking adds to all; clicking (x) removes from those that have it.
+- The add field works as normal and applies the addition to all selected images.
 
 ---
 
-### Empty Library State
+#### Empty Library State
 
 If no images exist:
 
@@ -424,11 +413,9 @@ DRAG AND DROP HERE TO ADD
 
 ---
 
-### User Flow
-
 #### Filtering
 
-### Categories
+**Categories**
 
 Category filters support:
 
@@ -436,27 +423,30 @@ Category filters support:
 - Off
 - Exclude
 
-Only one state active per category.
+Multiple category filters may be active simultaneously.
 
 ---
 
-### Tags
+**Tags**
 
-Users type into tag search field.
+Users type into the tag search field.
 
-Matching tags appear as suggestions.
+Matching tags appear as autocomplete suggestions.
 
-Filtering occurs only after selecting a tag suggestion.
+Selecting a suggestion adds that tag to the active filter list. Each active tag displays an (x) button to remove it from the list.
 
-Tag filters support:
+Filtering is applied only after selecting a suggestion, not while typing.
 
-- On
-- Off
+Each active tag filter supports:
+
+- On (include)
 - Exclude
 
+Multiple tag filters may be active simultaneously.
+
 ---
 
-### Collections
+**Collections**
 
 Clicking a collection:
 
@@ -470,9 +460,9 @@ Collections behave similarly to virtual subfolders.
 
 ---
 
-# 5.3 Image View
+### 5.3 Image View
 
-### Purpose
+#### Purpose
 
 Displays full-resolution image preview.
 
@@ -480,9 +470,7 @@ Supports image inspection and metadata editing.
 
 ---
 
-### Components
-
-## Title Bar
+#### Title Bar
 
 Contains:
 
@@ -491,7 +479,7 @@ Contains:
 
 ---
 
-## Image Display
+#### Image Display
 
 Centered in window.
 
@@ -503,7 +491,7 @@ Supports:
 
 ---
 
-## Information Panel
+#### Information Panel
 
 Located along bottom edge.
 
@@ -517,32 +505,28 @@ Supports:
 
 ---
 
-### Navigation
+#### Navigation
 
 Users can navigate:
 
 - previous image
 - next image
 
-Navigation remains constrained to current browsing context.
+Navigation remains constrained to the current browsing context (active filters, active collection, or active selection set).
 
-Examples:
-
-- current collection
-- current filtered results
-- current selection set
+If the adjacent image is within the already-loaded buffer, it is used directly. If it lies beyond the loaded buffer, the frontend fetches the next cursor page from the API before navigating.
 
 ---
 
-### Fullscreen Behavior
+#### Fullscreen Behavior
 
 Title bar and information panel may be hidden so image occupies entire window.
 
 ---
 
-# 5.4 Import Conflict Modal
+### 5.4 Import Conflict Modal
 
-### Purpose
+#### Purpose
 
 Allows users to review and resolve import conflicts before finalizing imports.
 
@@ -550,9 +534,7 @@ Imports may be initiated from any application view.
 
 ---
 
-### Components
-
-## Images Ready To Import
+#### Images Ready To Import
 
 Displays:
 
@@ -562,7 +544,7 @@ Displays:
 
 ---
 
-## Images Already In Library
+#### Images Already In Library
 
 Displays:
 
@@ -572,7 +554,7 @@ Displays:
 
 ---
 
-## Conflicts Section
+#### Conflicts Section
 
 Displays:
 
@@ -584,25 +566,27 @@ Existing path remains default selection.
 
 ---
 
-### Import Workflow
+#### Import Workflow
 
 1. User drags files/folders into application
 2. Frontend validates supported image types
-3. Frontend sends paths to backend
-4. Backend checks:
+3. Frontend sends paths to backend preview endpoint
+4. Backend returns categorized results:
    - supported file types
    - duplicates
    - conflicts
-5. Backend returns categorized results
-6. User resolves conflicts
-7. User confirms import or cancels
-8. Backend begins import job
-9. Success notification appears when import completes
-10. Library returns to temporary filtered state showing recently imported images
+5. Import modal opens showing:
+   - images ready to import
+   - images already in library (if any)
+   - conflicts section (only shown if conflicts exist)
+6. User resolves any conflicts, then confirms or cancels
+7. Backend begins import job
+8. Success notification appears when import completes
+9. Library returns to a temporary filtered state showing recently imported images
 
 ---
 
-### Import Jobs
+#### Import Jobs
 
 Each import job operates independently.
 
@@ -612,57 +596,61 @@ Imports may continue in background after initiation.
 
 ## 6. Shared Interaction Models
 
-# Selection Behavior
+### Selection Behavior
 
-### Single Click
+#### Single Click
 
 Select single image.
 
-### Ctrl/Cmd Click
+#### Ctrl/Cmd Click
 
 Toggle image selection.
 
-### Shift Click
+#### Shift Click
 
 Select range.
 
-### Double Click
+#### Double Click
 
 Open Image View.
 
-### Escape
+#### Escape
 
 Clear selection.
 
 ---
 
-# Drag & Drop Behavior
+### Drag & Drop Behavior
 
-### Supported Sources
+#### Supported Sources
 
 - External file manager
 - Thumbnail grid selections
 
----
-
-### Supported Targets
+#### Supported Targets
 
 - Collections
 - Main application window
 
----
+#### Collection Drag Behavior
 
-### Collection Drag Behavior
+Dragging images onto a collection in the sidebar:
 
-Dragging images onto collections:
-
-- adds images to collection
-- displays hover feedback
+- adds images to that collection
+- displays hover feedback on the collection target
 - may display insertion animation
 
+#### Main Window Drag Behavior
+
+Dragging files or folders from an external file manager onto the main window:
+
+- always triggers the import preview modal
+- the modal displays the categorized preview (ready to import, already in library, conflicts if any)
+- the user confirms or cancels before any import begins
+
 ---
 
-# Bulk Metadata Editing
+### Bulk Metadata Editing
 
 Multiple selected images support:
 
@@ -754,7 +742,7 @@ Requirements:
 
 - virtualized rendering
 - lazy thumbnail loading
-- incremental loading
+- incremental data prefetch (100 images per cursor page, 3 pages ahead)
 - smooth scrolling
 
 ---
@@ -773,12 +761,11 @@ The following operations must not freeze the UI:
 
 ### Window Resizing
 
-As window width increases:
+Row count is derived from window height and the target thumbnail size (180px).
 
-- additional thumbnails become visible
-- row count remains fixed
+As window width increases, additional thumbnail columns become visible.
 
-Future versions may support adjustable thumbnail sizing.
+Future versions may support user-adjustable thumbnail sizing.
 
 ---
 
