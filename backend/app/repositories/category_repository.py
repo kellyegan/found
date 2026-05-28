@@ -1,6 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 
+from sqlalchemy import case
 from sqlmodel import Session, select
 
 from app.models.category import Category, ImageCategory
@@ -23,6 +24,18 @@ class CategoryRepository:
 
     def list(self) -> List[Category]:
         return list(self.session.exec(select(Category)).all())
+
+    def search(self, q: str) -> List[Category]:
+        """Return categories whose names contain q (case-insensitive).
+        Prefix matches are returned before mid-word matches; alphabetical within each group."""
+        priority = case((Category.name.ilike(f"{q}%"), 0), else_=1)
+        return list(
+            self.session.exec(
+                select(Category)
+                .where(Category.name.ilike(f"%{q}%"))
+                .order_by(priority, Category.name)
+            ).all()
+        )
 
     def update(self, category: Category) -> Category:
         self.session.add(category)

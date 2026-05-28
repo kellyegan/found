@@ -46,6 +46,14 @@ def create_category(data: CategoryCreate, repo: CategoryRepository = Depends(_ge
     return {"success": True, "data": CategoryRead.model_validate(category)}
 
 
+@router.get("/categories/search", summary="Search categories")
+def search_categories(q: str = "", repo: CategoryRepository = Depends(_get_repo)):
+    """Return categories whose names contain q (case-insensitive).
+    Prefix matches are returned before mid-word matches; alphabetical within each group.
+    An empty q returns all categories. Designed for autocomplete use."""
+    return {"success": True, "data": [CategoryRead.model_validate(c) for c in repo.search(q)]}
+
+
 @router.put("/categories/{category_id}", summary="Update category")
 def update_category(
     category_id: UUID,
