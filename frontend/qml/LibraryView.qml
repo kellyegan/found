@@ -4,6 +4,9 @@ Item {
     id: root
 
     property string loadingState: "Loading"
+    property var gridModel: null
+
+    signal loadMoreRequested()
 
     // Loading
     Text {
@@ -39,10 +42,12 @@ Item {
         }
     }
 
-    // Library grid stub — replaced in future commit
-    Item {
+    // Thumbnail grid
+    ThumbnailGrid {
         anchors.fill: parent
         visible: root.loadingState === "Ready"
+        model: root.gridModel
+        onLoadMoreRequested: root.loadMoreRequested()
     }
 
     // Error

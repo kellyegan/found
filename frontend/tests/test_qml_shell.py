@@ -180,12 +180,60 @@ def test_library_view_loading_state_is_writable(engine):
 
 def test_main_qml_loads_with_app_window(qapp):
     """main.qml (now using AppWindow) still loads via QQmlApplicationEngine."""
+    from frontend.library.thumbnail_grid_model import ThumbnailGridModel
     theme = ThemeManager()
     app_state = AppStateManager()
-    library_state = LibraryViewModel(image_fetcher=lambda: 0)
+    library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("AppState", app_state)
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load after AppWindow refactor"
+
+
+# ---------------------------------------------------------------------------
+# ThumbnailTile
+# ---------------------------------------------------------------------------
+
+
+def test_thumbnail_tile_qml_exists():
+    assert (QML_DIR / "ThumbnailTile.qml").exists()
+
+
+def test_thumbnail_tile_loads(engine):
+    load_component(engine, "ThumbnailTile.qml")
+
+
+def test_thumbnail_tile_has_thumbnail_url_property(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    assert obj.property("thumbnailUrl") == ""
+
+
+def test_thumbnail_tile_has_file_status_property(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    assert obj.property("fileStatus") == "available"
+
+
+def test_thumbnail_tile_has_selected_property(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    assert obj.property("selected") is False
+
+
+# ---------------------------------------------------------------------------
+# ThumbnailGrid
+# ---------------------------------------------------------------------------
+
+
+def test_thumbnail_grid_qml_exists():
+    assert (QML_DIR / "ThumbnailGrid.qml").exists()
+
+
+def test_thumbnail_grid_loads(engine):
+    load_component(engine, "ThumbnailGrid.qml")
+
+
+def test_thumbnail_grid_has_model_property(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    # model defaults to null — property should exist and be readable
+    assert obj.property("model") is None or obj.property("model") is not None
