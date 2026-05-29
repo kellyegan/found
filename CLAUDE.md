@@ -22,7 +22,14 @@ pyenv activate found_env
 Install dependencies:
 
 ```
+make setup
+```
+
+Or install individual components:
+
+```
 pip install -r backend/requirements-dev.txt
+pip install -r frontend/requirements-dev.txt
 ```
 
 ## Commands

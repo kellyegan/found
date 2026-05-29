@@ -880,11 +880,12 @@ Error:
 ```text
 found/                          ← project root
 │
-├── requirements.txt
-├── requirements-dev.txt
 ├── pyproject.toml
 │
 └── backend/
+    │
+    ├── requirements.txt
+    ├── requirements-dev.txt
     │
     ├── app/
     │   │
