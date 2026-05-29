@@ -29,13 +29,10 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
 
         delegate: ThumbnailTile {
-            required property string thumbnailUrl
-            required property string fileStatus
-
             width: grid.cellWidth
             height: grid.cellHeight
-            thumbnailUrl: thumbnailUrl
-            fileStatus: fileStatus
+            thumbnailUrl: model.thumbnailUrl ?? ""
+            fileStatus: model.fileStatus ?? "available"
         }
 
         // Trigger incremental load when right edge of content is within 3 viewport-widths
