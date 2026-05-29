@@ -31,8 +31,24 @@ Item {
         delegate: ThumbnailTile {
             width: grid.cellWidth
             height: grid.cellHeight
+            imageId: model.imageId ?? ""
             thumbnailUrl: model.thumbnailUrl ?? ""
             fileStatus: model.fileStatus ?? "available"
+            selected: {
+                var _rev = SelectionManager.selectionRevision
+                return SelectionManager.isSelected(model.imageId ?? "")
+            }
+            onTileClicked: function(id, mods) {
+                if (mods & Qt.ControlModifier)
+                    SelectionManager.toggle(id)
+                else if (mods & Qt.ShiftModifier)
+                    SelectionManager.extendTo(id, root.model ? root.model.allIds : [])
+                else
+                    SelectionManager.select(id)
+            }
+            onTileDoubleClicked: function(id) {
+                SelectionManager.requestOpen(id)
+            }
         }
 
         // Trigger incremental load when right edge of content is within 3 viewport-widths

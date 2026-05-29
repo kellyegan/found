@@ -11,6 +11,8 @@ Covers:
 - LibraryView exposes loadingState (str) property, defaulting to "Loading"
 - AppWindow loads as a top-level window component
 - main.qml still loads cleanly after being updated to use AppWindow
+- ThumbnailTile exposes imageId, tileClicked/tileDoubleClicked signals
+- ThumbnailGrid loads with SelectionManager registered as context property
 """
 
 import pytest
@@ -22,6 +24,7 @@ import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
 from frontend.library.view_model import LibraryViewModel
+from frontend.selection.selection_manager import SelectionManager
 
 QML_DIR = Path(frontend.__file__).parent / "qml"
 
@@ -33,13 +36,14 @@ QML_DIR = Path(frontend.__file__).parent / "qml"
 
 @pytest.fixture
 def engine(qapp):
-    """QQmlEngine with Theme registered. Holds a Python ref to ThemeManager so
-    it is not garbage-collected while the fixture is active."""
+    """QQmlEngine with Theme and SelectionManager registered."""
     theme = ThemeManager()
+    selection = SelectionManager()
     e = QQmlEngine()
     e.rootContext().setContextProperty("Theme", theme)
-    # Attach theme to engine so Qt's ownership tree keeps it alive alongside e.
+    e.rootContext().setContextProperty("SelectionManager", selection)
     theme.setParent(e)
+    selection.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -218,6 +222,17 @@ def test_thumbnail_tile_has_file_status_property(engine):
 def test_thumbnail_tile_has_selected_property(engine):
     obj = load_component(engine, "ThumbnailTile.qml")
     assert obj.property("selected") is False
+
+
+def test_thumbnail_tile_has_image_id_property(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    assert obj.property("imageId") == ""
+
+
+def test_thumbnail_tile_image_id_is_writable(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    obj.setProperty("imageId", "test-uuid-123")
+    assert obj.property("imageId") == "test-uuid-123"
 
 
 # ---------------------------------------------------------------------------

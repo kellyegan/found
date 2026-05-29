@@ -3,9 +3,13 @@ import QtQuick
 Item {
     id: root
 
+    property string imageId: ""
     property string thumbnailUrl: ""
     property string fileStatus: "available"
     property bool selected: false
+
+    signal tileClicked(string imageId, int modifiers)
+    signal tileDoubleClicked(string imageId)
 
     Rectangle {
         anchors.fill: parent
@@ -70,6 +74,17 @@ Item {
             color: "transparent"
             border.color: Theme.accent
             border.width: root.selected ? 2 : 0
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.LeftButton
+            onClicked: function(mouse) {
+                root.tileClicked(root.imageId, mouse.modifiers)
+            }
+            onDoubleClicked: function(mouse) {
+                root.tileDoubleClicked(root.imageId)
+            }
         }
     }
 }
