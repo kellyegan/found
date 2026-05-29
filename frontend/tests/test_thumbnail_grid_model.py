@@ -204,3 +204,33 @@ def test_count_changed_signal_fires_after_clear(qapp):
     model.countChanged.connect(received.append)
     model.clear()
     assert 0 in received
+
+
+# ---------------------------------------------------------------------------
+# allIds
+# ---------------------------------------------------------------------------
+
+
+def test_all_ids_initially_empty(qapp):
+    model = ThumbnailGridModel()
+    assert model.allIds == []
+
+
+def test_all_ids_returns_ids_in_order(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert model.allIds == ["aaaa-1111", "bbbb-2222"]
+
+
+def test_all_ids_updates_after_second_page(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, "tok", True)
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert model.allIds == ["aaaa-1111", "bbbb-2222", "aaaa-1111", "bbbb-2222"]
+
+
+def test_all_ids_empty_after_clear(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    model.clear()
+    assert model.allIds == []

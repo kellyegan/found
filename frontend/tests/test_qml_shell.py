@@ -11,6 +11,8 @@ Covers:
 - LibraryView exposes loadingState (str) property, defaulting to "Loading"
 - AppWindow loads as a top-level window component
 - main.qml still loads cleanly after being updated to use AppWindow
+- ThumbnailTile exposes imageId, tileClicked/tileDoubleClicked signals
+- ThumbnailGrid loads with SelectionManager registered as context property
 """
 
 import pytest
@@ -22,6 +24,7 @@ import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
 from frontend.library.view_model import LibraryViewModel
+from frontend.selection.selection_manager import SelectionManager
 
 QML_DIR = Path(frontend.__file__).parent / "qml"
 
@@ -33,13 +36,14 @@ QML_DIR = Path(frontend.__file__).parent / "qml"
 
 @pytest.fixture
 def engine(qapp):
-    """QQmlEngine with Theme registered. Holds a Python ref to ThemeManager so
-    it is not garbage-collected while the fixture is active."""
+    """QQmlEngine with Theme and SelectionManager registered."""
     theme = ThemeManager()
+    selection = SelectionManager()
     e = QQmlEngine()
     e.rootContext().setContextProperty("Theme", theme)
-    # Attach theme to engine so Qt's ownership tree keeps it alive alongside e.
+    e.rootContext().setContextProperty("SelectionManager", selection)
     theme.setParent(e)
+    selection.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -179,17 +183,18 @@ def test_library_view_loading_state_is_writable(engine):
 
 
 def test_main_qml_loads_with_app_window(qapp):
-    """main.qml (now using AppWindow) still loads via QQmlApplicationEngine."""
-    from frontend.library.thumbnail_grid_model import ThumbnailGridModel
+    """main.qml loads cleanly with all required context properties registered."""
     theme = ThemeManager()
     app_state = AppStateManager()
     library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("AppState", app_state)
     e.rootContext().setContextProperty("LibraryState", library_state)
+    e.rootContext().setContextProperty("SelectionManager", selection)
     e.load(str(QML_DIR / "main.qml"))
-    assert e.rootObjects(), "main.qml failed to load after AppWindow refactor"
+    assert e.rootObjects(), "main.qml failed to load"
 
 
 # ---------------------------------------------------------------------------
@@ -218,6 +223,17 @@ def test_thumbnail_tile_has_file_status_property(engine):
 def test_thumbnail_tile_has_selected_property(engine):
     obj = load_component(engine, "ThumbnailTile.qml")
     assert obj.property("selected") is False
+
+
+def test_thumbnail_tile_has_image_id_property(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    assert obj.property("imageId") == ""
+
+
+def test_thumbnail_tile_image_id_is_writable(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    obj.setProperty("imageId", "test-uuid-123")
+    assert obj.property("imageId") == "test-uuid-123"
 
 
 # ---------------------------------------------------------------------------

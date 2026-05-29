@@ -76,3 +76,7 @@ class ThumbnailGridModel(QAbstractListModel):
     @Property(str)
     def cursor(self) -> str:
         return self._cursor or ""
+
+    @Property(list, notify=countChanged)
+    def allIds(self) -> list:
+        return [item["id"] for item in self._items]
