@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtQml import QJSValue
 
 
 @dataclass
@@ -78,8 +79,10 @@ class NavigationManager(QObject):
     # ------------------------------------------------------------------
 
     @Slot(str, "QVariant")
-    def push(self, view: str, params: dict = None) -> None:
+    def push(self, view: str, params=None) -> None:
         self._stack.append(self._current)
+        if isinstance(params, QJSValue):
+            params = params.toVariant()
         params = params or {}
         self._current = NavigationEntry(
             view=view,
@@ -134,8 +137,10 @@ class NavigationManager(QObject):
     def updateScrollX(self, x: float) -> None:
         self._current.scroll_x = x
 
-    @Slot(list, str, str)
-    def saveSelection(self, selection_ids: list, primary_id: str, anchor_id: str) -> None:
-        self._current.selection_ids = list(selection_ids)
+    @Slot("QVariant", str, str)
+    def saveSelection(self, selection_ids, primary_id: str, anchor_id: str) -> None:
+        if isinstance(selection_ids, QJSValue):
+            selection_ids = selection_ids.toVariant() or []
+        self._current.selection_ids = list(selection_ids or [])
         self._current.primary_id = primary_id
         self._current.anchor_id = anchor_id
