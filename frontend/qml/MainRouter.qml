@@ -228,6 +228,7 @@ Item {
             importedCount: ImportState.importedCount
             skippedCount: ImportState.skippedCount
             errorCount: ImportState.errorCount
+            progress: ImportState.progress
 
             onConfirmed: ImportState.executeImport()
             onCancelled: ImportState.cancel()

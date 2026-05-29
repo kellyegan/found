@@ -11,6 +11,7 @@ Item {
     property int importedCount: 0
     property int skippedCount: 0
     property int errorCount: 0
+    property double progress: 0.0
 
     signal confirmed()
     signal cancelled()
@@ -179,14 +180,39 @@ Item {
         // ── Importing ─────────────────────────────────────────────────
         Column {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: 16
             visible: root.loadingState === "Importing"
+            width: parent.width - 80
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Importing…"
                 color: "#cccccc"
                 font.pixelSize: 15
+            }
+
+            // Progress track
+            Rectangle {
+                width: parent.width
+                height: 4
+                radius: 2
+                color: "#333333"
+
+                Rectangle {
+                    width: parent.width * root.progress
+                    height: parent.height
+                    radius: parent.radius
+                    color: "#88cc88"
+
+                    Behavior on width { NumberAnimation { duration: 200 } }
+                }
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: Math.round(root.progress * 100) + "%"
+                color: "#666666"
+                font.pixelSize: 12
             }
         }
 

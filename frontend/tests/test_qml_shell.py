@@ -570,3 +570,18 @@ def test_import_panel_has_cancelled_signal(engine):
     received = []
     obj.cancelled.connect(lambda: received.append(1))
     assert isinstance(received, list)
+
+
+# ImportPanel progress — Slice 9 Commit 4A
+# ---------------------------------------------------------------------------
+
+
+def test_import_panel_progress_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("progress") == 0.0
+
+
+def test_import_panel_progress_is_writable(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    obj.setProperty("progress", 0.5)
+    assert obj.property("progress") == 0.5
