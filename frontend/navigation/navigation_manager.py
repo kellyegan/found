@@ -44,6 +44,22 @@ class NavigationManager(QObject):
     def canGoBack(self) -> bool:
         return len(self._stack) > 0
 
+    @Property(bool, notify=navigationChanged)
+    def hasNext(self) -> bool:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return False
+        return ids.index(img) < len(ids) - 1
+
+    @Property(bool, notify=navigationChanged)
+    def hasPrev(self) -> bool:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return False
+        return ids.index(img) > 0
+
     @Property(str, notify=navigationChanged)
     def currentView(self) -> str:
         return self._current.view
@@ -74,6 +90,28 @@ class NavigationManager(QObject):
             return
         self._current = self._stack.pop()
         self.navigationChanged.emit()
+
+    @Slot()
+    def goNext(self) -> None:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return
+        idx = ids.index(img)
+        if idx < len(ids) - 1:
+            self._current.image_id = ids[idx + 1]
+            self.navigationChanged.emit()
+
+    @Slot()
+    def goPrev(self) -> None:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return
+        idx = ids.index(img)
+        if idx > 0:
+            self._current.image_id = ids[idx - 1]
+            self.navigationChanged.emit()
 
     @Slot(float)
     def updateScrollX(self, x: float) -> None:

@@ -333,3 +333,13 @@ def test_image_view_filename_defaults_to_empty(engine):
 def test_image_view_file_status_defaults_to_available(engine):
     obj = load_component(engine, "ImageView.qml")
     assert obj.property("fileStatus") == "available"
+
+
+def test_image_view_has_next_defaults_to_false(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("hasNext") is False
+
+
+def test_image_view_has_prev_defaults_to_false(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("hasPrev") is False

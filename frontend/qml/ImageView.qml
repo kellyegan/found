@@ -7,6 +7,19 @@ Item {
     property string imageUrl: ""
     property string filename: ""
     property string fileStatus: "available"
+    property bool hasNext: false
+    property bool hasPrev: false
+
+    // Arrow key navigation — Left/Right advance through context
+    Shortcut {
+        sequence: "Right"
+        onActivated: if (root.hasNext) NavigationManager.goNext()
+    }
+
+    Shortcut {
+        sequence: "Left"
+        onActivated: if (root.hasPrev) NavigationManager.goPrev()
+    }
 
     Rectangle {
         anchors.fill: parent

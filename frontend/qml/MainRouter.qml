@@ -94,6 +94,8 @@ Item {
                            ? baseUrl + "/api/v1/images/" + NavigationManager.currentEntry.image_id + "/file"
                            : ""
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
+            hasNext: NavigationManager.hasNext
+            hasPrev: NavigationManager.hasPrev
         }
     }
 }
