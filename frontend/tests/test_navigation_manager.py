@@ -76,6 +76,11 @@ def test_initial_entry_image_id_is_none(qapp):
     assert entry["image_id"] is None
 
 
+def test_initial_entry_context_ids_empty(qapp):
+    entry = _nm().currentEntry
+    assert entry["context_ids"] == []
+
+
 # ---------------------------------------------------------------------------
 # push()
 # ---------------------------------------------------------------------------
@@ -117,6 +122,19 @@ def test_push_stacks_multiple_views(qapp):
     nm.push("image", {"image_id": "img-1"})
     assert nm.currentView == "image"
     assert nm.canGoBack is True
+
+
+def test_push_carries_context_ids_into_entry(qapp):
+    nm = _nm()
+    ids = ["a", "b", "c"]
+    nm.push("image", {"image_id": "b", "context_ids": ids})
+    assert nm.currentEntry["context_ids"] == ids
+
+
+def test_push_context_ids_default_empty(qapp):
+    nm = _nm()
+    nm.push("image", {"image_id": "x"})
+    assert nm.currentEntry["context_ids"] == []
 
 
 # ---------------------------------------------------------------------------

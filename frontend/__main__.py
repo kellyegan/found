@@ -70,6 +70,7 @@ def main():
     engine.rootContext().setContextProperty("LibraryState", library_state)
     engine.rootContext().setContextProperty("SelectionManager", selection_manager)
     engine.rootContext().setContextProperty("NavigationManager", navigation_manager)
+    engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"
     engine.load(str(qml_path))

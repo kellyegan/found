@@ -13,6 +13,7 @@ class NavigationEntry:
     selection_ids: list = field(default_factory=list)
     primary_id: str = ""
     anchor_id: str = ""
+    context_ids: list = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return {
@@ -23,6 +24,7 @@ class NavigationEntry:
             "selection_ids": list(self.selection_ids),
             "primary_id": self.primary_id,
             "anchor_id": self.anchor_id,
+            "context_ids": list(self.context_ids),
         }
 
 
@@ -62,6 +64,7 @@ class NavigationManager(QObject):
             view=view,
             image_id=params.get("image_id"),
             collection_id=params.get("collection_id"),
+            context_ids=list(params.get("context_ids") or []),
         )
         self.navigationChanged.emit()
 
