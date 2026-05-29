@@ -222,6 +222,7 @@ Item {
             z: 30
             loadingState: ImportState.loadingState
             pendingFiles: ImportState.pendingFiles
+            conflictFiles: ImportState.conflictFiles
             duplicateCount: ImportState.duplicateFiles.length
             conflictCount: ImportState.conflictFiles.length
             invalidCount: ImportState.invalidFiles.length
@@ -232,6 +233,9 @@ Item {
 
             onConfirmed: ImportState.executeImport()
             onCancelled: ImportState.cancel()
+            onConflictChoiceChanged: function(path, choice) {
+                ImportState.setConflictChoice(path, choice)
+            }
         }
     }
 }

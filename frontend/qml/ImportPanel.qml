@@ -5,6 +5,7 @@ Item {
 
     property string loadingState: "Idle"
     property var pendingFiles: []
+    property var conflictFiles: []
     property int duplicateCount: 0
     property int conflictCount: 0
     property int invalidCount: 0
@@ -15,6 +16,7 @@ Item {
 
     signal confirmed()
     signal cancelled()
+    signal conflictChoiceChanged(string path, string choice)
 
     visible: loadingState !== "Idle"
 
@@ -75,17 +77,17 @@ Item {
 
             // Summary chips
             Row {
+                id: chipsRow
                 anchors { top: previewTitle.bottom; left: parent.left; topMargin: 10 }
                 spacing: 8
 
                 Repeater {
                     model: [
-                        { label: root.duplicateCount + " duplicate" + (root.duplicateCount === 1 ? "" : "s"), visible: root.duplicateCount > 0, color: "#555555" },
-                        { label: root.conflictCount + " conflict" + (root.conflictCount === 1 ? "" : "s"), visible: root.conflictCount > 0, color: "#885500" },
-                        { label: root.invalidCount + " unsupported", visible: root.invalidCount > 0, color: "#663333" },
+                        { label: root.duplicateCount + " duplicate" + (root.duplicateCount === 1 ? "" : "s"), show: root.duplicateCount > 0, color: "#555555" },
+                        { label: root.invalidCount + " unsupported", show: root.invalidCount > 0, color: "#663333" },
                     ]
                     delegate: Rectangle {
-                        visible: modelData.visible
+                        visible: modelData.show
                         height: 22
                         width: chipLabel.width + 16
                         radius: 11
@@ -102,9 +104,11 @@ Item {
                 }
             }
 
-            // Scrollable file list
+            // New files list (only shown when no conflicts need resolving)
             Rectangle {
-                anchors { top: parent.top; topMargin: 56; left: parent.left; right: parent.right; bottom: buttonRow.top; bottomMargin: 12 }
+                id: newFilesList
+                anchors { top: chipsRow.bottom; topMargin: 8; left: parent.left; right: parent.right; bottom: buttonRow.top; bottomMargin: 12 }
+                visible: root.conflictFiles.length === 0
                 color: "#141414"
                 radius: 4
 
@@ -121,6 +125,126 @@ Item {
                         color: "#888888"
                         font.pixelSize: 11
                         elide: Text.ElideRight
+                    }
+                }
+            }
+
+            // Conflict resolution list
+            Column {
+                anchors { top: chipsRow.bottom; topMargin: 8; left: parent.left; right: parent.right; bottom: buttonRow.top; bottomMargin: 12 }
+                visible: root.conflictFiles.length > 0
+                spacing: 0
+
+                Text {
+                    width: parent.width
+                    text: root.conflictFiles.length + " conflict" + (root.conflictFiles.length === 1 ? "" : "s") + " — choose how to handle each:"
+                    color: "#ccaa44"
+                    font.pixelSize: 12
+                    bottomPadding: 8
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: parent.height - 28
+                    color: "#141414"
+                    radius: 4
+
+                    ListView {
+                        anchors { fill: parent; margins: 8 }
+                        clip: true
+                        model: root.conflictFiles
+                        spacing: 8
+
+                        delegate: Item {
+                            id: conflictDelegate
+                            width: parent ? parent.width : 0
+                            height: conflictContent.implicitHeight + 4
+
+                            property string currentChoice: "keep"
+                            property string conflictPath: modelData.path || ""
+
+                            Column {
+                                id: conflictContent
+                                width: parent.width
+                                spacing: 2
+
+                                Text {
+                                    width: parent.width
+                                    text: {
+                                        var parts = conflictDelegate.conflictPath.split("/")
+                                        return parts[parts.length - 1]
+                                    }
+                                    color: "#cccccc"
+                                    font.pixelSize: 11
+                                    elide: Text.ElideRight
+                                }
+
+                                Text {
+                                    width: parent.width
+                                    text: "Existing: " + (modelData.existing_filename || "")
+                                    color: "#666666"
+                                    font.pixelSize: 10
+                                    elide: Text.ElideRight
+                                }
+
+                                Row {
+                                    spacing: 6
+                                    topPadding: 2
+
+                                    Rectangle {
+                                        height: 20
+                                        width: keepLabel.implicitWidth + 14
+                                        radius: 10
+                                        color: conflictDelegate.currentChoice === "keep" ? "#885500" : "#2a2a2a"
+                                        border.color: conflictDelegate.currentChoice === "keep" ? "#cc8800" : "#444444"
+                                        border.width: 1
+
+                                        Text {
+                                            id: keepLabel
+                                            anchors.centerIn: parent
+                                            text: "Keep existing"
+                                            color: conflictDelegate.currentChoice === "keep" ? "#ffcc66" : "#888888"
+                                            font.pixelSize: 10
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                conflictDelegate.currentChoice = "keep"
+                                                root.conflictChoiceChanged(conflictDelegate.conflictPath, "keep")
+                                            }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        height: 20
+                                        width: updateLabel.implicitWidth + 14
+                                        radius: 10
+                                        color: conflictDelegate.currentChoice === "update" ? "#885500" : "#2a2a2a"
+                                        border.color: conflictDelegate.currentChoice === "update" ? "#cc8800" : "#444444"
+                                        border.width: 1
+
+                                        Text {
+                                            id: updateLabel
+                                            anchors.centerIn: parent
+                                            text: "Update path"
+                                            color: conflictDelegate.currentChoice === "update" ? "#ffcc66" : "#888888"
+                                            font.pixelSize: 10
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                conflictDelegate.currentChoice = "update"
+                                                root.conflictChoiceChanged(conflictDelegate.conflictPath, "update")
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

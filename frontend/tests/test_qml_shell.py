@@ -585,3 +585,35 @@ def test_import_panel_progress_is_writable(engine):
     obj = load_component(engine, "ImportPanel.qml")
     obj.setProperty("progress", 0.5)
     assert obj.property("progress") == 0.5
+
+
+# ImportPanel conflict UI — Slice 9 Commit 4C
+# ---------------------------------------------------------------------------
+
+
+def test_import_panel_conflict_files_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "ImportPanel.qml")
+    val = obj.property("conflictFiles")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == []
+
+
+def test_import_panel_conflict_files_is_writable(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    sample = [{"path": "/a.jpg", "existing_image_id": "uuid-1",
+               "existing_path": "/old/a.jpg", "existing_filename": "a.jpg"}]
+    obj.setProperty("conflictFiles", sample)
+    from PySide6.QtQml import QJSValue
+    val = obj.property("conflictFiles")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert len(val) == 1
+
+
+def test_import_panel_has_conflict_choice_changed_signal(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    received = []
+    obj.conflictChoiceChanged.connect(lambda path, choice: received.append((path, choice)))
+    assert isinstance(received, list)

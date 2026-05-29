@@ -103,6 +103,20 @@ def _make_job_fetcher(base_url: str):
     return fetch
 
 
+def _make_conflict_resolver(base_url: str):
+    def resolve(image_id: str, new_path: str) -> bool:
+        try:
+            response = httpx.patch(
+                f"{base_url}/api/v1/images/{image_id}",
+                json={"path": new_path},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return resolve
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None):
         try:
@@ -151,6 +165,7 @@ def main():
         scanner=_make_scanner(base_url),
         importer=_make_importer(base_url),
         job_fetcher=_make_job_fetcher(base_url),
+        conflict_resolver=_make_conflict_resolver(base_url),
     )
 
     controller = AppController(
