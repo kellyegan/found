@@ -343,3 +343,18 @@ def test_image_view_has_next_defaults_to_false(engine):
 def test_image_view_has_prev_defaults_to_false(engine):
     obj = load_component(engine, "ImageView.qml")
     assert obj.property("hasPrev") is False
+
+
+def test_image_view_zoom_level_defaults_to_one(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("zoomLevel") == 1.0
+
+
+def test_image_view_pan_offset_x_defaults_to_zero(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("panOffsetX") == 0.0
+
+
+def test_image_view_pan_offset_y_defaults_to_zero(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("panOffsetY") == 0.0
