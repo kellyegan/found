@@ -261,6 +261,11 @@ def test_thumbnail_grid_has_model_property(engine):
     assert obj.property("model") is None or obj.property("model") is not None
 
 
+def test_thumbnail_grid_has_scroll_x_property(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    assert obj.property("scrollX") == 0.0
+
+
 # ---------------------------------------------------------------------------
 # NavigationBar
 # ---------------------------------------------------------------------------

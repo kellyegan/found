@@ -275,3 +275,100 @@ def test_request_open_emits_open_requested(qapp):
     sm.openRequested.connect(received.append)
     sm.requestOpen("img-123")
     assert received == ["img-123"]
+
+
+# ---------------------------------------------------------------------------
+# restore()
+# ---------------------------------------------------------------------------
+
+
+def test_restore_sets_selection(qapp):
+    sm = _sm()
+    sm.restore(["a", "b"], "b", "a")
+    assert sm.isSelected("a")
+    assert sm.isSelected("b")
+    assert sm.selectionCount == 2
+
+
+def test_restore_sets_primary_id(qapp):
+    sm = _sm()
+    sm.restore(["a", "b"], "b", "a")
+    assert sm.primaryId == "b"
+
+
+def test_restore_clears_previous_selection(qapp):
+    sm = _sm()
+    sm.select("c")
+    sm.restore(["a", "b"], "b", "a")
+    assert not sm.isSelected("c")
+
+
+def test_restore_fires_selection_changed(qapp):
+    sm = _sm()
+    received = []
+    sm.selectionChanged.connect(lambda: received.append(1))
+    sm.restore(["a"], "a", "a")
+    assert received
+
+
+def test_restore_empty_list_clears_selection(qapp):
+    sm = _sm()
+    sm.select("a")
+    sm.restore([], "", "")
+    assert sm.selectionCount == 0
+    assert sm.primaryId == ""
+
+
+# ---------------------------------------------------------------------------
+# selectedIds / anchorId properties
+# ---------------------------------------------------------------------------
+
+
+def test_selected_ids_initially_empty(qapp):
+    assert _sm().selectedIds == []
+
+
+def test_selected_ids_contains_selected(qapp):
+    sm = _sm()
+    sm.select("a")
+    assert "a" in sm.selectedIds
+    assert len(sm.selectedIds) == 1
+
+
+def test_selected_ids_reflects_multi_select(qapp):
+    sm = _sm()
+    sm.select("a")
+    sm.toggle("b")
+    assert set(sm.selectedIds) == {"a", "b"}
+
+
+def test_selected_ids_empty_after_clear(qapp):
+    sm = _sm()
+    sm.select("a")
+    sm.clear()
+    assert sm.selectedIds == []
+
+
+def test_anchor_id_initially_empty(qapp):
+    assert _sm().anchorId == ""
+
+
+def test_anchor_id_set_on_select(qapp):
+    sm = _sm()
+    sm.select("b")
+    assert sm.anchorId == "b"
+
+
+def test_anchor_id_set_on_toggle_add(qapp):
+    sm = _sm()
+    sm.select("a")
+    sm.toggle("b")
+    assert sm.anchorId == "b"
+
+
+def test_anchor_id_unchanged_on_toggle_remove(qapp):
+    sm = _sm()
+    sm.select("a")
+    sm.toggle("b")
+    sm.toggle("b")  # remove b — anchor stays at b from the add
+    assert sm.anchorId == "b"

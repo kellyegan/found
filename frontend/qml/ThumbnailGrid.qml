@@ -5,8 +5,13 @@ Item {
 
     property var model: null
     property int targetThumbnailSize: 180
+    readonly property real scrollX: grid.contentX
 
     signal loadMoreRequested()
+
+    function scrollToX(x) {
+        grid.contentX = x
+    }
 
     GridView {
         id: grid

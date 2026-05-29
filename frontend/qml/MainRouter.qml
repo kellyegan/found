@@ -39,11 +39,41 @@ Item {
 
         // Library view
         LibraryView {
+            id: libraryView
             anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
             onLoadMoreRequested: LibraryState.load_more()
+        }
+
+        // Restore selection + scroll when navigating back to library
+        Connections {
+            target: NavigationManager
+            function onNavigationChanged() {
+                if (NavigationManager.currentView === "library") {
+                    var entry = NavigationManager.currentEntry
+                    SelectionManager.restore(
+                        entry.selection_ids,
+                        entry.primary_id,
+                        entry.anchor_id
+                    )
+                    libraryView.scrollToX(entry.scroll_x)
+                }
+            }
+        }
+
+        // Double-click on an image: save state and push image view
+        Connections {
+            target: SelectionManager
+            function onOpenRequested(imageId) {
+                NavigationManager.saveSelection(
+                    SelectionManager.selectedIds,
+                    SelectionManager.primaryId,
+                    SelectionManager.anchorId
+                )
+                NavigationManager.push("image", {"image_id": imageId})
+            }
         }
 
         // Placeholder — Collection view (Slice 8)

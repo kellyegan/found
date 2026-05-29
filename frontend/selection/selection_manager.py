@@ -28,6 +28,14 @@ class SelectionManager(QObject):
     def primaryId(self) -> str:
         return self._primary
 
+    @Property(str, notify=selectionChanged)
+    def anchorId(self) -> str:
+        return self._anchor
+
+    @Property(list, notify=selectionChanged)
+    def selectedIds(self) -> list:
+        return list(self._selected)
+
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
@@ -85,6 +93,14 @@ class SelectionManager(QObject):
     @Slot(str)
     def requestOpen(self, image_id: str) -> None:
         self.openRequested.emit(image_id)
+
+    @Slot(list, str, str)
+    def restore(self, selection_ids: list, primary_id: str, anchor_id: str) -> None:
+        self._selected = set(selection_ids)
+        self._primary = primary_id
+        self._anchor = anchor_id
+        self._bump()
+
 
     # ------------------------------------------------------------------
     # Internal
