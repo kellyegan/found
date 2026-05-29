@@ -368,3 +368,31 @@ def test_cancel_from_complete_resets_to_idle(qapp):
     wait_for_state(vm, "Complete")
     vm.cancel()
     assert vm.loadingState == "Idle"
+
+
+# ---------------------------------------------------------------------------
+# progress — Slice 9 Commit 3
+# ---------------------------------------------------------------------------
+
+
+def test_progress_defaults_to_zero(qapp):
+    assert _vm().progress == 0.0
+
+
+def test_progress_is_one_after_complete(qapp):
+    vm = _vm(job_fetcher=lambda jid: {**SAMPLE_JOB_COMPLETE, "total_files": 2, "processed_files": 2})
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert vm.progress == 1.0
+
+
+def test_progress_resets_on_cancel(qapp):
+    vm = _vm()
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    vm.cancel()
+    assert vm.progress == 0.0

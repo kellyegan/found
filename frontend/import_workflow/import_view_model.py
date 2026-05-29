@@ -28,6 +28,7 @@ class ImportViewModel(QObject):
     loadingStateChanged = Signal(str)
     pendingFilesChanged = Signal()
     importCompleted = Signal()
+    progressChanged = Signal(float)
 
     def __init__(
         self,
@@ -50,6 +51,7 @@ class ImportViewModel(QObject):
         self._skipped_count = 0
         self._error_count = 0
         self._job_id = ""
+        self._progress: float = 0.0
         self._scan_thread: Optional[_ScanThread] = None
         self._import_thread: Optional[_ImportThread] = None
 
@@ -93,6 +95,10 @@ class ImportViewModel(QObject):
     def jobId(self) -> str:
         return self._job_id
 
+    @Property(float, notify=progressChanged)
+    def progress(self) -> float:
+        return self._progress
+
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
@@ -125,7 +131,9 @@ class ImportViewModel(QObject):
         self._skipped_count = 0
         self._error_count = 0
         self._job_id = ""
+        self._progress = 0.0
         self.pendingFilesChanged.emit()
+        self.progressChanged.emit(0.0)
         self._set_state("Idle")
 
     # ------------------------------------------------------------------
@@ -151,6 +159,10 @@ class ImportViewModel(QObject):
         self._imported_count = data.get("successful_imports", 0)
         self._skipped_count = data.get("duplicate_paths", 0) + data.get("duplicate_hashes", 0)
         self._error_count = data.get("failed_imports", 0)
+        total = data.get("total_files", 0)
+        processed = data.get("processed_files", 0)
+        self._progress = processed / total if total > 0 else 1.0
+        self.progressChanged.emit(self._progress)
         self.importCompleted.emit()
         self._set_state("Complete")
 

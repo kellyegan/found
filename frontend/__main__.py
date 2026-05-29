@@ -104,11 +104,13 @@ def _make_job_fetcher(base_url: str):
 
 
 def _make_page_fetcher(base_url: str):
-    def fetch(cursor=None, limit=100):
+    def fetch(cursor=None, limit=100, import_job=None):
         try:
             url = f"{base_url}/api/v1/images?view=grid&limit={limit}"
             if cursor:
                 url += f"&cursor={cursor}"
+            if import_job:
+                url += f"&import_job={import_job}"
             response = httpx.get(url, timeout=10.0)
             data = response.json()
             if data.get("success"):

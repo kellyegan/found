@@ -183,6 +183,17 @@ def test_library_view_loading_state_is_writable(engine):
     assert obj.property("loadingState") == "Empty"
 
 
+def test_library_view_is_filtered_defaults_to_false(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    assert obj.property("isFiltered") is False
+
+
+def test_library_view_is_filtered_is_writable(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    obj.setProperty("isFiltered", True)
+    assert obj.property("isFiltered") is True
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------

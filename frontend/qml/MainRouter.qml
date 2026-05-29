@@ -50,7 +50,19 @@ Item {
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
+            isFiltered: LibraryState.isFiltered
             onLoadMoreRequested: LibraryState.load_more()
+            onClearFilterRequested: LibraryState.clearFilter()
+        }
+
+        // After import completes, filter library to show only the new images
+        Connections {
+            target: ImportState
+            function onLoadingStateChanged(state) {
+                if (state === "Complete") {
+                    LibraryState.filterByJobId(ImportState.jobId)
+                }
+            }
         }
 
         // Restore selection + scroll when navigating back to library
