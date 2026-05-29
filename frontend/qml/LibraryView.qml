@@ -66,10 +66,16 @@ Item {
 
     // Thumbnail grid
     ThumbnailGrid {
+        id: thumbnailGrid
         anchors.fill: parent
         visible: root.loadingState === "Ready"
         model: root.gridModel
         onLoadMoreRequested: root.loadMoreRequested()
+        onScrollXChanged: function(x) { NavigationManager.updateScrollX(x) }
+    }
+
+    function scrollToX(x) {
+        thumbnailGrid.scrollToX(x)
     }
 
     // Error

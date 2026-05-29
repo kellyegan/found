@@ -12,6 +12,7 @@ from frontend.backend.connection_monitor import BackendConnectionManager
 from frontend.backend.process_manager import BackendProcessManager
 from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
+from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
 from frontend.theme.theme import ThemeManager
@@ -52,6 +53,7 @@ def main():
     library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url))
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
     selection_manager = SelectionManager()
+    navigation_manager = NavigationManager()
 
     controller = AppController(
         app_state,
@@ -67,6 +69,7 @@ def main():
     engine.rootContext().setContextProperty("BackendConnection", connection_monitor)
     engine.rootContext().setContextProperty("LibraryState", library_state)
     engine.rootContext().setContextProperty("SelectionManager", selection_manager)
+    engine.rootContext().setContextProperty("NavigationManager", navigation_manager)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"
     engine.load(str(qml_path))
