@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+from PySide6.QtCore import QThreadPool
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -9,18 +10,26 @@ import httpx
 from frontend.app.controller import AppController
 from frontend.backend.connection_monitor import BackendConnectionManager
 from frontend.backend.process_manager import BackendProcessManager
+from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
 from frontend.state.app_state import AppStateManager
 from frontend.theme.theme import ThemeManager
 
 
-def _make_image_fetcher(base_url: str):
-    def fetch() -> int | None:
+def _make_page_fetcher(base_url: str):
+    def fetch(cursor=None, limit=100):
         try:
-            response = httpx.get(f"{base_url}/api/v1/images?limit=1", timeout=5.0)
+            url = f"{base_url}/api/v1/images?view=grid&limit={limit}"
+            if cursor:
+                url += f"&cursor={cursor}"
+            response = httpx.get(url, timeout=10.0)
             data = response.json()
             if data.get("success"):
-                return len(data.get("data", []))
+                return {
+                    "items": data.get("data", []),
+                    "next_cursor": data.get("next_cursor"),
+                    "has_more": data.get("has_more", False),
+                }
             return None
         except Exception:
             return None
@@ -38,7 +47,10 @@ def main():
         health_url=process_manager.health_url,
     )
     base_url = f"http://{process_manager._host}:{process_manager._port}"
-    library_state = LibraryViewModel(image_fetcher=_make_image_fetcher(base_url))
+
+    library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url))
+    thumbnail_provider = ThumbnailProvider(base_url=base_url)
+
     controller = AppController(
         app_state,
         process_manager,
@@ -47,6 +59,7 @@ def main():
     )
 
     engine = QQmlApplicationEngine()
+    engine.addImageProvider("thumbnails", thumbnail_provider)
     engine.rootContext().setContextProperty("Theme", theme)
     engine.rootContext().setContextProperty("AppState", app_state)
     engine.rootContext().setContextProperty("BackendConnection", connection_monitor)
@@ -58,8 +71,21 @@ def main():
     if not engine.rootObjects():
         sys.exit(1)
 
+    def _shutdown():
+        controller.shutdown()
+        library_state.shutdown()
+        QThreadPool.globalInstance().waitForDone(2000)
+
+    app.aboutToQuit.connect(_shutdown)
+
     controller.start()
-    sys.exit(app.exec())
+    exit_code = app.exec()
+
+    # Destroy the QML engine before Python GC runs so QML objects are torn
+    # down while all Python-side owners are still alive.
+    del engine
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
