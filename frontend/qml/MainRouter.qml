@@ -20,5 +20,7 @@ Item {
         anchors.fill: parent
         visible: root.appState === "Ready"
         loadingState: root.libraryLoadingState
+        gridModel: LibraryState.gridModel
+        onLoadMoreRequested: LibraryState.load_more()
     }
 }

@@ -61,7 +61,7 @@ class _FetchRunnable(QRunnable):
         image = self._fetch()
         self._cache.put(self._image_id, image)
         self._response._image = image
-        self._response.finished.emit("")
+        self._response.finished.emit()
 
     def _fetch(self) -> QImage:
         try:
@@ -91,13 +91,13 @@ class ThumbnailProvider(QQuickAsyncImageProvider):
     def requestImageResponse(self, image_id: str, requested_size: QSize) -> _ThumbnailResponse:
         response = _ThumbnailResponse()
         self._pending.append(response)
-        response.finished.connect(lambda _err: self._on_finished(response))
+        response.finished.connect(lambda: self._on_finished(response))
 
         cached = self._cache.get(image_id)
         if cached is not None:
             response._image = cached
             from PySide6.QtCore import QTimer
-            QTimer.singleShot(0, lambda: response.finished.emit(""))
+            QTimer.singleShot(0, lambda: response.finished.emit())
         else:
             url = f"{self._base_url}/api/v1/images/{image_id}/thumbnail"
             runnable = _FetchRunnable(response, url, self._cache, image_id)

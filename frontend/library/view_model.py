@@ -1,7 +1,9 @@
 from enum import Enum, auto
 from typing import Callable
 
-from PySide6.QtCore import QObject, QThread, Property, Signal
+from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
+
+from frontend.library.thumbnail_grid_model import ThumbnailGridModel
 
 
 class LibraryLoadingState(Enum):
@@ -14,42 +16,74 @@ class LibraryLoadingState(Enum):
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
 
-    def __init__(self, image_fetcher: Callable[[], int | None], parent=None):
+    def __init__(
+        self,
+        page_fetcher: Callable[..., dict | None],
+        parent=None,
+    ):
         super().__init__(parent)
-        self._image_fetcher = image_fetcher
+        self._page_fetcher = page_fetcher
         self._loading_state = LibraryLoadingState.Loading
-        self._thread: _LoadThread | None = None
+        self._grid_model = ThumbnailGridModel(parent=self)
+        self._thread: _PageThread | None = None
+        self._is_fetching = False
 
     @Property(str, notify=loadingStateChanged)
     def loadingState(self) -> str:
         return self._loading_state.name
 
+    @Property(QObject, constant=True)
+    def gridModel(self) -> ThumbnailGridModel:
+        return self._grid_model
+
     def load(self) -> None:
-        self._thread = _LoadThread(self._image_fetcher)
-        self._thread.result.connect(self._on_result)
+        self._grid_model.clear()
+        self._start_fetch(cursor=None, is_initial=True)
+
+    @Slot()
+    def load_more(self) -> None:
+        if not self._grid_model.hasMore or self._is_fetching:
+            return
+        self._start_fetch(cursor=self._grid_model.cursor or None, is_initial=False)
+
+    def _start_fetch(self, cursor: str | None, is_initial: bool) -> None:
+        self._is_fetching = True
+        self._thread = _PageThread(self._page_fetcher, cursor)
+        self._thread.result.connect(lambda page: self._on_result(page, is_initial))
         self._thread.start()
 
-    def _on_result(self, count: int) -> None:
-        if count < 0:
-            new_state = LibraryLoadingState.Error
-        elif count == 0:
-            new_state = LibraryLoadingState.Empty
-        else:
-            new_state = LibraryLoadingState.Ready
-        self._loading_state = new_state
-        self.loadingStateChanged.emit(new_state.name)
+    def _on_result(self, page: dict | None, is_initial: bool) -> None:
+        self._is_fetching = False
+        if page is None:
+            if is_initial:
+                self._set_state(LibraryLoadingState.Error)
+            return
+
+        items = page.get("items", [])
+        cursor = page.get("next_cursor")
+        has_more = page.get("has_more", False)
+        self._grid_model.appendPage(items, cursor, has_more)
+
+        if is_initial:
+            new_state = LibraryLoadingState.Empty if not items else LibraryLoadingState.Ready
+            self._set_state(new_state)
+
+    def _set_state(self, state: LibraryLoadingState) -> None:
+        self._loading_state = state
+        self.loadingStateChanged.emit(state.name)
 
 
-class _LoadThread(QThread):
-    result = Signal(int)  # -1 = error, 0 = empty, N = count
+class _PageThread(QThread):
+    result = Signal(object)  # dict | None
 
-    def __init__(self, fetcher: Callable[[], int | None], parent=None):
+    def __init__(self, fetcher: Callable, cursor: str | None, parent=None):
         super().__init__(parent)
         self._fetcher = fetcher
+        self._cursor = cursor
 
     def run(self) -> None:
         try:
-            count = self._fetcher()
-            self.result.emit(-1 if count is None else count)
+            page = self._fetcher(cursor=self._cursor, limit=100)
+            self.result.emit(page)
         except Exception:
-            self.result.emit(-1)
+            self.result.emit(None)
