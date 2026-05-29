@@ -54,7 +54,8 @@ Rectangle {
         onExited: root.isDropTarget = false
         onDropped: function(drop) {
             root.isDropTarget = false
-            root.imageDropped(root.collectionId, drop.text)
+            var iid = drop.source ? (drop.source.imageId ?? "") : ""
+            if (iid !== "") root.imageDropped(root.collectionId, iid)
         }
     }
 }

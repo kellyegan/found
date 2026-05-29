@@ -11,18 +11,66 @@ Item {
     signal tileClicked(string imageId, int modifiers)
     signal tileDoubleClicked(string imageId)
 
-    Drag.active: dragHandler.active
-    Drag.keys: ["found/image"]
-    Drag.mimeData: { "text/plain": root.imageId }
-
+    // DragHandler tracks the gesture without moving the tile
     DragHandler {
         id: dragHandler
         target: null
+        onActiveChanged: {
+            if (active) {
+                dragProxy.Drag.active = true
+            } else {
+                dragProxy.Drag.drop()
+            }
+        }
+    }
+
+    // Floating proxy parented to the window so it can move across the whole scene
+    Item {
+        id: dragProxy
+        parent: root.Window.contentItem ?? root
+        width: root.width
+        height: root.height
+        visible: Drag.active
+
+        x: {
+            if (!dragHandler.active) return 0
+            var g = root.mapToGlobal(dragHandler.centroid.position.x, dragHandler.centroid.position.y)
+            return dragProxy.parent.mapFromGlobal(g.x, g.y).x - width / 2
+        }
+        y: {
+            if (!dragHandler.active) return 0
+            var g = root.mapToGlobal(dragHandler.centroid.position.x, dragHandler.centroid.position.y)
+            return dragProxy.parent.mapFromGlobal(g.x, g.y).y - height / 2
+        }
+
+        property string imageId: root.imageId
+
+        Drag.keys: ["found/image"]
+        Drag.hotSpot.x: width / 2
+        Drag.hotSpot.y: height / 2
+
+        Rectangle {
+            anchors.fill: parent
+            color: Theme.surface
+            opacity: 0.9
+            border.color: Theme.accent
+            border.width: 2
+            radius: 3
+
+            Image {
+                anchors { fill: parent; margins: 2 }
+                source: root.thumbnailUrl
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                smooth: true
+            }
+        }
     }
 
     Rectangle {
         anchors.fill: parent
         color: Theme.surface
+        opacity: dragHandler.active ? 0.4 : 1.0
 
         Image {
             id: img
