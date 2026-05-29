@@ -10,6 +10,7 @@ class BackendProcessManager(QObject):
     ready = Signal()
     failed = Signal(str)
     stopped = Signal()
+    retrying = Signal(int)   # emits 1-indexed retry attempt number
 
     def __init__(
         self,
@@ -51,6 +52,7 @@ class BackendProcessManager(QObject):
         )
         self._thread.ready.connect(self.ready)
         self._thread.failed.connect(self.failed)
+        self._thread.retrying.connect(self.retrying)
         self._thread.start()
 
     def stop(self) -> None:
@@ -90,6 +92,7 @@ class BackendProcessManager(QObject):
 class _StartupThread(QThread):
     ready = Signal()
     failed = Signal(str)
+    retrying = Signal(int)
 
     def __init__(
         self,
@@ -114,6 +117,7 @@ class _StartupThread(QThread):
             if self.isInterruptionRequested():
                 return
             if attempt > 0:
+                self.retrying.emit(attempt)
                 self._interruptible_sleep(self._retry_interval)
                 if self.isInterruptionRequested():
                     return

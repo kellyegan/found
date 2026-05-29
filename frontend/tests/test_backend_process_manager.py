@@ -67,7 +67,9 @@ def make_manager(
 def test_ready_signal_fires_when_health_check_passes(qapp):
     manager = make_manager(health_checker=lambda url: True)
     manager.start()
-    assert wait_for_signal(manager.ready)
+    result = wait_for_signal(manager.ready)
+    manager.stop()
+    assert result
 
 
 # ---------------------------------------------------------------------------
@@ -78,13 +80,16 @@ def test_ready_signal_fires_when_health_check_passes(qapp):
 def test_failed_signal_fires_after_all_retries_exhausted(qapp):
     manager = make_manager(health_checker=lambda url: False)
     manager.start()
-    assert wait_for_signal(manager.failed)
+    result = wait_for_signal(manager.failed)
+    manager.stop()
+    assert result
 
 
 def test_failed_message_includes_retry_count(qapp):
     manager = make_manager(health_checker=lambda url: False, max_retries=2)
     manager.start()
     messages = wait_for_signal(manager.failed)
+    manager.stop()
     assert messages and "2" in messages[0]
 
 
@@ -103,6 +108,7 @@ def test_health_check_called_once_per_attempt(qapp):
     manager = make_manager(health_checker=counting_checker, max_retries=2)
     manager.start()
     wait_for_signal(manager.failed)
+    manager.stop()
 
     assert call_count[0] == 3  # initial attempt + 2 retries
 
@@ -116,7 +122,9 @@ def test_succeeds_on_retry(qapp):
 
     manager = make_manager(health_checker=flaky_checker, max_retries=2)
     manager.start()
-    assert wait_for_signal(manager.ready)
+    result = wait_for_signal(manager.ready)
+    manager.stop()
+    assert result
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +161,31 @@ def test_stop_emits_stopped_signal(qapp):
 
 
 # ---------------------------------------------------------------------------
+# Retrying signal
+# ---------------------------------------------------------------------------
+
+
+def test_retrying_signal_fires_once_per_retry(qapp):
+    manager = make_manager(health_checker=lambda url: False, max_retries=2)
+    retry_attempts = []
+    manager.retrying.connect(lambda n: retry_attempts.append(n))
+    manager.start()
+    wait_for_signal(manager.failed)
+    manager.stop()
+    assert len(retry_attempts) == 2  # max_retries=2 → two retries
+
+
+def test_retrying_signal_not_fired_on_initial_attempt(qapp):
+    manager = make_manager(health_checker=lambda url: False, max_retries=0)
+    retry_attempts = []
+    manager.retrying.connect(lambda n: retry_attempts.append(n))
+    manager.start()
+    wait_for_signal(manager.failed)
+    manager.stop()
+    assert retry_attempts == []  # no retries — initial attempt only
+
+
+# ---------------------------------------------------------------------------
 # Default process factory
 # ---------------------------------------------------------------------------
 
@@ -172,6 +205,7 @@ def test_default_factory_launches_uvicorn(qapp):
         )
         manager.start()
         wait_for_signal(manager.ready)
+        manager.stop()
 
     assert mock_popen.called
     cmd = mock_popen.call_args[0][0]

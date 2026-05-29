@@ -19,6 +19,7 @@ from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
 
 import frontend
 from frontend.theme.theme import ThemeManager
+from frontend.state.app_state import AppStateManager
 
 QML_DIR = Path(frontend.__file__).parent / "qml"
 
@@ -144,7 +145,9 @@ def test_main_router_app_state_is_writable(engine):
 def test_main_qml_loads_with_app_window(qapp):
     """main.qml (now using AppWindow) still loads via QQmlApplicationEngine."""
     theme = ThemeManager()
+    app_state = AppStateManager()
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
+    e.rootContext().setContextProperty("AppState", app_state)
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load after AppWindow refactor"

@@ -140,3 +140,97 @@ def test_state_changed_signal_fires_for_each_transition(qapp):
         AppState.BackendRetrying,
         AppState.BackendError,
     ]
+
+
+# ---------------------------------------------------------------------------
+# QML-accessible properties: stateName, statusMessage, hasError
+# ---------------------------------------------------------------------------
+
+
+def test_state_name_returns_current_state_name(qapp):
+    manager = AppStateManager()
+    assert manager.stateName == "Launching"
+
+
+def test_state_name_updates_on_transition(qapp):
+    manager = AppStateManager()
+    manager.transition_to(AppState.BackendStarting)
+    assert manager.stateName == "BackendStarting"
+
+
+def test_state_name_changed_signal_fires_on_transition(qapp):
+    manager = AppStateManager()
+    received = []
+    manager.stateNameChanged.connect(lambda s: received.append(s))
+    manager.transition_to(AppState.BackendStarting)
+    assert received == ["BackendStarting"]
+
+
+def test_status_message_is_empty_in_launching_state(qapp):
+    assert AppStateManager().statusMessage == ""
+
+
+def test_status_message_is_non_empty_in_backend_starting(qapp):
+    manager = AppStateManager()
+    manager.transition_to(AppState.BackendStarting)
+    assert len(manager.statusMessage) > 0
+
+
+def test_status_message_is_non_empty_in_backend_retrying(qapp):
+    manager = AppStateManager()
+    manager._state = AppState.BackendRetrying
+    assert len(manager.statusMessage) > 0
+
+
+def test_status_message_changed_signal_fires_on_transition(qapp):
+    manager = AppStateManager()
+    received = []
+    manager.statusMessageChanged.connect(lambda s: received.append(s))
+    manager.transition_to(AppState.BackendStarting)
+    assert received  # at least one emission
+
+
+def test_has_error_is_false_by_default(qapp):
+    assert AppStateManager().hasError is False
+
+
+def test_has_error_is_true_in_backend_error_state(qapp):
+    manager = AppStateManager()
+    manager._state = AppState.BackendRetrying
+    manager.transition_to(AppState.BackendError)
+    assert manager.hasError is True
+
+
+def test_has_error_is_false_in_ready_state(qapp):
+    manager = AppStateManager()
+    manager.transition_to(AppState.BackendStarting)
+    manager.transition_to(AppState.Ready)
+    assert manager.hasError is False
+
+
+def test_has_error_changed_signal_fires_when_entering_error_state(qapp):
+    manager = AppStateManager()
+    manager._state = AppState.BackendRetrying
+    received = []
+    manager.hasErrorChanged.connect(lambda v: received.append(v))
+    manager.transition_to(AppState.BackendError)
+    assert received == [True]
+
+
+# ---------------------------------------------------------------------------
+# Updated valid transitions (gaps fixed for controller wiring)
+# ---------------------------------------------------------------------------
+
+
+def test_backend_starting_can_transition_to_backend_error(qapp):
+    manager = AppStateManager()
+    manager.transition_to(AppState.BackendStarting)
+    manager.transition_to(AppState.BackendError)
+    assert manager.state == AppState.BackendError
+
+
+def test_backend_retrying_can_transition_to_ready(qapp):
+    manager = AppStateManager()
+    manager._state = AppState.BackendRetrying
+    manager.transition_to(AppState.Ready)
+    assert manager.state == AppState.Ready

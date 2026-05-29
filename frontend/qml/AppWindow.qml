@@ -13,6 +13,8 @@ ApplicationWindow {
 
     MainRouter {
         anchors.fill: parent
-        appState: "Launching"
+        appState: AppState.stateName
+        statusMessage: AppState.statusMessage
+        hasError: AppState.hasError
     }
 }
