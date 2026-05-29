@@ -7,6 +7,8 @@ Covers:
 - BackendProcessManager.failed → AppState transitions to BackendError
 - BackendProcessManager.retrying → AppState transitions to BackendRetrying
 - shutdown() transitions to ShuttingDown and stops the process manager
+- connection_monitor.start() is called when backend becomes Ready
+- connection_monitor.stop() is called on shutdown
 """
 
 import pytest
@@ -133,3 +135,41 @@ def test_shutdown_stops_process_manager(qapp):
     wait_for_signal(state.stateChanged)
     controller.shutdown()
     mock_proc.terminate.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# connection_monitor integration
+# ---------------------------------------------------------------------------
+
+
+def test_start_calls_connection_monitor_start_when_ready(qapp):
+    mock_monitor = MagicMock()
+    state = AppStateManager()
+    pm = make_process_manager(health_checker=lambda url: True)
+    controller = AppController(state, pm, connection_monitor=mock_monitor)
+    controller.start()
+    wait_for_signal(state.stateChanged)  # Wait for Ready
+    pm.stop()
+    mock_monitor.start.assert_called_once()
+
+
+def test_connection_monitor_not_started_if_backend_fails(qapp):
+    mock_monitor = MagicMock()
+    state = AppStateManager()
+    pm = make_process_manager(health_checker=lambda url: False, max_retries=0)
+    controller = AppController(state, pm, connection_monitor=mock_monitor)
+    controller.start()
+    wait_for_signal(state.stateChanged)  # Wait for BackendError
+    pm.stop()
+    mock_monitor.start.assert_not_called()
+
+
+def test_shutdown_stops_connection_monitor(qapp):
+    mock_monitor = MagicMock()
+    state = AppStateManager()
+    pm = make_process_manager(health_checker=lambda url: True)
+    controller = AppController(state, pm, connection_monitor=mock_monitor)
+    controller.start()
+    wait_for_signal(state.stateChanged)  # Wait for Ready
+    controller.shutdown()
+    mock_monitor.stop.assert_called_once()

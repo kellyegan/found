@@ -11,11 +11,13 @@ class AppController(QObject):
         self,
         app_state: AppStateManager,
         process_manager: BackendProcessManager,
+        connection_monitor=None,
         parent=None,
     ):
         super().__init__(parent)
         self._app_state = app_state
         self._process_manager = process_manager
+        self._connection_monitor = connection_monitor
 
         process_manager.ready.connect(self._on_ready)
         process_manager.failed.connect(self._on_failed)
@@ -27,10 +29,14 @@ class AppController(QObject):
 
     def shutdown(self) -> None:
         self._app_state.transition_to(AppState.ShuttingDown)
+        if self._connection_monitor is not None:
+            self._connection_monitor.stop()
         self._process_manager.stop()
 
     def _on_ready(self) -> None:
         self._app_state.transition_to(AppState.Ready)
+        if self._connection_monitor is not None:
+            self._connection_monitor.start()
 
     def _on_failed(self, message: str) -> None:
         self._app_state.transition_to(AppState.BackendError)
