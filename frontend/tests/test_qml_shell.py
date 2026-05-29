@@ -24,6 +24,7 @@ import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
 from frontend.library.view_model import LibraryViewModel
+from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 
@@ -193,12 +194,19 @@ def test_main_qml_loads_with_app_window(qapp):
     library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
     selection = SelectionManager()
     navigation = NavigationManager()
+    collections_state = CollectionsViewModel(
+        collections_fetcher=lambda: [],
+        collection_creator=lambda name: None,
+        images_adder=lambda cid, iids: False,
+        collection_images_fetcher=lambda cid: [],
+    )
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("AppState", app_state)
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
+    e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load"
@@ -358,3 +366,58 @@ def test_image_view_pan_offset_x_defaults_to_zero(engine):
 def test_image_view_pan_offset_y_defaults_to_zero(engine):
     obj = load_component(engine, "ImageView.qml")
     assert obj.property("panOffsetY") == 0.0
+
+
+# ---------------------------------------------------------------------------
+# CollectionItem
+# ---------------------------------------------------------------------------
+
+
+def test_collection_item_qml_exists():
+    assert (QML_DIR / "CollectionItem.qml").exists()
+
+
+def test_collection_item_loads(engine):
+    load_component(engine, "CollectionItem.qml")
+
+
+def test_collection_item_collection_id_defaults_to_empty(engine):
+    obj = load_component(engine, "CollectionItem.qml")
+    assert obj.property("collectionId") == ""
+
+
+def test_collection_item_collection_name_defaults_to_empty(engine):
+    obj = load_component(engine, "CollectionItem.qml")
+    assert obj.property("collectionName") == ""
+
+
+def test_collection_item_is_drop_target_defaults_to_false(engine):
+    obj = load_component(engine, "CollectionItem.qml")
+    assert obj.property("isDropTarget") is False
+
+
+# ---------------------------------------------------------------------------
+# CollectionsSidebar
+# ---------------------------------------------------------------------------
+
+
+def test_collections_sidebar_qml_exists():
+    assert (QML_DIR / "CollectionsSidebar.qml").exists()
+
+
+def test_collections_sidebar_loads(engine):
+    load_component(engine, "CollectionsSidebar.qml")
+
+
+def test_collections_sidebar_open_defaults_to_false(engine):
+    obj = load_component(engine, "CollectionsSidebar.qml")
+    assert obj.property("open") is False
+
+
+def test_collections_sidebar_collections_property_exists(engine):
+    obj = load_component(engine, "CollectionsSidebar.qml")
+    from PySide6.QtQml import QJSValue
+    val = obj.property("collections")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == []

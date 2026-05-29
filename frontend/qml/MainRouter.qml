@@ -18,8 +18,11 @@ Item {
 
     // Ready state — navigation bar + view router
     Item {
+        id: readyContainer
         anchors.fill: parent
         visible: root.appState === "Ready"
+
+        property bool sidebarOpen: false
 
         NavigationBar {
             id: navBar
@@ -27,6 +30,7 @@ Item {
             height: NavigationManager.immersiveMode ? 0 : 48
             visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
+            sidebarOpen: readyContainer.sidebarOpen
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
@@ -36,6 +40,7 @@ Item {
                 }
             }
             onGoBackRequested: NavigationManager.goBack()
+            onSidebarToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
         }
 
         // Library view
@@ -60,6 +65,16 @@ Item {
                         entry.anchor_id
                     )
                     libraryView.scrollToX(entry.scroll_x)
+                }
+            }
+        }
+
+        // Load collections when app becomes ready
+        Connections {
+            target: AppState
+            function onStateNameChanged(name) {
+                if (name === "Ready") {
+                    CollectionsState.load()
                 }
             }
         }
@@ -97,6 +112,44 @@ Item {
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
             hasNext: NavigationManager.hasNext
             hasPrev: NavigationManager.hasPrev
+        }
+
+        // Sidebar overlay — rendered above content, below nav bar
+        CollectionsSidebar {
+            anchors { top: navBar.bottom; left: parent.left; bottom: parent.bottom }
+            width: implicitWidth
+            open: readyContainer.sidebarOpen
+            collections: CollectionsState.collections
+            z: 10
+
+            onClosed: readyContainer.sidebarOpen = false
+
+            onCollectionClicked: function(collectionId, collectionName) {
+                readyContainer.sidebarOpen = false
+                NavigationManager.push("collection", { "collection_id": collectionId, "collection_name": collectionName })
+                CollectionsState.loadCollectionImages(collectionId)
+            }
+
+            onCreateCollectionRequested: function(name) {
+                CollectionsState.createCollection(name)
+            }
+        }
+
+        // Dim overlay behind sidebar
+        Rectangle {
+            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            color: "#000000"
+            opacity: readyContainer.sidebarOpen ? 0.4 : 0.0
+            z: 9
+            visible: opacity > 0
+
+            Behavior on opacity { NumberAnimation { duration: 200 } }
+
+            MouseArea {
+                anchors.fill: parent
+                enabled: readyContainer.sidebarOpen
+                onClicked: readyContainer.sidebarOpen = false
+            }
         }
     }
 }
