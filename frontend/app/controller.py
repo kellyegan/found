@@ -12,12 +12,14 @@ class AppController(QObject):
         app_state: AppStateManager,
         process_manager: BackendProcessManager,
         connection_monitor=None,
+        library_view_model=None,
         parent=None,
     ):
         super().__init__(parent)
         self._app_state = app_state
         self._process_manager = process_manager
         self._connection_monitor = connection_monitor
+        self._library_view_model = library_view_model
 
         process_manager.ready.connect(self._on_ready)
         process_manager.failed.connect(self._on_failed)
@@ -37,6 +39,8 @@ class AppController(QObject):
         self._app_state.transition_to(AppState.Ready)
         if self._connection_monitor is not None:
             self._connection_monitor.start()
+        if self._library_view_model is not None:
+            self._library_view_model.load()
 
     def _on_failed(self, message: str) -> None:
         self._app_state.transition_to(AppState.BackendError)

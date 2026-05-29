@@ -7,6 +7,7 @@ Item {
     property string appState: "Launching"
     property string statusMessage: ""
     property bool hasError: false
+    property string libraryLoadingState: "Loading"
 
     SplashScreen {
         anchors.fill: parent
@@ -15,9 +16,9 @@ Item {
         hasError: root.hasError
     }
 
-    // LibraryView placeholder — replaced in Commit 9
-    Item {
+    LibraryView {
         anchors.fill: parent
         visible: root.appState === "Ready"
+        loadingState: root.libraryLoadingState
     }
 }

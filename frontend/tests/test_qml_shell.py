@@ -1,13 +1,14 @@
 """
-Tests for the QML application shell — Commit 6.
+Tests for the QML application shell — Commits 6–9.
 
 Covers:
-- SplashScreen.qml, MainRouter.qml, and AppWindow.qml exist
+- SplashScreen.qml, MainRouter.qml, AppWindow.qml, LibraryView.qml exist
 - Each component loads without QML errors
 - SplashScreen exposes statusText (str) and hasError (bool) properties
 - SplashScreen statusText value is readable after creation
 - SplashScreen hasError defaults to False
 - MainRouter exposes appState (str) property, defaulting to "Launching"
+- LibraryView exposes loadingState (str) property, defaulting to "Loading"
 - AppWindow loads as a top-level window component
 - main.qml still loads cleanly after being updated to use AppWindow
 """
@@ -20,6 +21,7 @@ from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
 import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
+from frontend.library.view_model import LibraryViewModel
 
 QML_DIR = Path(frontend.__file__).parent / "qml"
 
@@ -142,12 +144,48 @@ def test_main_router_app_state_is_writable(engine):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# LibraryView
+# ---------------------------------------------------------------------------
+
+
+def test_library_view_qml_exists():
+    assert (QML_DIR / "LibraryView.qml").exists()
+
+
+def test_library_view_loads(engine):
+    load_component(engine, "LibraryView.qml")
+
+
+def test_library_view_has_loading_state_property(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    assert obj.property("loadingState") is not None or obj.property("loadingState") == ""
+
+
+def test_library_view_loading_state_defaults_to_loading(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    assert obj.property("loadingState") == "Loading"
+
+
+def test_library_view_loading_state_is_writable(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    obj.setProperty("loadingState", "Empty")
+    assert obj.property("loadingState") == "Empty"
+
+
+# ---------------------------------------------------------------------------
+# AppWindow & main.qml (integration)
+# ---------------------------------------------------------------------------
+
+
 def test_main_qml_loads_with_app_window(qapp):
     """main.qml (now using AppWindow) still loads via QQmlApplicationEngine."""
     theme = ThemeManager()
     app_state = AppStateManager()
+    library_state = LibraryViewModel(image_fetcher=lambda: 0)
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("AppState", app_state)
+    e.rootContext().setContextProperty("LibraryState", library_state)
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load after AppWindow refactor"

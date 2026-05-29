@@ -173,3 +173,30 @@ def test_shutdown_stops_connection_monitor(qapp):
     wait_for_signal(state.stateChanged)  # Wait for Ready
     controller.shutdown()
     mock_monitor.stop.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# library_view_model integration
+# ---------------------------------------------------------------------------
+
+
+def test_start_loads_library_view_model_when_ready(qapp):
+    mock_library = MagicMock()
+    state = AppStateManager()
+    pm = make_process_manager(health_checker=lambda url: True)
+    controller = AppController(state, pm, library_view_model=mock_library)
+    controller.start()
+    wait_for_signal(state.stateChanged)  # Wait for Ready
+    pm.stop()
+    mock_library.load.assert_called_once()
+
+
+def test_library_view_model_not_loaded_when_backend_fails(qapp):
+    mock_library = MagicMock()
+    state = AppStateManager()
+    pm = make_process_manager(health_checker=lambda url: False, max_retries=0)
+    controller = AppController(state, pm, library_view_model=mock_library)
+    controller.start()
+    wait_for_signal(state.stateChanged)  # Wait for BackendError
+    pm.stop()
+    mock_library.load.assert_not_called()

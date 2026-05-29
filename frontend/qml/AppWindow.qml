@@ -16,5 +16,6 @@ ApplicationWindow {
         appState: AppState.stateName
         statusMessage: AppState.statusMessage
         hasError: AppState.hasError
+        libraryLoadingState: LibraryState.loadingState
     }
 }
