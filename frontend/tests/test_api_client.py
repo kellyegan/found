@@ -148,3 +148,73 @@ def test_api_error_str_includes_code_and_message():
     err = ApiError("some_code", "Some message")
     assert "some_code" in str(err)
     assert "Some message" in str(err)
+
+
+# ---------------------------------------------------------------------------
+# list_images
+# ---------------------------------------------------------------------------
+
+
+async def test_list_images_returns_items_cursor_and_has_more():
+    """list_images() returns (items, next_cursor, has_more) from a paged response."""
+    client, mock_http = make_client()
+    items = [{"id": "abc", "filename": "a.jpg", "file_status": "available"}]
+    mock_http.get.return_value = mock_response(
+        200,
+        {"success": True, "data": items, "next_cursor": "tok123", "has_more": True},
+    )
+    result_items, next_cursor, has_more = await client.list_images()
+    assert result_items == items
+    assert next_cursor == "tok123"
+    assert has_more is True
+
+
+async def test_list_images_passes_grid_view_by_default():
+    client, mock_http = make_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    await client.list_images()
+    call_kwargs = mock_http.get.call_args
+    params = call_kwargs.kwargs.get("params", call_kwargs.args[1] if len(call_kwargs.args) > 1 else {})
+    assert params.get("view") == "grid"
+
+
+async def test_list_images_passes_cursor_when_provided():
+    client, mock_http = make_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    await client.list_images(cursor="tok456")
+    call_kwargs = mock_http.get.call_args
+    params = call_kwargs.kwargs.get("params", {})
+    assert params.get("cursor") == "tok456"
+
+
+async def test_list_images_omits_cursor_when_none():
+    client, mock_http = make_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    await client.list_images(cursor=None)
+    call_kwargs = mock_http.get.call_args
+    params = call_kwargs.kwargs.get("params", {})
+    assert "cursor" not in params
+
+
+async def test_list_images_raises_network_error_on_connection_failure():
+    client, mock_http = make_client()
+    mock_http.get.side_effect = httpx.NetworkError("Connection refused")
+    with pytest.raises(NetworkError):
+        await client.list_images()
+
+
+async def test_list_images_returns_empty_list_when_no_images():
+    client, mock_http = make_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    items, next_cursor, has_more = await client.list_images()
+    assert items == []
+    assert next_cursor is None
+    assert has_more is False

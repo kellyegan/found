@@ -66,6 +66,33 @@ class ApiClient:
 
         return body.get("data")
 
+    async def list_images(
+        self,
+        cursor: str | None = None,
+        limit: int = 100,
+        view: str = "grid",
+    ) -> tuple[list[dict], str | None, bool]:
+        params: dict = {"limit": limit, "view": view}
+        if cursor is not None:
+            params["cursor"] = cursor
+        try:
+            response = await self._client.get("/api/v1/images", params=params)
+        except httpx.NetworkError as exc:
+            raise NetworkError(str(exc)) from exc
+        except httpx.TimeoutException as exc:
+            raise NetworkError(f"Request timed out: {exc}") from exc
+        try:
+            body = response.json()
+        except Exception as exc:
+            raise ApiError("parse_error", f"Invalid response body: {exc}") from exc
+        if not body.get("success"):
+            error = body.get("error", {})
+            raise ApiError(
+                error.get("code", "unknown"),
+                error.get("message", "Unknown error"),
+            )
+        return body.get("data", []), body.get("next_cursor"), body.get("has_more", False)
+
     async def close(self) -> None:
         await self._client.aclose()
 
