@@ -68,6 +68,10 @@ class LibraryViewModel(QObject):
             new_state = LibraryLoadingState.Empty if not items else LibraryLoadingState.Ready
             self._set_state(new_state)
 
+    def shutdown(self) -> None:
+        if self._thread is not None and self._thread.isRunning():
+            self._thread.wait(3000)
+
     def _set_state(self, state: LibraryLoadingState) -> None:
         self._loading_state = state
         self.loadingStateChanged.emit(state.name)

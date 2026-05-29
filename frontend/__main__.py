@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+from PySide6.QtCore import QThreadPool
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -70,8 +71,21 @@ def main():
     if not engine.rootObjects():
         sys.exit(1)
 
+    def _shutdown():
+        controller.shutdown()
+        library_state.shutdown()
+        QThreadPool.globalInstance().waitForDone(2000)
+
+    app.aboutToQuit.connect(_shutdown)
+
     controller.start()
-    sys.exit(app.exec())
+    exit_code = app.exec()
+
+    # Destroy the QML engine before Python GC runs so QML objects are torn
+    # down while all Python-side owners are still alive.
+    del engine
+
+    sys.exit(exit_code)
 
 
 if __name__ == "__main__":
