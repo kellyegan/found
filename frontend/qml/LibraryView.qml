@@ -8,6 +8,28 @@ Item {
 
     signal loadMoreRequested()
 
+    // Keyboard shortcuts — active application-wide, no focus required
+    Shortcut {
+        sequence: "Escape"
+        onActivated: SelectionManager.clear()
+    }
+
+    Shortcut {
+        sequence: StandardKey.SelectAll
+        onActivated: {
+            if (root.loadingState === "Ready" && root.gridModel)
+                SelectionManager.selectAll(root.gridModel.allIds)
+        }
+    }
+
+    Shortcut {
+        sequence: "Return"
+        onActivated: {
+            if (SelectionManager.primaryId !== "")
+                SelectionManager.requestOpen(SelectionManager.primaryId)
+        }
+    }
+
     // Loading
     Text {
         anchors.centerIn: parent

@@ -183,17 +183,18 @@ def test_library_view_loading_state_is_writable(engine):
 
 
 def test_main_qml_loads_with_app_window(qapp):
-    """main.qml (now using AppWindow) still loads via QQmlApplicationEngine."""
-    from frontend.library.thumbnail_grid_model import ThumbnailGridModel
+    """main.qml loads cleanly with all required context properties registered."""
     theme = ThemeManager()
     app_state = AppStateManager()
     library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("AppState", app_state)
     e.rootContext().setContextProperty("LibraryState", library_state)
+    e.rootContext().setContextProperty("SelectionManager", selection)
     e.load(str(QML_DIR / "main.qml"))
-    assert e.rootObjects(), "main.qml failed to load after AppWindow refactor"
+    assert e.rootObjects(), "main.qml failed to load"
 
 
 # ---------------------------------------------------------------------------
