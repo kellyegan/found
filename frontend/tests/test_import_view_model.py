@@ -44,15 +44,32 @@ SAMPLE_JOB_COMPLETE = {
 }
 
 
+SAMPLE_SCAN_WITH_CONFLICT = {
+    "new": ["/path/a.jpg"],
+    "already_imported": [],
+    "conflicts": [
+        {
+            "path": "/path/d.jpg",
+            "existing_image_id": "uuid-1",
+            "existing_path": "/old/d.jpg",
+            "existing_filename": "d.jpg",
+        }
+    ],
+    "invalid": [],
+}
+
+
 def _vm(
     scanner=None,
     importer=None,
     job_fetcher=None,
+    conflict_resolver=None,
 ):
     return ImportViewModel(
         scanner=scanner or (lambda paths: {"new": [], "already_imported": [], "conflicts": [], "invalid": []}),
         importer=importer or (lambda paths: "job-id-123"),
         job_fetcher=job_fetcher or (lambda job_id: SAMPLE_JOB_COMPLETE),
+        conflict_resolver=conflict_resolver or (lambda image_id, new_path: True),
     )
 
 
@@ -396,3 +413,88 @@ def test_progress_resets_on_cancel(qapp):
     wait_for_state(vm, "Complete")
     vm.cancel()
     assert vm.progress == 0.0
+
+
+# ---------------------------------------------------------------------------
+# conflict choices — Slice 9 Commit 4B
+# ---------------------------------------------------------------------------
+
+
+def test_conflict_choices_defaults_to_empty(qapp):
+    assert _vm().conflictChoices == {}
+
+
+def test_set_conflict_choice_stores_update(qapp):
+    vm = _vm()
+    vm.setConflictChoice("/path/d.jpg", "update")
+    assert vm.conflictChoices.get("/path/d.jpg") == "update"
+
+
+def test_set_conflict_choice_stores_keep(qapp):
+    vm = _vm()
+    vm.setConflictChoice("/path/d.jpg", "keep")
+    assert vm.conflictChoices.get("/path/d.jpg") == "keep"
+
+
+def test_cancel_clears_conflict_choices(qapp):
+    vm = _vm()
+    vm.setConflictChoice("/path/d.jpg", "update")
+    vm.cancel()
+    assert vm.conflictChoices == {}
+
+
+def test_execute_import_calls_resolver_for_update_choice(qapp):
+    calls = []
+
+    def resolver(image_id, new_path):
+        calls.append((image_id, new_path))
+        return True
+
+    vm = _vm(
+        scanner=lambda paths: SAMPLE_SCAN_WITH_CONFLICT,
+        conflict_resolver=resolver,
+    )
+    vm.scanPaths(["/path/d.jpg"])
+    wait_for_state(vm, "Previewing")
+    vm.setConflictChoice("/path/d.jpg", "update")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert ("uuid-1", "/path/d.jpg") in calls
+
+
+def test_execute_import_skips_resolver_for_keep_choice(qapp):
+    calls = []
+
+    def resolver(image_id, new_path):
+        calls.append((image_id, new_path))
+        return True
+
+    vm = _vm(
+        scanner=lambda paths: SAMPLE_SCAN_WITH_CONFLICT,
+        conflict_resolver=resolver,
+    )
+    vm.scanPaths(["/path/d.jpg"])
+    wait_for_state(vm, "Previewing")
+    vm.setConflictChoice("/path/d.jpg", "keep")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert calls == []
+
+
+def test_execute_import_defaults_to_keep_when_no_choice(qapp):
+    calls = []
+
+    def resolver(image_id, new_path):
+        calls.append((image_id, new_path))
+        return True
+
+    vm = _vm(
+        scanner=lambda paths: SAMPLE_SCAN_WITH_CONFLICT,
+        conflict_resolver=resolver,
+    )
+    vm.scanPaths(["/path/d.jpg"])
+    wait_for_state(vm, "Previewing")
+    # no setConflictChoice call — should default to "keep"
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert calls == []
