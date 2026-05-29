@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Callable
@@ -49,6 +50,7 @@ class BackendProcessManager(QObject):
             retry_interval=self._retry_interval,
             poll_interval=self._poll_interval,
             startup_timeout=self._startup_timeout,
+            process=self._process,
         )
         self._thread.ready.connect(self.ready)
         self._thread.failed.connect(self.failed)
@@ -71,7 +73,7 @@ class BackendProcessManager(QObject):
         backend_dir = Path(__file__).parent.parent.parent / "backend"
         return subprocess.Popen(
             [
-                "python", "-m", "uvicorn",
+                sys.executable, "-m", "uvicorn",
                 "app.main:app",
                 "--host", self._host,
                 "--port", str(self._port),
@@ -102,6 +104,7 @@ class _StartupThread(QThread):
         retry_interval: float,
         poll_interval: float,
         startup_timeout: float,
+        process=None,
         parent=None,
     ):
         super().__init__(parent)
@@ -111,6 +114,7 @@ class _StartupThread(QThread):
         self._retry_interval = retry_interval
         self._poll_interval = poll_interval
         self._startup_timeout = startup_timeout
+        self._process = process
 
     def run(self) -> None:
         for attempt in range(self._max_retries + 1):
@@ -133,6 +137,8 @@ class _StartupThread(QThread):
         while True:
             if self.isInterruptionRequested():
                 return False
+            if self._process is not None and self._process.poll() is not None:
+                return False  # process exited — no point waiting for the timeout
             if self._health_checker(self._health_url):
                 return True
             if time.monotonic() >= deadline:

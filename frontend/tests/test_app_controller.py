@@ -40,9 +40,15 @@ def wait_for_signal(signal, timeout_ms=2000):
     return received
 
 
+def _running_mock():
+    proc = MagicMock()
+    proc.poll.return_value = None  # simulate a running process
+    return proc
+
+
 def make_process_manager(health_checker=None, max_retries=0):
     return BackendProcessManager(
-        process_factory=lambda: MagicMock(),
+        process_factory=_running_mock,
         health_checker=health_checker or (lambda url: True),
         max_retries=max_retries,
         retry_interval=0.0,
@@ -120,7 +126,7 @@ def test_shutdown_transitions_to_shutting_down(qapp):
 
 
 def test_shutdown_stops_process_manager(qapp):
-    mock_proc = MagicMock()
+    mock_proc = _running_mock()
     pm = BackendProcessManager(
         process_factory=lambda: mock_proc,
         health_checker=lambda url: True,

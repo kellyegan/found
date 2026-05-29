@@ -2,3 +2,6 @@
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+markers = [
+    "integration: tests that start real subprocesses or require external services",
+]
