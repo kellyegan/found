@@ -32,9 +32,12 @@ def test_main_qml_exists():
 
 def test_qml_engine_loads_main(qapp):
     from PySide6.QtQml import QQmlApplicationEngine
+    from frontend.theme.theme import ThemeManager
     import frontend
 
+    theme = ThemeManager()
     engine = QQmlApplicationEngine()
+    engine.rootContext().setContextProperty("Theme", theme)
     qml_path = Path(frontend.__file__).parent / "qml" / "main.qml"
     engine.load(str(qml_path))
 
