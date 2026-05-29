@@ -190,3 +190,98 @@ def test_load_more_is_noop_when_no_more_pages(qapp):
     count_before = vm.gridModel.count
     vm.load_more()
     assert vm.gridModel.count == count_before
+
+
+# ---------------------------------------------------------------------------
+# reload() — Slice 9 Commit 3
+# ---------------------------------------------------------------------------
+
+
+def test_reload_clears_and_refetches(qapp):
+    calls = []
+
+    def fetcher(cursor=None, limit=100, import_job=None):
+        calls.append(cursor)
+        return _page(items=SAMPLE_ITEMS)
+
+    vm = _make_vm(fetcher=fetcher)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.reload()
+    wait_for_state(vm, "Ready")
+    assert len(calls) == 2
+
+
+def test_reload_resets_grid_before_refetch(qapp):
+    vm = _make_vm(fetcher=lambda cursor=None, limit=100, import_job=None: _page(items=SAMPLE_ITEMS))
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert vm.gridModel.count == 2
+
+    vm.reload()
+    wait_for_state(vm, "Ready")
+    assert vm.gridModel.count == 2  # still 2, not 4 — grid was cleared before reload
+
+
+# ---------------------------------------------------------------------------
+# Import-job filter — Slice 9 Commit 3
+# ---------------------------------------------------------------------------
+
+
+def _make_filtering_vm(captured=None):
+    """VM whose fetcher records the import_job kwarg passed to it."""
+    calls = captured if captured is not None else []
+
+    def fetcher(cursor=None, limit=100, import_job=None):
+        calls.append(import_job)
+        return _page(items=SAMPLE_ITEMS)
+
+    vm = LibraryViewModel(page_fetcher=fetcher)
+    return vm, calls
+
+
+def test_is_filtered_defaults_to_false(qapp):
+    vm = _make_vm()
+    assert vm.isFiltered is False
+
+
+def test_filter_by_job_id_sets_is_filtered(qapp):
+    vm, _ = _make_filtering_vm()
+    vm.filterByJobId("job-123")
+    wait_for_state(vm, "Ready")
+    assert vm.isFiltered is True
+
+
+def test_filter_by_job_id_passes_job_id_to_fetcher(qapp):
+    vm, calls = _make_filtering_vm()
+    vm.filterByJobId("job-abc")
+    wait_for_state(vm, "Ready")
+    assert "job-abc" in calls
+
+
+def test_filter_by_job_id_triggers_reload(qapp):
+    vm, calls = _make_filtering_vm()
+    vm.load()
+    wait_for_state(vm, "Ready")
+    count_before = len(calls)
+    vm.filterByJobId("job-xyz")
+    wait_for_state(vm, "Ready")
+    assert len(calls) > count_before
+
+
+def test_clear_filter_resets_is_filtered(qapp):
+    vm, _ = _make_filtering_vm()
+    vm.filterByJobId("job-123")
+    wait_for_state(vm, "Ready")
+    vm.clearFilter()
+    wait_for_state(vm, "Ready")
+    assert vm.isFiltered is False
+
+
+def test_clear_filter_fetches_without_job_id(qapp):
+    vm, calls = _make_filtering_vm()
+    vm.filterByJobId("job-123")
+    wait_for_state(vm, "Ready")
+    vm.clearFilter()
+    wait_for_state(vm, "Ready")
+    assert calls[-1] is None  # last fetch had no import_job filter

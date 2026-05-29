@@ -15,6 +15,7 @@ class LibraryLoadingState(Enum):
 
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
+    isFilteredChanged = Signal(bool)
 
     def __init__(
         self,
@@ -27,6 +28,7 @@ class LibraryViewModel(QObject):
         self._grid_model = ThumbnailGridModel(parent=self)
         self._thread: _PageThread | None = None
         self._is_fetching = False
+        self._job_filter: str | None = None
 
     @Property(str, notify=loadingStateChanged)
     def loadingState(self) -> str:
@@ -36,9 +38,19 @@ class LibraryViewModel(QObject):
     def gridModel(self) -> ThumbnailGridModel:
         return self._grid_model
 
+    @Property(bool, notify=isFilteredChanged)
+    def isFiltered(self) -> bool:
+        return self._job_filter is not None
+
     def load(self) -> None:
         self._grid_model.clear()
+        if self._loading_state != LibraryLoadingState.Loading:
+            self._set_state(LibraryLoadingState.Loading)
         self._start_fetch(cursor=None, is_initial=True)
+
+    @Slot()
+    def reload(self) -> None:
+        self.load()
 
     @Slot()
     def load_more(self) -> None:
@@ -46,9 +58,28 @@ class LibraryViewModel(QObject):
             return
         self._start_fetch(cursor=self._grid_model.cursor or None, is_initial=False)
 
+    @Slot(str)
+    def filterByJobId(self, job_id: str) -> None:
+        was_filtered = self.isFiltered
+        self._job_filter = job_id
+        if not was_filtered:
+            self.isFilteredChanged.emit(True)
+        self.load()
+
+    @Slot()
+    def clearFilter(self) -> None:
+        if self._job_filter is None:
+            return
+        self._job_filter = None
+        self.isFilteredChanged.emit(False)
+        self.load()
+
     def _start_fetch(self, cursor: str | None, is_initial: bool) -> None:
         self._is_fetching = True
-        self._thread = _PageThread(self._page_fetcher, cursor)
+        fetch_kwargs: dict = {"cursor": cursor, "limit": 100}
+        if self._job_filter is not None:
+            fetch_kwargs["import_job"] = self._job_filter
+        self._thread = _PageThread(self._page_fetcher, fetch_kwargs)
         self._thread.result.connect(lambda page: self._on_result(page, is_initial))
         self._thread.start()
 
@@ -80,14 +111,14 @@ class LibraryViewModel(QObject):
 class _PageThread(QThread):
     result = Signal(object)  # dict | None
 
-    def __init__(self, fetcher: Callable, cursor: str | None, parent=None):
+    def __init__(self, fetcher: Callable, fetch_kwargs: dict, parent=None):
         super().__init__(parent)
         self._fetcher = fetcher
-        self._cursor = cursor
+        self._fetch_kwargs = fetch_kwargs
 
     def run(self) -> None:
         try:
-            page = self._fetcher(cursor=self._cursor, limit=100)
+            page = self._fetcher(**self._fetch_kwargs)
             self.result.emit(page)
         except Exception:
             self.result.emit(None)

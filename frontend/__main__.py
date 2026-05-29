@@ -11,6 +11,7 @@ from frontend.app.controller import AppController
 from frontend.backend.connection_monitor import BackendConnectionManager
 from frontend.backend.process_manager import BackendProcessManager
 from frontend.collections.collections_view_model import CollectionsViewModel
+from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
 from frontend.navigation.navigation_manager import NavigationManager
@@ -69,12 +70,61 @@ def _make_collection_images_fetcher(base_url: str):
     return fetch
 
 
+def _make_scanner(base_url: str):
+    def scan(paths: list[str]):
+        try:
+            response = httpx.post(f"{base_url}/api/v1/images/import/preview", json={"paths": paths}, timeout=30.0)
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+    return scan
+
+
+def _make_importer(base_url: str):
+    def do_import(paths: list[str]):
+        try:
+            response = httpx.post(f"{base_url}/api/v1/images/import", json={"paths": paths}, timeout=30.0)
+            data = response.json()
+            return data["data"]["job_id"] if data.get("success") else None
+        except Exception:
+            return None
+    return do_import
+
+
+def _make_job_fetcher(base_url: str):
+    def fetch(job_id: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/jobs/{job_id}", timeout=10.0)
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
+def _make_conflict_resolver(base_url: str):
+    def resolve(image_id: str, new_path: str) -> bool:
+        try:
+            response = httpx.patch(
+                f"{base_url}/api/v1/images/{image_id}",
+                json={"path": new_path},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return resolve
+
+
 def _make_page_fetcher(base_url: str):
-    def fetch(cursor=None, limit=100):
+    def fetch(cursor=None, limit=100, import_job=None):
         try:
             url = f"{base_url}/api/v1/images?view=grid&limit={limit}"
             if cursor:
                 url += f"&cursor={cursor}"
+            if import_job:
+                url += f"&import_job={import_job}"
             response = httpx.get(url, timeout=10.0)
             data = response.json()
             if data.get("success"):
@@ -111,6 +161,12 @@ def main():
         images_adder=_make_images_adder(base_url),
         collection_images_fetcher=_make_collection_images_fetcher(base_url),
     )
+    import_state = ImportViewModel(
+        scanner=_make_scanner(base_url),
+        importer=_make_importer(base_url),
+        job_fetcher=_make_job_fetcher(base_url),
+        conflict_resolver=_make_conflict_resolver(base_url),
+    )
 
     controller = AppController(
         app_state,
@@ -128,6 +184,7 @@ def main():
     engine.rootContext().setContextProperty("SelectionManager", selection_manager)
     engine.rootContext().setContextProperty("NavigationManager", navigation_manager)
     engine.rootContext().setContextProperty("CollectionsState", collections_state)
+    engine.rootContext().setContextProperty("ImportState", import_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"

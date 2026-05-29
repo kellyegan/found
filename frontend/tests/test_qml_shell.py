@@ -25,6 +25,7 @@ from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
 from frontend.library.view_model import LibraryViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
+from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 
@@ -182,6 +183,17 @@ def test_library_view_loading_state_is_writable(engine):
     assert obj.property("loadingState") == "Empty"
 
 
+def test_library_view_is_filtered_defaults_to_false(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    assert obj.property("isFiltered") is False
+
+
+def test_library_view_is_filtered_is_writable(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    obj.setProperty("isFiltered", True)
+    assert obj.property("isFiltered") is True
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
@@ -200,6 +212,13 @@ def test_main_qml_loads_with_app_window(qapp):
         images_adder=lambda cid, iids: False,
         collection_images_fetcher=lambda cid: [],
     )
+    import_state = ImportViewModel(
+        scanner=lambda paths: {"new": [], "already_imported": [], "conflicts": [], "invalid": []},
+        importer=lambda paths: "job-id",
+        job_fetcher=lambda jid: {"status": "completed", "total_files": 0, "processed_files": 0,
+                                  "successful_imports": 0, "duplicate_paths": 0,
+                                  "duplicate_hashes": 0, "failed_imports": 0},
+    )
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("AppState", app_state)
@@ -207,6 +226,7 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
+    e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load"
@@ -478,3 +498,127 @@ def test_collections_sidebar_has_image_dropped_signal(engine):
 
 def test_thumbnail_tile_still_loads_with_drag_support(engine):
     load_component(engine, "ThumbnailTile.qml")
+
+
+# ---------------------------------------------------------------------------
+# ImportPanel — Slice 9 Commit 2
+# ---------------------------------------------------------------------------
+
+
+def test_import_panel_qml_exists():
+    assert (QML_DIR / "ImportPanel.qml").exists()
+
+
+def test_import_panel_loads(engine):
+    load_component(engine, "ImportPanel.qml")
+
+
+def test_import_panel_loading_state_defaults_to_idle(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("loadingState") == "Idle"
+
+
+def test_import_panel_loading_state_is_writable(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    obj.setProperty("loadingState", "Previewing")
+    assert obj.property("loadingState") == "Previewing"
+
+
+def test_import_panel_pending_files_defaults_to_empty(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    from PySide6.QtQml import QJSValue
+    val = obj.property("pendingFiles")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == []
+
+
+def test_import_panel_duplicate_count_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("duplicateCount") == 0
+
+
+def test_import_panel_conflict_count_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("conflictCount") == 0
+
+
+def test_import_panel_invalid_count_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("invalidCount") == 0
+
+
+def test_import_panel_imported_count_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("importedCount") == 0
+
+
+def test_import_panel_skipped_count_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("skippedCount") == 0
+
+
+def test_import_panel_has_confirmed_signal(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    received = []
+    obj.confirmed.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_import_panel_has_cancelled_signal(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    received = []
+    obj.cancelled.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+# ImportPanel progress — Slice 9 Commit 4A
+# ---------------------------------------------------------------------------
+
+
+def test_import_panel_progress_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("progress") == 0.0
+
+
+def test_import_panel_progress_is_writable(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    obj.setProperty("progress", 0.5)
+    assert obj.property("progress") == 0.5
+
+
+# ImportPanel conflict UI — Slice 9 Commit 4C
+# ---------------------------------------------------------------------------
+
+
+def test_import_panel_conflict_files_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "ImportPanel.qml")
+    val = obj.property("conflictFiles")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == []
+
+
+def test_import_panel_conflict_files_is_writable(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    sample = [{"path": "/a.jpg", "existing_image_id": "uuid-1",
+               "existing_path": "/old/a.jpg", "existing_filename": "a.jpg"}]
+    obj.setProperty("conflictFiles", sample)
+    from PySide6.QtQml import QJSValue
+    val = obj.property("conflictFiles")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert len(val) == 1
+
+
+def test_import_panel_has_conflict_choice_changed_signal(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    received = []
+    obj.conflictChoiceChanged.connect(lambda path, choice: received.append((path, choice)))
+    assert isinstance(received, list)
+
+
+def test_import_panel_updated_count_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("updatedCount") == 0

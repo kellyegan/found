@@ -50,7 +50,19 @@ Item {
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
+            isFiltered: LibraryState.isFiltered
             onLoadMoreRequested: LibraryState.load_more()
+            onClearFilterRequested: LibraryState.clearFilter()
+        }
+
+        // After import completes, filter library to show only the new images
+        Connections {
+            target: ImportState
+            function onLoadingStateChanged(state) {
+                if (state === "Complete") {
+                    LibraryState.filterByJobId(ImportState.jobId)
+                }
+            }
         }
 
         // Restore selection + scroll when navigating back to library
@@ -160,6 +172,70 @@ Item {
                 anchors.fill: parent
                 enabled: readyContainer.sidebarOpen
                 onClicked: readyContainer.sidebarOpen = false
+            }
+        }
+
+        // File drop area — accepts files/directories dragged from Finder/Explorer
+        DropArea {
+            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "library"
+            z: 20
+
+            onEntered: function(drag) {
+                drag.accepted = drag.hasUrls
+            }
+
+            onDropped: function(drop) {
+                if (!drop.hasUrls) return
+                var paths = []
+                for (var i = 0; i < drop.urls.length; i++) {
+                    var s = drop.urls[i].toString()
+                    // Strip file:// prefix; handle file:///path on macOS/Linux
+                    paths.push(s.replace(/^file:\/\//, ""))
+                }
+                ImportState.scanPaths(paths)
+            }
+
+            // Drag-over highlight
+            Rectangle {
+                anchors.fill: parent
+                color: "#ffffff"
+                opacity: parent.containsDrag ? 0.08 : 0.0
+                visible: opacity > 0
+
+                Behavior on opacity { NumberAnimation { duration: 100 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: parent.parent.containsDrag
+                    text: "Drop to import"
+                    color: "#cccccc"
+                    font.pixelSize: 18
+                    font.weight: Font.Medium
+                }
+            }
+        }
+
+        // Import panel overlay
+        ImportPanel {
+            anchors.fill: parent
+            z: 30
+            loadingState: ImportState.loadingState
+            pendingFiles: ImportState.pendingFiles
+            conflictFiles: ImportState.conflictFiles
+            duplicateCount: ImportState.duplicateFiles.length
+            conflictCount: ImportState.conflictFiles.length
+            invalidCount: ImportState.invalidFiles.length
+            importedCount: ImportState.importedCount
+            updatedCount: ImportState.updatedCount
+            skippedCount: ImportState.skippedCount
+            errorCount: ImportState.errorCount
+            progress: ImportState.progress
+
+            onConfirmed: ImportState.executeImport()
+            onCancelled: ImportState.cancel()
+            onConflictChoiceChanged: function(path, choice) {
+                ImportState.setConflictChoice(path, choice)
             }
         }
     }
