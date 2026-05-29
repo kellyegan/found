@@ -24,6 +24,7 @@ import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
 from frontend.library.view_model import LibraryViewModel
+from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 
 QML_DIR = Path(frontend.__file__).parent / "qml"
@@ -36,14 +37,17 @@ QML_DIR = Path(frontend.__file__).parent / "qml"
 
 @pytest.fixture
 def engine(qapp):
-    """QQmlEngine with Theme and SelectionManager registered."""
+    """QQmlEngine with Theme, SelectionManager, and NavigationManager registered."""
     theme = ThemeManager()
     selection = SelectionManager()
+    navigation = NavigationManager()
     e = QQmlEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("SelectionManager", selection)
+    e.rootContext().setContextProperty("NavigationManager", navigation)
     theme.setParent(e)
     selection.setParent(e)
+    navigation.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -188,11 +192,13 @@ def test_main_qml_loads_with_app_window(qapp):
     app_state = AppStateManager()
     library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
     selection = SelectionManager()
+    navigation = NavigationManager()
     e = QQmlApplicationEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("AppState", app_state)
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
+    e.rootContext().setContextProperty("NavigationManager", navigation)
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load"
 
@@ -253,3 +259,38 @@ def test_thumbnail_grid_has_model_property(engine):
     obj = load_component(engine, "ThumbnailGrid.qml")
     # model defaults to null — property should exist and be readable
     assert obj.property("model") is None or obj.property("model") is not None
+
+
+# ---------------------------------------------------------------------------
+# NavigationBar
+# ---------------------------------------------------------------------------
+
+
+def test_navigation_bar_qml_exists():
+    assert (QML_DIR / "NavigationBar.qml").exists()
+
+
+def test_navigation_bar_loads(engine):
+    load_component(engine, "NavigationBar.qml")
+
+
+def test_navigation_bar_can_go_back_defaults_to_false(engine):
+    obj = load_component(engine, "NavigationBar.qml")
+    assert obj.property("canGoBack") is False
+
+
+def test_navigation_bar_can_go_back_is_writable(engine):
+    obj = load_component(engine, "NavigationBar.qml")
+    obj.setProperty("canGoBack", True)
+    assert obj.property("canGoBack") is True
+
+
+def test_navigation_bar_view_title_defaults_to_empty(engine):
+    obj = load_component(engine, "NavigationBar.qml")
+    assert obj.property("viewTitle") == ""
+
+
+def test_navigation_bar_view_title_is_writable(engine):
+    obj = load_component(engine, "NavigationBar.qml")
+    obj.setProperty("viewTitle", "Library")
+    assert obj.property("viewTitle") == "Library"

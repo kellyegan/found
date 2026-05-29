@@ -16,11 +16,46 @@ Item {
         hasError: root.hasError
     }
 
-    LibraryView {
+    // Ready state — navigation bar + view router
+    Item {
         anchors.fill: parent
         visible: root.appState === "Ready"
-        loadingState: root.libraryLoadingState
-        gridModel: LibraryState.gridModel
-        onLoadMoreRequested: LibraryState.load_more()
+
+        NavigationBar {
+            id: navBar
+            anchors { top: parent.top; left: parent.left; right: parent.right }
+            height: 48
+            canGoBack: NavigationManager.canGoBack
+            viewTitle: {
+                switch (NavigationManager.currentView) {
+                    case "library":    return "Library"
+                    case "collection": return "Collection"
+                    case "image":      return "Image"
+                    default:           return ""
+                }
+            }
+            onGoBackRequested: NavigationManager.goBack()
+        }
+
+        // Library view
+        LibraryView {
+            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "library"
+            loadingState: root.libraryLoadingState
+            gridModel: LibraryState.gridModel
+            onLoadMoreRequested: LibraryState.load_more()
+        }
+
+        // Placeholder — Collection view (Slice 8)
+        Item {
+            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "collection"
+        }
+
+        // Placeholder — Image view (Slice 5)
+        Item {
+            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "image"
+        }
     }
 }
