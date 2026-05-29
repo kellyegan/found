@@ -162,5 +162,63 @@ Item {
                 onClicked: readyContainer.sidebarOpen = false
             }
         }
+
+        // File drop area — accepts files/directories dragged from Finder/Explorer
+        DropArea {
+            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "library"
+            z: 20
+
+            onEntered: function(drag) {
+                drag.accepted = drag.hasUrls
+            }
+
+            onDropped: function(drop) {
+                if (!drop.hasUrls) return
+                var paths = []
+                for (var i = 0; i < drop.urls.length; i++) {
+                    var s = drop.urls[i].toString()
+                    // Strip file:// prefix; handle file:///path on macOS/Linux
+                    paths.push(s.replace(/^file:\/\//, ""))
+                }
+                ImportState.scanPaths(paths)
+            }
+
+            // Drag-over highlight
+            Rectangle {
+                anchors.fill: parent
+                color: "#ffffff"
+                opacity: parent.containsDrag ? 0.08 : 0.0
+                visible: opacity > 0
+
+                Behavior on opacity { NumberAnimation { duration: 100 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    visible: parent.parent.containsDrag
+                    text: "Drop to import"
+                    color: "#cccccc"
+                    font.pixelSize: 18
+                    font.weight: Font.Medium
+                }
+            }
+        }
+
+        // Import panel overlay
+        ImportPanel {
+            anchors.fill: parent
+            z: 30
+            loadingState: ImportState.loadingState
+            pendingFiles: ImportState.pendingFiles
+            duplicateCount: ImportState.duplicateFiles.length
+            conflictCount: ImportState.conflictFiles.length
+            invalidCount: ImportState.invalidFiles.length
+            importedCount: ImportState.importedCount
+            skippedCount: ImportState.skippedCount
+            errorCount: ImportState.errorCount
+
+            onConfirmed: ImportState.executeImport()
+            onCancelled: ImportState.cancel()
+        }
     }
 }
