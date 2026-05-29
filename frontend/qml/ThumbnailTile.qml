@@ -11,6 +11,15 @@ Item {
     signal tileClicked(string imageId, int modifiers)
     signal tileDoubleClicked(string imageId)
 
+    Drag.active: dragHandler.active
+    Drag.keys: ["found/image"]
+    Drag.mimeData: { "text/plain": root.imageId }
+
+    DragHandler {
+        id: dragHandler
+        target: null
+    }
+
     Rectangle {
         anchors.fill: parent
         color: Theme.surface

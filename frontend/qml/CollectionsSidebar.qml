@@ -8,6 +8,7 @@ Item {
 
     signal collectionClicked(string collectionId, string collectionName)
     signal createCollectionRequested(string name)
+    signal imageDropped(string collectionId, string imageId)
     signal closed()
 
     implicitWidth: 260
@@ -145,6 +146,7 @@ Item {
                 collectionId: modelData.id ?? ""
                 collectionName: modelData.name ?? ""
                 onClicked: (cid, cname) => root.collectionClicked(cid, cname)
+                onImageDropped: (cid, iid) => root.imageDropped(cid, iid)
             }
 
             // Empty state

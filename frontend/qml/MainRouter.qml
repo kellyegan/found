@@ -137,6 +137,13 @@ Item {
             onCreateCollectionRequested: function(name) {
                 CollectionsState.createCollection(name)
             }
+
+            onImageDropped: function(collectionId, imageId) {
+                var ids = SelectionManager.isSelected(imageId)
+                    ? SelectionManager.selectedIds
+                    : [imageId]
+                CollectionsState.addImagesToCollection(collectionId, ids)
+            }
         }
 
         // Dim overlay behind sidebar

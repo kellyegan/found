@@ -8,6 +8,7 @@ Rectangle {
     property bool isDropTarget: false
 
     signal clicked(string collectionId, string collectionName)
+    signal imageDropped(string collectionId, string imageId)
 
     implicitHeight: 36
     color: isDropTarget ? "#2a3a2a" : (hoverArea.containsMouse ? "#252525" : "transparent")
@@ -44,5 +45,16 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         onClicked: root.clicked(root.collectionId, root.collectionName)
+    }
+
+    DropArea {
+        anchors.fill: parent
+        keys: ["found/image"]
+        onEntered: function(drag) { root.isDropTarget = true }
+        onExited: root.isDropTarget = false
+        onDropped: function(drop) {
+            root.isDropTarget = false
+            root.imageDropped(root.collectionId, drop.text)
+        }
     }
 }

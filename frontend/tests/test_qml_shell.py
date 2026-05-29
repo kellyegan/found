@@ -455,3 +455,26 @@ def test_collection_view_grid_model_defaults_to_none(engine):
 def test_collection_view_loading_state_defaults_to_idle(engine):
     obj = load_component(engine, "CollectionView.qml")
     assert obj.property("loadingState") == "Idle"
+
+
+# ---------------------------------------------------------------------------
+# Drag-to-collection — Commit 4
+# ---------------------------------------------------------------------------
+
+
+def test_collection_item_has_image_dropped_signal(engine):
+    obj = load_component(engine, "CollectionItem.qml")
+    received = []
+    obj.imageDropped.connect(lambda cid, iid: received.append((cid, iid)))
+    assert isinstance(received, list)  # signal attribute exists
+
+
+def test_collections_sidebar_has_image_dropped_signal(engine):
+    obj = load_component(engine, "CollectionsSidebar.qml")
+    received = []
+    obj.imageDropped.connect(lambda cid, iid: received.append((cid, iid)))
+    assert isinstance(received, list)  # signal attribute exists
+
+
+def test_thumbnail_tile_still_loads_with_drag_support(engine):
+    load_component(engine, "ThumbnailTile.qml")
