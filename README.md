@@ -16,3 +16,25 @@
 - SQLite database using SQLModel
 - Filesystem-based thumbnail cache
 - Desktop GUI frontend (planned)
+
+## Installing
+
+```bash
+make setup
+```
+
+## Running
+
+### Full application
+
+```bash
+pyenv activate found_env
+python -m frontend
+```
+
+### Backend only
+
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
