@@ -10,6 +10,7 @@ Item {
     property int conflictCount: 0
     property int invalidCount: 0
     property int importedCount: 0
+    property int updatedCount: 0
     property int skippedCount: 0
     property int errorCount: 0
     property double progress: 0.0
@@ -359,9 +360,13 @@ Item {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: root.importedCount + " imported" +
-                          (root.skippedCount > 0 ? " · " + root.skippedCount + " skipped" : "") +
-                          (root.errorCount > 0 ? " · " + root.errorCount + " failed" : "")
+                    text: {
+                        var parts = [root.importedCount + " imported"]
+                        if (root.updatedCount > 0) parts.push(root.updatedCount + " updated")
+                        if (root.skippedCount > 0) parts.push(root.skippedCount + " skipped")
+                        if (root.errorCount > 0) parts.push(root.errorCount + " failed")
+                        return parts.join(" · ")
+                    }
                     color: "#888888"
                     font.pixelSize: 13
                 }

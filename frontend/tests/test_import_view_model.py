@@ -498,3 +498,43 @@ def test_execute_import_defaults_to_keep_when_no_choice(qapp):
     vm.executeImport()
     wait_for_state(vm, "Complete")
     assert calls == []
+
+
+# ---------------------------------------------------------------------------
+# updatedCount — conflicts resolved as "update path"
+# ---------------------------------------------------------------------------
+
+
+def test_updated_count_defaults_to_zero(qapp):
+    assert _vm().updatedCount == 0
+
+
+def test_updated_count_reflects_update_choices(qapp):
+    vm = _vm(scanner=lambda paths: SAMPLE_SCAN_WITH_CONFLICT)
+    vm.scanPaths(["/path/d.jpg"])
+    wait_for_state(vm, "Previewing")
+    vm.setConflictChoice("/path/d.jpg", "update")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert vm.updatedCount == 1
+
+
+def test_updated_count_is_zero_for_keep_choices(qapp):
+    vm = _vm(scanner=lambda paths: SAMPLE_SCAN_WITH_CONFLICT)
+    vm.scanPaths(["/path/d.jpg"])
+    wait_for_state(vm, "Previewing")
+    vm.setConflictChoice("/path/d.jpg", "keep")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert vm.updatedCount == 0
+
+
+def test_updated_count_resets_on_cancel(qapp):
+    vm = _vm(scanner=lambda paths: SAMPLE_SCAN_WITH_CONFLICT)
+    vm.scanPaths(["/path/d.jpg"])
+    wait_for_state(vm, "Previewing")
+    vm.setConflictChoice("/path/d.jpg", "update")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    vm.cancel()
+    assert vm.updatedCount == 0

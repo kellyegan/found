@@ -617,3 +617,8 @@ def test_import_panel_has_conflict_choice_changed_signal(engine):
     received = []
     obj.conflictChoiceChanged.connect(lambda path, choice: received.append((path, choice)))
     assert isinstance(received, list)
+
+
+def test_import_panel_updated_count_defaults_to_zero(engine):
+    obj = load_component(engine, "ImportPanel.qml")
+    assert obj.property("updatedCount") == 0

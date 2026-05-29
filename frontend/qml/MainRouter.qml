@@ -227,6 +227,7 @@ Item {
             conflictCount: ImportState.conflictFiles.length
             invalidCount: ImportState.invalidFiles.length
             importedCount: ImportState.importedCount
+            updatedCount: ImportState.updatedCount
             skippedCount: ImportState.skippedCount
             errorCount: ImportState.errorCount
             progress: ImportState.progress

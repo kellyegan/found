@@ -55,6 +55,7 @@ class ImportViewModel(QObject):
         self._error_count = 0
         self._job_id = ""
         self._progress: float = 0.0
+        self._updated_count = 0
         self._conflict_choices: dict[str, str] = {}
         self._scan_thread: Optional[_ScanThread] = None
         self._import_thread: Optional[_ImportThread] = None
@@ -107,6 +108,10 @@ class ImportViewModel(QObject):
     def conflictChoices(self) -> dict:
         return self._conflict_choices
 
+    @Property(int, notify=importCompleted)
+    def updatedCount(self) -> int:
+        return self._updated_count
+
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
@@ -128,6 +133,10 @@ class ImportViewModel(QObject):
 
     @Slot()
     def executeImport(self) -> None:
+        self._updated_count = sum(
+            1 for c in self._conflict_files
+            if self._conflict_choices.get(c.get("path", ""), "keep") == "update"
+        )
         self._set_state("Importing")
         thread = _ImportThread(
             self._importer,
@@ -152,6 +161,7 @@ class ImportViewModel(QObject):
         self._error_count = 0
         self._job_id = ""
         self._progress = 0.0
+        self._updated_count = 0
         self._conflict_choices = {}
         self.pendingFilesChanged.emit()
         self.progressChanged.emit(0.0)
