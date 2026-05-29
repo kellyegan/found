@@ -421,3 +421,37 @@ def test_collections_sidebar_collections_property_exists(engine):
     if isinstance(val, QJSValue):
         val = val.toVariant() or []
     assert val == []
+
+
+# ---------------------------------------------------------------------------
+# CollectionView
+# ---------------------------------------------------------------------------
+
+
+def test_collection_view_qml_exists():
+    assert (QML_DIR / "CollectionView.qml").exists()
+
+
+def test_collection_view_loads(engine):
+    load_component(engine, "CollectionView.qml")
+
+
+def test_collection_view_collection_name_defaults_to_empty(engine):
+    obj = load_component(engine, "CollectionView.qml")
+    assert obj.property("collectionName") == ""
+
+
+def test_collection_view_collection_name_is_writable(engine):
+    obj = load_component(engine, "CollectionView.qml")
+    obj.setProperty("collectionName", "Portraits")
+    assert obj.property("collectionName") == "Portraits"
+
+
+def test_collection_view_grid_model_defaults_to_none(engine):
+    obj = load_component(engine, "CollectionView.qml")
+    assert obj.property("gridModel") is None
+
+
+def test_collection_view_loading_state_defaults_to_idle(engine):
+    obj = load_component(engine, "CollectionView.qml")
+    assert obj.property("loadingState") == "Idle"

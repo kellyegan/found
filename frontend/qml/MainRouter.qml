@@ -95,10 +95,14 @@ Item {
             }
         }
 
-        // Placeholder — Collection view (Slice 8)
-        Item {
+        // Collection view
+        CollectionView {
             anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "collection"
+            collectionName: NavigationManager.currentView === "collection"
+                            ? (NavigationManager.currentEntry.collection_name ?? "") : ""
+            gridModel: CollectionsState.collectionGridModel
+            loadingState: CollectionsState.loadingState
         }
 
         // Image view (Slice 5)
