@@ -24,7 +24,8 @@ Item {
         NavigationBar {
             id: navBar
             anchors { top: parent.top; left: parent.left; right: parent.right }
-            height: 48
+            height: NavigationManager.immersiveMode ? 0 : 48
+            visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
             viewTitle: {
                 switch (NavigationManager.currentView) {
@@ -72,7 +73,10 @@ Item {
                     SelectionManager.primaryId,
                     SelectionManager.anchorId
                 )
-                NavigationManager.push("image", {"image_id": imageId})
+                NavigationManager.push("image", {
+                    "image_id": imageId,
+                    "context_ids": LibraryState.gridModel ? LibraryState.gridModel.allIds : []
+                })
             }
         }
 
@@ -82,10 +86,17 @@ Item {
             visible: NavigationManager.currentView === "collection"
         }
 
-        // Placeholder — Image view (Slice 5)
-        Item {
+        // Image view (Slice 5)
+        ImageView {
             anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "image"
+            imageId:   NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.image_id ?? "") : ""
+            imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
+                           ? baseUrl + "/api/v1/images/" + NavigationManager.currentEntry.image_id + "/file"
+                           : ""
+            fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
+            hasNext: NavigationManager.hasNext
+            hasPrev: NavigationManager.hasPrev
         }
     }
 }

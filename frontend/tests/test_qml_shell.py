@@ -199,6 +199,7 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
+    e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load"
 
@@ -299,3 +300,61 @@ def test_navigation_bar_view_title_is_writable(engine):
     obj = load_component(engine, "NavigationBar.qml")
     obj.setProperty("viewTitle", "Library")
     assert obj.property("viewTitle") == "Library"
+
+
+# ---------------------------------------------------------------------------
+# ImageView
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_qml_exists():
+    assert (QML_DIR / "ImageView.qml").exists()
+
+
+def test_image_view_loads(engine):
+    load_component(engine, "ImageView.qml")
+
+
+def test_image_view_image_id_defaults_to_empty(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("imageId") == ""
+
+
+def test_image_view_image_url_defaults_to_empty(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("imageUrl") == ""
+
+
+def test_image_view_filename_defaults_to_empty(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("filename") == ""
+
+
+def test_image_view_file_status_defaults_to_available(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("fileStatus") == "available"
+
+
+def test_image_view_has_next_defaults_to_false(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("hasNext") is False
+
+
+def test_image_view_has_prev_defaults_to_false(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("hasPrev") is False
+
+
+def test_image_view_zoom_level_defaults_to_one(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("zoomLevel") == 1.0
+
+
+def test_image_view_pan_offset_x_defaults_to_zero(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("panOffsetX") == 0.0
+
+
+def test_image_view_pan_offset_y_defaults_to_zero(engine):
+    obj = load_component(engine, "ImageView.qml")
+    assert obj.property("panOffsetY") == 0.0

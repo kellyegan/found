@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtQml import QJSValue
 
 
 @dataclass
@@ -13,6 +14,7 @@ class NavigationEntry:
     selection_ids: list = field(default_factory=list)
     primary_id: str = ""
     anchor_id: str = ""
+    context_ids: list = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return {
@@ -23,6 +25,7 @@ class NavigationEntry:
             "selection_ids": list(self.selection_ids),
             "primary_id": self.primary_id,
             "anchor_id": self.anchor_id,
+            "context_ids": list(self.context_ids),
         }
 
 
@@ -33,6 +36,7 @@ class NavigationManager(QObject):
         super().__init__(parent)
         self._current = NavigationEntry(view="library")
         self._stack: list[NavigationEntry] = []
+        self._immersive: bool = False
 
     # ------------------------------------------------------------------
     # Properties
@@ -42,6 +46,22 @@ class NavigationManager(QObject):
     def canGoBack(self) -> bool:
         return len(self._stack) > 0
 
+    @Property(bool, notify=navigationChanged)
+    def hasNext(self) -> bool:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return False
+        return ids.index(img) < len(ids) - 1
+
+    @Property(bool, notify=navigationChanged)
+    def hasPrev(self) -> bool:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return False
+        return ids.index(img) > 0
+
     @Property(str, notify=navigationChanged)
     def currentView(self) -> str:
         return self._current.view
@@ -50,18 +70,25 @@ class NavigationManager(QObject):
     def currentEntry(self) -> dict:
         return self._current.as_dict()
 
+    @Property(bool, notify=navigationChanged)
+    def immersiveMode(self) -> bool:
+        return self._immersive
+
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
 
     @Slot(str, "QVariant")
-    def push(self, view: str, params: dict = None) -> None:
+    def push(self, view: str, params=None) -> None:
         self._stack.append(self._current)
+        if isinstance(params, QJSValue):
+            params = params.toVariant()
         params = params or {}
         self._current = NavigationEntry(
             view=view,
             image_id=params.get("image_id"),
             collection_id=params.get("collection_id"),
+            context_ids=list(params.get("context_ids") or []),
         )
         self.navigationChanged.emit()
 
@@ -69,15 +96,51 @@ class NavigationManager(QObject):
     def goBack(self) -> None:
         if not self._stack:
             return
+        self._immersive = False
         self._current = self._stack.pop()
         self.navigationChanged.emit()
+
+    @Slot()
+    def toggleImmersive(self) -> None:
+        self._immersive = not self._immersive
+        self.navigationChanged.emit()
+
+    @Slot(bool)
+    def setImmersive(self, value: bool) -> None:
+        if self._immersive != value:
+            self._immersive = value
+            self.navigationChanged.emit()
+
+    @Slot()
+    def goNext(self) -> None:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return
+        idx = ids.index(img)
+        if idx < len(ids) - 1:
+            self._current.image_id = ids[idx + 1]
+            self.navigationChanged.emit()
+
+    @Slot()
+    def goPrev(self) -> None:
+        ids = self._current.context_ids
+        img = self._current.image_id
+        if not ids or img not in ids:
+            return
+        idx = ids.index(img)
+        if idx > 0:
+            self._current.image_id = ids[idx - 1]
+            self.navigationChanged.emit()
 
     @Slot(float)
     def updateScrollX(self, x: float) -> None:
         self._current.scroll_x = x
 
-    @Slot(list, str, str)
-    def saveSelection(self, selection_ids: list, primary_id: str, anchor_id: str) -> None:
-        self._current.selection_ids = list(selection_ids)
+    @Slot("QVariant", str, str)
+    def saveSelection(self, selection_ids, primary_id: str, anchor_id: str) -> None:
+        if isinstance(selection_ids, QJSValue):
+            selection_ids = selection_ids.toVariant() or []
+        self._current.selection_ids = list(selection_ids or [])
         self._current.primary_id = primary_id
         self._current.anchor_id = anchor_id

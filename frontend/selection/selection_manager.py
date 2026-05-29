@@ -1,4 +1,5 @@
 from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtQml import QJSValue
 
 
 class SelectionManager(QObject):
@@ -94,9 +95,11 @@ class SelectionManager(QObject):
     def requestOpen(self, image_id: str) -> None:
         self.openRequested.emit(image_id)
 
-    @Slot(list, str, str)
-    def restore(self, selection_ids: list, primary_id: str, anchor_id: str) -> None:
-        self._selected = set(selection_ids)
+    @Slot("QVariant", str, str)
+    def restore(self, selection_ids, primary_id: str, anchor_id: str) -> None:
+        if isinstance(selection_ids, QJSValue):
+            selection_ids = selection_ids.toVariant() or []
+        self._selected = set(selection_ids or [])
         self._primary = primary_id
         self._anchor = anchor_id
         self._bump()

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Window
 
 ApplicationWindow {
     id: root
@@ -10,6 +11,9 @@ ApplicationWindow {
     visible: true
     color: Theme.background
     title: "Found"
+
+    // Toggle fullscreen with immersive mode
+    visibility: NavigationManager.immersiveMode ? Window.FullScreen : Window.Windowed
 
     MainRouter {
         anchors.fill: parent
