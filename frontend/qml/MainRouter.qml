@@ -24,7 +24,8 @@ Item {
         NavigationBar {
             id: navBar
             anchors { top: parent.top; left: parent.left; right: parent.right }
-            height: 48
+            height: NavigationManager.immersiveMode ? 0 : 48
+            visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
             viewTitle: {
                 switch (NavigationManager.currentView) {

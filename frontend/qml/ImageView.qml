@@ -44,6 +44,22 @@ Item {
         onActivated: if (root.hasPrev) NavigationManager.goPrev()
     }
 
+    // Immersive / fullscreen
+    Shortcut {
+        sequence: "F"
+        onActivated: NavigationManager.toggleImmersive()
+    }
+
+    Shortcut {
+        sequence: "Escape"
+        onActivated: {
+            if (NavigationManager.immersiveMode)
+                NavigationManager.setImmersive(false)
+            else
+                NavigationManager.goBack()
+        }
+    }
+
     // Keyboard zoom
     Shortcut {
         sequence: "="

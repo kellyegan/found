@@ -346,3 +346,54 @@ def test_has_next_has_prev_false_outside_image_view(qapp):
     nm = NavigationManager()
     assert nm.hasNext is False
     assert nm.hasPrev is False
+
+
+# ---------------------------------------------------------------------------
+# immersiveMode / toggleImmersive()
+# ---------------------------------------------------------------------------
+
+
+def test_immersive_mode_defaults_to_false(qapp):
+    assert NavigationManager().immersiveMode is False
+
+
+def test_toggle_immersive_enables(qapp):
+    nm = NavigationManager()
+    nm.toggleImmersive()
+    assert nm.immersiveMode is True
+
+
+def test_toggle_immersive_disables(qapp):
+    nm = NavigationManager()
+    nm.toggleImmersive()
+    nm.toggleImmersive()
+    assert nm.immersiveMode is False
+
+
+def test_set_immersive_true(qapp):
+    nm = NavigationManager()
+    nm.setImmersive(True)
+    assert nm.immersiveMode is True
+
+
+def test_set_immersive_false(qapp):
+    nm = NavigationManager()
+    nm.toggleImmersive()
+    nm.setImmersive(False)
+    assert nm.immersiveMode is False
+
+
+def test_immersive_clears_on_go_back(qapp):
+    nm = NavigationManager()
+    nm.push("image", {"image_id": "img-1"})
+    nm.toggleImmersive()
+    nm.goBack()
+    assert nm.immersiveMode is False
+
+
+def test_immersive_changed_fires_on_toggle(qapp):
+    nm = NavigationManager()
+    received = []
+    nm.navigationChanged.connect(lambda: received.append(1))
+    nm.toggleImmersive()
+    assert received

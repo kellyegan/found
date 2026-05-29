@@ -35,6 +35,7 @@ class NavigationManager(QObject):
         super().__init__(parent)
         self._current = NavigationEntry(view="library")
         self._stack: list[NavigationEntry] = []
+        self._immersive: bool = False
 
     # ------------------------------------------------------------------
     # Properties
@@ -68,6 +69,10 @@ class NavigationManager(QObject):
     def currentEntry(self) -> dict:
         return self._current.as_dict()
 
+    @Property(bool, notify=navigationChanged)
+    def immersiveMode(self) -> bool:
+        return self._immersive
+
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
@@ -88,8 +93,20 @@ class NavigationManager(QObject):
     def goBack(self) -> None:
         if not self._stack:
             return
+        self._immersive = False
         self._current = self._stack.pop()
         self.navigationChanged.emit()
+
+    @Slot()
+    def toggleImmersive(self) -> None:
+        self._immersive = not self._immersive
+        self.navigationChanged.emit()
+
+    @Slot(bool)
+    def setImmersive(self, value: bool) -> None:
+        if self._immersive != value:
+            self._immersive = value
+            self.navigationChanged.emit()
 
     @Slot()
     def goNext(self) -> None:
