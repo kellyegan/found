@@ -10,12 +10,63 @@ import httpx
 from frontend.app.controller import AppController
 from frontend.backend.connection_monitor import BackendConnectionManager
 from frontend.backend.process_manager import BackendProcessManager
+from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
 from frontend.theme.theme import ThemeManager
+
+
+def _make_collections_fetcher(base_url: str):
+    def fetch():
+        try:
+            response = httpx.get(f"{base_url}/api/v1/collections", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
+def _make_collection_creator(base_url: str):
+    def create(name: str):
+        try:
+            response = httpx.post(f"{base_url}/api/v1/collections", json={"name": name}, timeout=10.0)
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+    return create
+
+
+def _make_images_adder(base_url: str):
+    def add(collection_id: str, image_ids: list):
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/collections/{collection_id}/images",
+                json={"image_ids": image_ids},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return add
+
+
+def _make_collection_images_fetcher(base_url: str):
+    def fetch(collection_id: str):
+        try:
+            response = httpx.get(
+                f"{base_url}/api/v1/collections/{collection_id}/images?view=grid",
+                timeout=10.0,
+            )
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
 
 
 def _make_page_fetcher(base_url: str):
@@ -54,6 +105,12 @@ def main():
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
     selection_manager = SelectionManager()
     navigation_manager = NavigationManager()
+    collections_state = CollectionsViewModel(
+        collections_fetcher=_make_collections_fetcher(base_url),
+        collection_creator=_make_collection_creator(base_url),
+        images_adder=_make_images_adder(base_url),
+        collection_images_fetcher=_make_collection_images_fetcher(base_url),
+    )
 
     controller = AppController(
         app_state,
@@ -70,6 +127,7 @@ def main():
     engine.rootContext().setContextProperty("LibraryState", library_state)
     engine.rootContext().setContextProperty("SelectionManager", selection_manager)
     engine.rootContext().setContextProperty("NavigationManager", navigation_manager)
+    engine.rootContext().setContextProperty("CollectionsState", collections_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"
