@@ -386,7 +386,7 @@ Displays metadata for current selection.
 
 **Editable fields**
 
-- tags
+- tags — uses the Tag Editing Widget (see section 6)
 - categories
 - collections
 
@@ -647,6 +647,46 @@ Dragging files or folders from an external file manager onto the main window:
 - always triggers the import preview modal
 - the modal displays the categorized preview (ready to import, already in library, conflicts if any)
 - the user confirms or cancels before any import begins
+
+---
+
+### Tag Editing Widget
+
+Used in the Information Panel (Library View and Image View) for adding and removing tags on the selected image(s).
+
+#### Layout
+
+Tags are displayed as inline chips, followed immediately by a text input field within the same container row.
+
+```text
+[ Devsheet  x ] [ Lotis  x ]  Type and enter ...
+```
+
+#### Chip appearance
+
+Each tag chip displays the tag name and a circular remove button (×). Clicking × removes that tag from the selected image(s).
+
+#### Adding a tag
+
+The user types into the inline input field. As they type, a dropdown of autocomplete suggestions appears below the widget, populated by `GET /tags?search=<query>`. Selecting a suggestion from the dropdown adds that tag.
+
+If the user types a name that does not match any existing tag and presses Enter, a new tag is created and immediately applied.
+
+#### Autocomplete behavior
+
+- Suggestions appear after the first character is typed.
+- Up to 20 suggestions are shown, ordered alphabetically.
+- Already-applied tags are excluded from suggestions.
+- Pressing Escape closes the suggestion list without adding a tag.
+- Pressing Enter with no suggestion highlighted confirms the typed text as a new tag.
+
+#### Bulk editing
+
+When multiple images are selected, the widget reflects the intersection and union of their tags:
+
+- Tags shared by **all** selected images appear as normal chips with a (×) to remove from all.
+- Tags held by **some but not all** selected images appear as chips with a mixed/partial indicator. Clicking the chip adds it to all; clicking (×) removes it from those that have it.
+- Adding a tag via the input applies it to all selected images.
 
 ---
 

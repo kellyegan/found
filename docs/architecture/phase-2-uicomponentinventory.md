@@ -314,7 +314,9 @@ Displays matching tag suggestions as the user types.
 
 ### Behavior
 
-Appears while typing; dismissed on selection or blur.
+- Appears after the first character is typed; dismissed on selection, Escape, or blur.
+- Returns up to 20 results matching the current input by prefix.
+- Already-applied tags are excluded from the suggestion list.
 
 ---
 
@@ -525,11 +527,20 @@ Generic read-only metadata display row.
 
 Tag management UI for the info panel.
 
+### Layout
+
+Applied tags are displayed as inline chips followed immediately by a text input field in the same container row.
+
+```text
+[ Devsheet  x ] [ Lotis  x ]  Type and enter ...
+```
+
 ### Features
 
-- Add tags via TagSuggestionList
-- Remove tags with (x) per chip
-- Bulk editing: shows shared tags with remove button; shows partial tags with mixed FilterChip
+- Applied tags displayed as chips with (x) to remove.
+- Inline text input delegates to TagSuggestionList for autocomplete suggestions.
+- Pressing Enter with no suggestion highlighted creates a new tag and applies it immediately.
+- Bulk editing: shows shared tags with remove button; shows partial tags with mixed FilterChip.
 
 ---
 

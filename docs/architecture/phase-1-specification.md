@@ -650,6 +650,14 @@ Returns recent import jobs.
 GET /tags
 ```
 
+### Query Parameters
+
+| Parameter | Type   |
+| --------- | ------ |
+| search    | string |
+
+`search` filters tags by prefix match on the name field. Used to power autocomplete suggestions in the tag editing widget. Returns at most 20 results.
+
 ---
 
 ## Create Tag
