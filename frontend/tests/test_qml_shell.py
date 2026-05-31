@@ -296,36 +296,36 @@ def test_thumbnail_grid_has_scroll_x_property(engine):
 
 
 # ---------------------------------------------------------------------------
-# NavigationBar
+# TitleBar
 # ---------------------------------------------------------------------------
 
 
-def test_navigation_bar_qml_exists():
-    assert (QML_DIR / "NavigationBar.qml").exists()
+def test_title_bar_qml_exists():
+    assert (QML_DIR / "TitleBar.qml").exists()
 
 
-def test_navigation_bar_loads(engine):
-    load_component(engine, "NavigationBar.qml")
+def test_title_bar_loads(engine):
+    load_component(engine, "TitleBar.qml")
 
 
-def test_navigation_bar_can_go_back_defaults_to_false(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_can_go_back_defaults_to_false(engine):
+    obj = load_component(engine, "TitleBar.qml")
     assert obj.property("canGoBack") is False
 
 
-def test_navigation_bar_can_go_back_is_writable(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_can_go_back_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
     obj.setProperty("canGoBack", True)
     assert obj.property("canGoBack") is True
 
 
-def test_navigation_bar_view_title_defaults_to_empty(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_view_title_defaults_to_empty(engine):
+    obj = load_component(engine, "TitleBar.qml")
     assert obj.property("viewTitle") == ""
 
 
-def test_navigation_bar_view_title_is_writable(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_view_title_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
     obj.setProperty("viewTitle", "Library")
     assert obj.property("viewTitle") == "Library"
 

@@ -24,8 +24,8 @@ Item {
 
         property bool sidebarOpen: false
 
-        NavigationBar {
-            id: navBar
+        TitleBar {
+            id: titleBar
             anchors { top: parent.top; left: parent.left; right: parent.right }
             height: NavigationManager.immersiveMode ? 0 : 48
             visible: !NavigationManager.immersiveMode
@@ -46,7 +46,7 @@ Item {
         // Library view
         LibraryView {
             id: libraryView
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
@@ -109,7 +109,7 @@ Item {
 
         // Collection view
         CollectionView {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "collection"
             collectionName: NavigationManager.currentView === "collection"
                             ? (NavigationManager.currentEntry.collection_name ?? "") : ""
@@ -119,7 +119,7 @@ Item {
 
         // Image view (Slice 5)
         ImageView {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "image"
             imageId:   NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.image_id ?? "") : ""
             imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
@@ -132,7 +132,7 @@ Item {
 
         // Sidebar overlay — rendered above content, below nav bar
         CollectionsSidebar {
-            anchors { top: navBar.bottom; left: parent.left; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
             width: implicitWidth
             open: readyContainer.sidebarOpen
             collections: CollectionsState.collections
@@ -160,7 +160,7 @@ Item {
 
         // Dim overlay behind sidebar
         Rectangle {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             color: "#000000"
             opacity: readyContainer.sidebarOpen ? 0.4 : 0.0
             z: 9
@@ -177,7 +177,7 @@ Item {
 
         // File drop area — accepts files/directories dragged from Finder/Explorer
         DropArea {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "library"
             z: 20
 
