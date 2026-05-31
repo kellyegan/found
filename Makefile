@@ -1,6 +1,7 @@
 .PHONY: setup setup-backend setup-frontend
 
 setup: setup-backend setup-frontend
+	pip install -e .
 	@echo "All dependencies installed."
 
 setup-backend:

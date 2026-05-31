@@ -10,17 +10,25 @@ Item {
     property string libraryLoadingState: "Loading"
 
     SplashScreen {
+        id: splashScreen
         anchors.fill: parent
-        visible: root.appState !== "Ready"
+        visible: !splashDismissed
         statusText: root.statusMessage
         hasError: root.hasError
+        appVersion: foundVersion
+        appLicense: foundLicense
+        isReady: root.appState === "Ready"
+        onDismissed: splashDismissed = true
+        z: 1
     }
+
+    property bool splashDismissed: false
 
     // Ready state — navigation bar + view router
     Item {
         id: readyContainer
         anchors.fill: parent
-        visible: root.appState === "Ready"
+        visible: root.appState === "Ready" && splashDismissed
 
         property bool sidebarOpen: false
 

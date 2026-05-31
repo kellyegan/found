@@ -18,6 +18,7 @@ from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
 from frontend.theme.theme import ThemeManager
+from frontend.version import get_app_metadata
 
 
 def _make_collections_fetcher(base_url: str):
@@ -175,9 +176,13 @@ def main():
         library_view_model=library_state,
     )
 
+    app_metadata = get_app_metadata()
+
     engine = QQmlApplicationEngine()
     engine.addImageProvider("thumbnails", thumbnail_provider)
     engine.rootContext().setContextProperty("Theme", theme)
+    engine.rootContext().setContextProperty("foundVersion", app_metadata["version"])
+    engine.rootContext().setContextProperty("foundLicense", app_metadata["license"])
     engine.rootContext().setContextProperty("AppState", app_state)
     engine.rootContext().setContextProperty("BackendConnection", connection_monitor)
     engine.rootContext().setContextProperty("LibraryState", library_state)

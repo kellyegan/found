@@ -129,6 +129,46 @@ def test_splash_screen_has_error_is_writable(engine):
     assert obj.property("hasError") is True
 
 
+def test_splash_screen_app_version_defaults_to_empty(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    assert obj.property("appVersion") == ""
+
+
+def test_splash_screen_app_version_is_writable(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    obj.setProperty("appVersion", "0.1.0")
+    assert obj.property("appVersion") == "0.1.0"
+
+
+def test_splash_screen_app_license_defaults_to_empty(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    assert obj.property("appLicense") == ""
+
+
+def test_splash_screen_app_license_is_writable(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    obj.setProperty("appLicense", "MIT")
+    assert obj.property("appLicense") == "MIT"
+
+
+def test_splash_screen_is_ready_defaults_to_false(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    assert obj.property("isReady") is False
+
+
+def test_splash_screen_is_ready_is_writable(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    obj.setProperty("isReady", True)
+    assert obj.property("isReady") is True
+
+
+def test_splash_screen_has_dismissed_signal(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    received = []
+    obj.dismissed.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
 # ---------------------------------------------------------------------------
 # MainRouter
 # ---------------------------------------------------------------------------
@@ -228,6 +268,8 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
+    e.rootContext().setContextProperty("foundVersion", "0.1.0")
+    e.rootContext().setContextProperty("foundLicense", "MIT")
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load"
 
