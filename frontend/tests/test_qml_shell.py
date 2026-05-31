@@ -148,8 +148,8 @@ def test_splash_screen_app_license_defaults_to_empty(engine):
 
 def test_splash_screen_app_license_is_writable(engine):
     obj = load_component(engine, "SplashScreen.qml")
-    obj.setProperty("appLicense", "MIT")
-    assert obj.property("appLicense") == "MIT"
+    obj.setProperty("appLicense", GNU GPL v3.0)
+    assert obj.property("appLicense") == GNU GPL v3.0
 
 
 def test_splash_screen_is_ready_defaults_to_false(engine):
@@ -272,7 +272,7 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.rootContext().setContextProperty("foundVersion", "0.1.0")
-    e.rootContext().setContextProperty("foundLicense", "MIT")
+    e.rootContext().setContextProperty("foundLicense", GNU GPL v3.0)
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load"
 
