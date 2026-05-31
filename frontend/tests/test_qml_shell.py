@@ -496,6 +496,18 @@ def test_collections_sidebar_has_image_dropped_signal(engine):
     assert isinstance(received, list)  # signal attribute exists
 
 
+def test_collections_sidebar_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "CollectionsSidebar.qml")
+    received = []
+    obj.toggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_title_bar_has_no_sidebar_open_property(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("sidebarOpen") is None
+
+
 def test_thumbnail_tile_still_loads_with_drag_support(engine):
     load_component(engine, "ThumbnailTile.qml")
 

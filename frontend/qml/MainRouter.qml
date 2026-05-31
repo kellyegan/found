@@ -30,7 +30,6 @@ Item {
             height: NavigationManager.immersiveMode ? 0 : 48
             visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
-            sidebarOpen: readyContainer.sidebarOpen
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
@@ -40,7 +39,6 @@ Item {
                 }
             }
             onGoBackRequested: NavigationManager.goBack()
-            onSidebarToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
         }
 
         // Library view
@@ -138,7 +136,7 @@ Item {
             collections: CollectionsState.collections
             z: 10
 
-            onClosed: readyContainer.sidebarOpen = false
+            onToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
 
             onCollectionClicked: function(collectionId, collectionName) {
                 readyContainer.sidebarOpen = false

@@ -5,10 +5,8 @@ Item {
 
     property bool canGoBack: false
     property string viewTitle: ""
-    property bool sidebarOpen: false
 
     signal goBackRequested()
-    signal sidebarToggleRequested()
 
     // ── Title zone (left) ────────────────────────────────────────────────────
     Item {
@@ -68,28 +66,8 @@ Item {
             top: parent.top
             bottom: parent.bottom
             left: statusZone.right
-            right: sidebarBtn.left
+            right: parent.right
         }
         // Keyword search and filter dropdown will be added in a later commit
-    }
-
-    // Sidebar toggle — temporary, replaced by edge tab in next commit
-    Item {
-        id: sidebarBtn
-        width: 44
-        height: parent.height
-        anchors.right: parent.right
-
-        Text {
-            anchors.centerIn: parent
-            text: "☰"
-            font.pixelSize: 16
-            color: root.sidebarOpen ? "#88cc88" : Theme.text
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: root.sidebarToggleRequested()
-        }
     }
 }
