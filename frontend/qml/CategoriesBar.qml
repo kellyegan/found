@@ -92,7 +92,7 @@ Item {
                 bottomMargin: 6
             }
             orientation: ListView.Horizontal
-            spacing: 8
+            spacing: 28
             clip: true
             model: root.categories
 
