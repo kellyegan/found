@@ -24,6 +24,7 @@ import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
 from frontend.library.view_model import LibraryViewModel
+from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.navigation.navigation_manager import NavigationManager
@@ -265,6 +266,8 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
+    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
+    e.rootContext().setContextProperty("CategoriesState", categories_state)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
@@ -552,6 +555,53 @@ def test_title_bar_has_no_sidebar_open_property(engine):
 
 def test_thumbnail_tile_still_loads_with_drag_support(engine):
     load_component(engine, "ThumbnailTile.qml")
+
+
+# ---------------------------------------------------------------------------
+# CategoriesBar
+# ---------------------------------------------------------------------------
+
+
+def test_categories_bar_qml_exists():
+    assert (QML_DIR / "CategoriesBar.qml").exists()
+
+
+def test_categories_bar_loads(engine):
+    load_component(engine, "CategoriesBar.qml")
+
+
+def test_categories_bar_open_defaults_to_true(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    assert obj.property("open") is True  # component default; MainRouter starts it closed
+
+
+def test_categories_bar_open_is_writable(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    obj.setProperty("open", False)
+    assert obj.property("open") is False
+
+
+def test_categories_bar_categories_defaults_to_empty(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    from PySide6.QtQml import QJSValue
+    val = obj.property("categories")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_categories_bar_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    received = []
+    obj.toggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_categories_bar_has_filter_toggled_signal(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    received = []
+    obj.filterToggled.connect(lambda cat_id: received.append(cat_id))
+    assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------

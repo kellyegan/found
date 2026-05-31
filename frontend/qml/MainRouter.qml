@@ -31,6 +31,7 @@ Item {
         visible: root.appState === "Ready" && splashDismissed
 
         property bool sidebarOpen: false
+        property bool categoriesBarOpen: false
 
         TitleBar {
             id: titleBar
@@ -49,10 +50,23 @@ Item {
             onGoBackRequested: NavigationManager.goBack()
         }
 
+        // Categories bar — structural bottom zone for library/collection views
+        CategoriesBar {
+            id: categoriesBar
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            open: readyContainer.categoriesBarOpen
+            visible: NavigationManager.currentView === "library" || NavigationManager.currentView === "collection"
+            categories: CategoriesState.categories
+            onToggleRequested: readyContainer.categoriesBarOpen = !readyContainer.categoriesBarOpen
+            onFilterToggled: function(categoryId) { CategoriesState.cycleFilter(categoryId) }
+            z: 5
+        }
+
         // Library view
         LibraryView {
             id: libraryView
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
@@ -87,12 +101,13 @@ Item {
             }
         }
 
-        // Load collections when app becomes ready
+        // Load collections and categories when app becomes ready
         Connections {
             target: AppState
             function onStateNameChanged(name) {
                 if (name === "Ready") {
                     CollectionsState.load()
+                    CategoriesState.load()
                 }
             }
         }
@@ -116,6 +131,7 @@ Item {
         // Collection view
         CollectionView {
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             visible: NavigationManager.currentView === "collection"
             collectionName: NavigationManager.currentView === "collection"
                             ? (NavigationManager.currentEntry.collection_name ?? "") : ""

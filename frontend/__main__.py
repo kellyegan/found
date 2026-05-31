@@ -17,6 +17,7 @@ from frontend.library.view_model import LibraryViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
+from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.theme.theme import ThemeManager
 from frontend.version import get_app_metadata
 
@@ -118,6 +119,17 @@ def _make_conflict_resolver(base_url: str):
     return resolve
 
 
+def _make_categories_fetcher(base_url: str):
+    def fetch():
+        try:
+            response = httpx.get(f"{base_url}/api/v1/categories", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None):
         try:
@@ -153,6 +165,7 @@ def main():
     base_url = f"http://{process_manager._host}:{process_manager._port}"
 
     library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url))
+    categories_state = CategoriesViewModel(categories_fetcher=_make_categories_fetcher(base_url))
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
     selection_manager = SelectionManager()
     navigation_manager = NavigationManager()
@@ -188,6 +201,7 @@ def main():
     engine.rootContext().setContextProperty("LibraryState", library_state)
     engine.rootContext().setContextProperty("SelectionManager", selection_manager)
     engine.rootContext().setContextProperty("NavigationManager", navigation_manager)
+    engine.rootContext().setContextProperty("CategoriesState", categories_state)
     engine.rootContext().setContextProperty("CollectionsState", collections_state)
     engine.rootContext().setContextProperty("ImportState", import_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
