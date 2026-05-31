@@ -145,6 +145,20 @@ def _make_category_creator(base_url: str):
     return create
 
 
+def _make_category_images_adder(base_url: str):
+    def add(category_id: str, image_ids: list):
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/images/bulk/categories",
+                json={"image_ids": image_ids, "add_category_ids": [category_id]},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return add
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None):
         try:
@@ -183,6 +197,7 @@ def main():
     categories_state = CategoriesViewModel(
         categories_fetcher=_make_categories_fetcher(base_url),
         category_creator=_make_category_creator(base_url),
+        images_adder=_make_category_images_adder(base_url),
     )
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
     selection_manager = SelectionManager()

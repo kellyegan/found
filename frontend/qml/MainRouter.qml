@@ -60,6 +60,12 @@ Item {
             onToggleRequested: readyContainer.categoriesBarOpen = !readyContainer.categoriesBarOpen
             onFilterToggled: function(categoryId) { CategoriesState.cycleFilter(categoryId) }
             onCreateCategoryRequested: function(name) { CategoriesState.createCategory(name) }
+            onImageDropped: function(categoryId, imageId) {
+                var ids = SelectionManager.isSelected(imageId)
+                    ? SelectionManager.selectedIds
+                    : [imageId]
+                CategoriesState.addImagesToCategory(categoryId, ids)
+            }
             z: 5
         }
 
@@ -199,8 +205,9 @@ Item {
         }
 
         // File drop area — accepts files/directories dragged from Finder/Explorer
+        // Stops at categoriesBar.top so chip DropAreas are not blocked by this higher-z area
         DropArea {
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: categoriesBar.top }
             visible: NavigationManager.currentView === "library"
             z: 20
 

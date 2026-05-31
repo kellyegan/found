@@ -287,3 +287,33 @@ def test_create_category_noop_without_creator(qapp):
     before = len(vm.categories)
     vm.createCategory("Macro")
     assert len(vm.categories) == before
+
+
+# ---------------------------------------------------------------------------
+# Add images to category
+# ---------------------------------------------------------------------------
+
+def _vm_with_adder(adder):
+    return CategoriesViewModel(
+        categories_fetcher=lambda: SAMPLE_CATEGORIES,
+        images_adder=adder,
+    )
+
+
+def test_add_images_to_category_calls_adder_with_ids(qapp):
+    calls = []
+    vm = _vm_with_adder(lambda cat_id, ids: calls.append((cat_id, ids)))
+    vm.addImagesToCategory("cat-1", ["img-a", "img-b"])
+    assert calls == [("cat-1", ["img-a", "img-b"])]
+
+
+def test_add_images_to_category_noop_without_adder(qapp):
+    vm = _vm()
+    vm.addImagesToCategory("cat-1", ["img-a"])  # must not raise
+
+
+def test_add_images_to_category_noop_with_empty_ids(qapp):
+    calls = []
+    vm = _vm_with_adder(lambda cat_id, ids: calls.append((cat_id, ids)))
+    vm.addImagesToCategory("cat-1", [])
+    assert calls == []

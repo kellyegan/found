@@ -1,6 +1,7 @@
 from typing import Callable, Optional
 
 from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
+from PySide6.QtQml import QJSValue
 
 _CYCLE = {"off": "include", "include": "exclude", "exclude": "off"}
 
@@ -10,10 +11,17 @@ class CategoriesViewModel(QObject):
     loadingStateChanged = Signal(str)
     filterChanged = Signal()
 
-    def __init__(self, categories_fetcher: Callable, category_creator: Optional[Callable] = None, parent=None):
+    def __init__(
+        self,
+        categories_fetcher: Callable,
+        category_creator: Optional[Callable] = None,
+        images_adder: Optional[Callable] = None,
+        parent=None,
+    ):
         super().__init__(parent)
         self._categories_fetcher = categories_fetcher
         self._category_creator = category_creator
+        self._images_adder = images_adder
         self._categories: list = []
         self._filter_states: dict[str, str] = {}
         self._loading_state = "Idle"
@@ -75,6 +83,14 @@ class CategoriesViewModel(QObject):
             key=lambda c: c["name"].lower(),
         )
         self.categoriesChanged.emit()
+
+    @Slot(str, "QVariant")
+    def addImagesToCategory(self, category_id: str, image_ids) -> None:
+        if isinstance(image_ids, QJSValue):
+            image_ids = image_ids.toVariant() or []
+        if not image_ids or self._images_adder is None:
+            return
+        self._images_adder(category_id, list(image_ids))
 
     @Slot()
     def clearFilters(self) -> None:

@@ -9,6 +9,7 @@ Item {
     signal toggleRequested()
     signal filterToggled(string categoryId)
     signal createCategoryRequested(string name)
+    signal imageDropped(string categoryId, string imageId)
 
     readonly property int _stripHeight: 44
     readonly property int _tabHeight: 16
@@ -38,6 +39,9 @@ Item {
             onClicked: root.toggleRequested()
         }
     }
+
+    // Id of the chip currently under an active drag — drives isDropTarget on delegates
+    property string _hoveredCategoryId: ""
 
     // ── Chip strip — below the tab ───────────────────────────────────────────
     Rectangle {
@@ -92,38 +96,37 @@ Item {
             clip: true
             model: root.categories
 
-            delegate: Rectangle {
-                id: chip
+            delegate: CategoryChip {
                 required property var modelData
-                width: chipLabel.implicitWidth + 24
-                height: parent ? parent.height : 32
-                radius: height / 2
-                color: {
-                    if (modelData.filterState === "include") return "#2a5a2a"
-                    if (modelData.filterState === "exclude") return "#5a2a2a"
-                    return Theme.surface2 ?? "#2a2a2a"
-                }
-                border.color: {
-                    if (modelData.filterState === "include") return "#44aa44"
-                    if (modelData.filterState === "exclude") return "#aa4444"
-                    return "#444444"
-                }
-                border.width: 1
+                categoryId: modelData.id
+                categoryName: modelData.name
+                filterState: modelData.filterState
+                isDropTarget: root._hoveredCategoryId === modelData.id
+                onFilterToggled: function(cid) { root.filterToggled(cid) }
+            }
+        }
 
-                Text {
-                    id: chipLabel
-                    anchors.centerIn: parent
-                    text: modelData.name
-                    font.pixelSize: Theme.fontSizeSm
-                    font.family: Theme.fontFamily
-                    color: modelData.filterState === "off" ? Theme.textMuted : Theme.text
-                }
+        // ── Strip-level drop target — covers chipList; uses itemAt() to find target chip
+        DropArea {
+            anchors {
+                left: chipList.left; right: chipList.right
+                top: chipList.top;   bottom: chipList.bottom
+            }
+            keys: ["found/image"]
 
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.filterToggled(modelData.id)
-                }
+            onEntered: function(drag) { root._hoveredCategoryId = _chipIdAt(drag.x) }
+            onPositionChanged: function(drag) { root._hoveredCategoryId = _chipIdAt(drag.x) }
+            onExited: root._hoveredCategoryId = ""
+            onDropped: function(drop) {
+                var catId = root._hoveredCategoryId
+                root._hoveredCategoryId = ""
+                var iid = drop.source ? (drop.source.imageId ?? "") : ""
+                if (catId !== "" && iid !== "") root.imageDropped(catId, iid)
+            }
+
+            function _chipIdAt(x) {
+                var item = chipList.itemAt(x + chipList.contentX, chipList.height / 2)
+                return item ? (item.categoryId ?? "") : ""
             }
         }
 
