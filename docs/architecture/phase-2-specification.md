@@ -255,49 +255,40 @@ This is the central workspace of the application.
 
 ```text
 +--------------------------------------------------+
-| Title Bar                      |    Filter Panel |
+| Title              | Status |       Search        |
 +--------------------------------------------------+
-|          |                                       |
-|  Sidebar |               Thumbnail               |
-|  overlay |                 Grid                  |
-|          |                                       |
-|          |                                       |
-|          |---------------------------------------+
-|          |           Information Panel           |
+|                                                  |
+| [◀]             Thumbnail Grid              [▶] |
+|                                                  |
+|                                                  |
++--------------------------------------------------+
+|                    Categories                    |
 +--------------------------------------------------+
 ```
+
+The Collections overlay extends from the left edge and the Metadata overlay from the right edge. Both sit above the thumbnail grid without compressing it.
 
 ---
 
 #### Title Bar
 
-Located at top-left.
+Full-width bar spanning the top of the window. Divided into three zones:
 
-Contains:
+**Title zone (left)** — current page title, back navigation, active collection name (if applicable)
 
-- current page title
-- back navigation
-- current collection name (if applicable)
+**Status zone (center)** — status indicators, only visible when there is something to report: import progress, missing image count, backend connection state
 
----
-
-#### Filter Panel
-
-Located at top-right.
-
-Contains:
-
-- category filtering
-- tag filtering
-- missing-image filtering (only visible when there are missing images)
+**Search zone (right)** — contains two elements:
+- Keyword search field: tag autocomplete; autocomplete dropdown appears below the title bar
+- Filter dropdown icon: grey when no filters active, blue when filters are active; opens a dropdown listing active keyword chips, category chips, and missing image toggle grouped by type; includes a Clear all filters button (does not affect active collection)
 
 ---
 
-#### Sidebar Overlay
+#### Collections Overlay
 
-Collapsible overlay panel.
+Left-edge collapsible overlay. Slides over the thumbnail grid without compressing it.
 
-Appears above thumbnail grid.
+Toggle tab on the left edge of the grid at mid-height. Triangle points toward the left edge when open, toward center when collapsed.
 
 Contains:
 
@@ -308,7 +299,56 @@ Collections are displayed alphabetically.
 
 Collections with no images appear visually muted.
 
-The sidebar is hidden while browsing a collection.
+The overlay is hidden while browsing a collection.
+
+---
+
+#### Metadata Overlay
+
+Right-edge collapsible overlay. Slides over the thumbnail grid without compressing it.
+
+Toggle tab on the right edge of the grid at mid-height. Triangle points toward the right edge when open, toward center when collapsed.
+
+The panel may remain open regardless of selection state.
+
+**Read-only fields**
+
+- filename
+- path
+- dimensions
+- filesize
+- date added
+- missing state
+
+**Editable fields**
+
+- tags — uses the Tag Editing Widget (see section 6)
+- categories
+- collections
+
+**Bulk editing behavior**
+
+When multiple images are selected, editable fields show the intersection of their metadata:
+
+- Items shared by all selected images appear with an (x) to remove from all.
+- Items held by some but not all images appear with a mixed/partial indicator. Clicking adds to all; clicking (x) removes from those that have it.
+- The add field works as normal and applies the addition to all selected images.
+
+---
+
+#### Categories Bar
+
+Bottom collapsible bar spanning the full window width.
+
+Toggle tab centered on the bottom edge. Triangle points downward when open, upward when collapsed.
+
+Contains a horizontally scrolling list of all categories. Each category supports tri-state filtering:
+
+- Off
+- On (include)
+- Exclude
+
+Multiple category filters may be active simultaneously. All categories are always shown.
 
 ---
 
@@ -325,6 +365,9 @@ Primary browsing area.
 - Row count derived from window height and a target thumbnail size of 180px:
   `rowCount = max(2, round(viewportHeight / 180))`
   `actualThumbnailSize = viewportHeight / rowCount`
+- Equal gap between all four sides of each thumbnail tile; gap will be user-adjustable in a future phase
+- Top and bottom margin separating the grid from the title bar and categories bar
+- Left and right margin sized so that edge columns remain partially visible and scrollable when either overlay is open
 
 **Scrolling Behavior**
 
@@ -357,7 +400,7 @@ If source image no longer exists:
 - image displays missing-image indicator
 - image metadata remains preserved
 
-Missing images can be filtered from the filter panel.
+Missing images can be filtered using the missing image toggle in the filter dropdown.
 
 **Failed Thumbnail Generation**
 
@@ -366,37 +409,6 @@ If thumbnail generation fails:
 - generic placeholder thumbnail appears
 - automatic retry occurs
 - image remains openable in Image View if possible
-
----
-
-#### Information Panel
-
-Located along bottom of window.
-
-Displays metadata for current selection.
-
-**Read-only fields**
-
-- filename
-- path
-- dimensions
-- filesize
-- date added
-- missing state
-
-**Editable fields**
-
-- tags — uses the Tag Editing Widget (see section 6)
-- categories
-- collections
-
-**Bulk editing behavior**
-
-When multiple images are selected, editable fields show the intersection of their metadata:
-
-- Items shared by all selected images appear with an (x) to remove from all.
-- Items held by some but not all images appear with a mixed/partial indicator. Clicking adds to all; clicking (x) removes from those that have it.
-- The add field works as normal and applies the addition to all selected images.
 
 ---
 
@@ -415,34 +427,24 @@ DRAG AND DROP HERE TO ADD
 
 #### Filtering
 
-**Categories**
+**Tags (keywords)**
 
-Category filters support:
+Users type into the keyword search field in the Search zone of the title bar.
 
-- On
-- Off
-- Exclude
+Matching tags appear as autocomplete suggestions. Selecting a suggestion adds a keyword chip to the filter dropdown. Filtering is applied only after selecting a suggestion, not while typing.
 
-Multiple category filters may be active simultaneously.
-
----
-
-**Tags**
-
-Users type into the tag search field.
-
-Matching tags appear as autocomplete suggestions.
-
-Selecting a suggestion adds that tag to the active filter list. Each active tag displays an (x) button to remove it from the list.
-
-Filtering is applied only after selecting a suggestion, not while typing.
-
-Each active tag filter supports:
+Each active keyword filter supports:
 
 - On (include)
 - Exclude
 
-Multiple tag filters may be active simultaneously.
+Multiple keyword filters may be active simultaneously.
+
+---
+
+**Categories**
+
+Category filters are applied from the Categories bar along the bottom of the window. Each category supports tri-state filtering (off / include / exclude) and multiple categories may be active simultaneously. Active category filters also appear as chips in the filter dropdown.
 
 ---
 
@@ -472,36 +474,31 @@ Supports image inspection and metadata editing.
 
 #### Title Bar
 
-Contains:
+Same three-zone structure as Library View:
 
-- back navigation
-- current image title/path context
+**Title zone (left)** — current image title/filename, back navigation
+
+**Status zone (center)** — same status indicators as Library View, only visible when there is something to report
+
+**Search zone (right)** — read-only in Image View; displays active keyword and category filter chips reflecting the browsing context the user navigated from
 
 ---
 
 #### Image Display
 
-Centered in window.
+Centered in window with margin on all sides.
 
 Supports:
 
-- zoom
-- pan
+- zoom (mouse wheel)
+- pan (click-and-drag)
 - fullscreen
 
 ---
 
-#### Information Panel
+#### Metadata Overlay
 
-Located along bottom edge.
-
-Displays same metadata fields as Library View.
-
-Supports:
-
-- editing tags
-- editing categories
-- editing collections
+Right-edge collapsible overlay. Collapsed by default when entering Image View. Same structure, toggle behavior, and contents as Library View metadata overlay.
 
 ---
 
@@ -520,7 +517,7 @@ If the adjacent image is within the already-loaded buffer, it is used directly. 
 
 #### Fullscreen Behavior
 
-Title bar and information panel may be hidden so image occupies entire window.
+Title bar (all three zones) and metadata overlay toggle tab are hidden so image occupies entire window. Navigation controls remain accessible on hover.
 
 ---
 

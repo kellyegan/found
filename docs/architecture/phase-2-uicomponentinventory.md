@@ -235,18 +235,21 @@ Reusable structural UI components.
 
 ### Purpose
 
-Top navigation/title region.
+Top navigation/title region. Divided into three zones.
 
 ### Used In
 
 - LibraryView
+- CollectionView
 - ImageView
 
-### Contains
+### Zones
 
-- page title
-- back navigation
-- optional actions
+**Title (left)** — page title, back navigation, active collection name when applicable
+
+**Status (center)** — status indicators (import progress, missing image count, backend connection state); only visible when there is something to report
+
+**Search (right)** — keyword search field and filter dropdown icon; read-only in Image View
 
 ---
 
@@ -254,7 +257,7 @@ Top navigation/title region.
 
 ### Purpose
 
-Collapsible overlay sidebar.
+Collapsible left-edge overlay for collection browsing. Slides over the thumbnail grid without compressing it.
 
 ### Used In
 
@@ -266,22 +269,30 @@ Collapsible overlay sidebar.
 - overlay interaction
 - collection browsing
 
+### Toggle Tab
+
+Positioned on the left edge of the grid at mid-height. Triangle points toward the left edge when open, toward center when collapsed. Hidden while browsing a collection.
+
 ---
 
-## BottomInfoPanel
+## MetadataOverlay
 
 ### Purpose
 
-Metadata display/edit region.
+Right-edge collapsible overlay for metadata display and editing. Slides over the thumbnail grid without compressing it.
 
 ### Used In
 
-- LibraryView
-- ImageView
+- LibraryView (open by default)
+- ImageView (collapsed by default)
+
+### Toggle Tab
+
+Positioned on the right edge of the grid at mid-height. Triangle points toward the right edge when open, toward center when collapsed.
 
 ### Contains
 
-- metadata fields
+- metadata fields (read-only: filename, path, dimensions, filesize, date added, missing state)
 - tag editor
 - category editor
 - collection editor
@@ -424,36 +435,50 @@ Filtering and discovery system.
 
 ---
 
-## FilterBar
+## CategoriesBar
 
 ### Purpose
 
-Top-level filtering controls.
+Bottom collapsible bar for category filtering.
+
+### Used In
+
+- LibraryView
+- CollectionView
+
+### Toggle Tab
+
+Centered on the bottom edge. Triangle points downward when open, upward when collapsed.
 
 ### Contains
 
-- CategoryFilterDropdown
-- TagSearchField
-- MissingImageToggle
+- Horizontally scrolling list of all categories
+- Each category is a tri-state filter chip (off / include / exclude)
+- All categories always shown (category count is expected to remain limited)
 
 ---
 
-## CategoryFilterDropdown
+## FilterDropdown
 
 ### Purpose
 
-Category filter selector.
+Dropdown panel opened from the filter icon in the Search zone of the title bar. Shows all active filters grouped by type.
 
-### Features
+### Used In
 
-- Tri-state filtering per category
-- Multiple active categories supported
+- TitleBar (Search zone)
+
+### Contains
+
+- Active keyword filter chips (from TagSearchField)
+- Active category filter chips (from CategoriesBar)
+- Missing image toggle
+- Clear all filters button (does not affect active collection)
 
 ### States
 
-- Off
-- On (include)
-- Exclude
+- Filter icon grey: no active filters
+- Filter icon blue: one or more active filters
 
 ---
 
@@ -461,13 +486,13 @@ Category filter selector.
 
 ### Purpose
 
-Tag lookup and filter entry field.
+Keyword (tag) search input in the Search zone of the title bar.
 
 ### Responsibilities
 
 - Text input
 - Delegates to TagSuggestionList for autocomplete
-- Displays active filter chips
+- Selected tags become keyword chips in the FilterDropdown
 
 ---
 
