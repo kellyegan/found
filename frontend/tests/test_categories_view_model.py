@@ -212,3 +212,78 @@ def test_clear_filters_emits_filter_changed(qapp):
     vm.filterChanged.connect(lambda: received.append(1))
     vm.clearFilters()
     assert len(received) == 1
+
+
+# ---------------------------------------------------------------------------
+# Create category
+# ---------------------------------------------------------------------------
+
+NEW_CATEGORY = {"id": "cat-4", "name": "Macro", "description": ""}
+
+
+def _vm_with_creator(creator):
+    return CategoriesViewModel(
+        categories_fetcher=lambda: SAMPLE_CATEGORIES,
+        category_creator=creator,
+    )
+
+
+def test_create_category_adds_to_list(qapp):
+    vm = _vm_with_creator(lambda name: {**NEW_CATEGORY, "name": name})
+    _load(vm)
+    vm.createCategory("Macro")
+    assert any(c["name"] == "Macro" for c in vm.categories)
+
+
+def test_create_category_maintains_sort_order(qapp):
+    vm = _vm_with_creator(lambda name: {**NEW_CATEGORY, "name": name})
+    _load(vm)
+    vm.createCategory("Macro")
+    names = [c["name"] for c in vm.categories]
+    assert names == sorted(names)
+
+
+def test_create_category_emits_categories_changed(qapp):
+    vm = _vm_with_creator(lambda name: {**NEW_CATEGORY, "name": name})
+    _load(vm)
+    received = []
+    vm.categoriesChanged.connect(lambda: received.append(1))
+    vm.createCategory("Macro")
+    assert len(received) == 1
+
+
+def test_create_category_skips_when_creator_returns_none(qapp):
+    vm = _vm_with_creator(lambda name: None)
+    _load(vm)
+    before = len(vm.categories)
+    vm.createCategory("Macro")
+    assert len(vm.categories) == before
+
+
+def test_create_category_strips_whitespace(qapp):
+    captured = []
+
+    def creator(name):
+        captured.append(name)
+        return {**NEW_CATEGORY, "name": name}
+
+    vm = _vm_with_creator(creator)
+    _load(vm)
+    vm.createCategory("  Macro  ")
+    assert captured[0] == "Macro"
+
+
+def test_create_category_skips_empty_name(qapp):
+    called = []
+    vm = _vm_with_creator(lambda name: called.append(name) or {**NEW_CATEGORY, "name": name})
+    _load(vm)
+    vm.createCategory("   ")
+    assert called == []
+
+
+def test_create_category_noop_without_creator(qapp):
+    vm = _vm()
+    _load(vm)
+    before = len(vm.categories)
+    vm.createCategory("Macro")
+    assert len(vm.categories) == before

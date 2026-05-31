@@ -10,9 +10,10 @@ class CategoriesViewModel(QObject):
     loadingStateChanged = Signal(str)
     filterChanged = Signal()
 
-    def __init__(self, categories_fetcher: Callable, parent=None):
+    def __init__(self, categories_fetcher: Callable, category_creator: Optional[Callable] = None, parent=None):
         super().__init__(parent)
         self._categories_fetcher = categories_fetcher
+        self._category_creator = category_creator
         self._categories: list = []
         self._filter_states: dict[str, str] = {}
         self._loading_state = "Idle"
@@ -60,6 +61,20 @@ class CategoriesViewModel(QObject):
         self._filter_states[category_id] = _CYCLE[current]
         self.categoriesChanged.emit()
         self.filterChanged.emit()
+
+    @Slot(str)
+    def createCategory(self, name: str) -> None:
+        name = name.strip()
+        if not name or self._category_creator is None:
+            return
+        result = self._category_creator(name)
+        if result is None:
+            return
+        self._categories = sorted(
+            self._categories + [result],
+            key=lambda c: c["name"].lower(),
+        )
+        self.categoriesChanged.emit()
 
     @Slot()
     def clearFilters(self) -> None:

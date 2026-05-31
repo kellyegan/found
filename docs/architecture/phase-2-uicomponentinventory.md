@@ -439,7 +439,7 @@ Filtering and discovery system.
 
 ### Purpose
 
-Bottom collapsible bar for category filtering.
+Bottom collapsible bar for category filtering and creation.
 
 ### Used In
 
@@ -452,9 +452,11 @@ Centered on the bottom edge. Triangle points downward when open, upward when col
 
 ### Contains
 
+- Fixed "+" button anchored to the left edge (remains visible while the chip list scrolls)
 - Horizontally scrolling list of all categories
 - Each category is a tri-state filter chip (off / include / exclude)
 - All categories always shown (category count is expected to remain limited)
+- NewCategoryField (inline — activated by the "+" button)
 
 ---
 
@@ -654,6 +656,25 @@ Inline create-new-collection UI.
 
 - Inline text entry
 - Validation
+
+---
+
+## NewCategoryField
+
+### Purpose
+
+Inline create-new-category UI, embedded in the CategoriesBar.
+
+### Activation
+
+Triggered by the fixed "+" button on the left of the CategoriesBar chip strip.
+
+### Features
+
+- Dims the chip strip while active
+- Centered text input with immediate focus
+- Enter confirms creation (non-empty name required)
+- Escape dismisses without creating
 
 ---
 

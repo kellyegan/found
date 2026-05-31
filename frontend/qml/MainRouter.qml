@@ -59,6 +59,7 @@ Item {
             categories: CategoriesState.categories
             onToggleRequested: readyContainer.categoriesBarOpen = !readyContainer.categoriesBarOpen
             onFilterToggled: function(categoryId) { CategoriesState.cycleFilter(categoryId) }
+            onCreateCategoryRequested: function(name) { CategoriesState.createCategory(name) }
             z: 5
         }
 

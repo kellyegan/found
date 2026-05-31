@@ -350,6 +350,15 @@ Contains a horizontally scrolling list of all categories. Each category supports
 
 Multiple category filters may be active simultaneously. All categories are always shown.
 
+**Creating categories**
+
+A fixed "+" button is anchored to the left edge of the chip strip and remains visible regardless of scroll position.
+
+Pressing "+" dims the chip strip and displays a centered text input field that receives immediate focus.
+
+- Pressing Enter (with a non-empty name) creates the category and appends it to the list.
+- Pressing Escape closes the input without creating a category.
+
 ---
 
 #### Thumbnail Grid
@@ -706,7 +715,7 @@ Thumbnail grid updates dynamically if active filters change.
 | Shortcut   | Action                           |
 | ---------- | -------------------------------- |
 | Escape     | Clear selection / close overlays |
-| Enter      | Open selected image              |
+| Space      | Open selected image              |
 | Ctrl/Cmd+A | Select all                       |
 
 ---

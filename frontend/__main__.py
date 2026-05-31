@@ -130,6 +130,21 @@ def _make_categories_fetcher(base_url: str):
     return fetch
 
 
+def _make_category_creator(base_url: str):
+    def create(name: str):
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/categories",
+                json={"name": name, "description": ""},
+                timeout=10.0,
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+    return create
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None):
         try:
@@ -165,7 +180,10 @@ def main():
     base_url = f"http://{process_manager._host}:{process_manager._port}"
 
     library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url))
-    categories_state = CategoriesViewModel(categories_fetcher=_make_categories_fetcher(base_url))
+    categories_state = CategoriesViewModel(
+        categories_fetcher=_make_categories_fetcher(base_url),
+        category_creator=_make_category_creator(base_url),
+    )
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
     selection_manager = SelectionManager()
     navigation_manager = NavigationManager()

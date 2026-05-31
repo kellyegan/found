@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 
 Item {
     id: root
@@ -25,7 +26,8 @@ Item {
     }
 
     Shortcut {
-        sequence: "Return"
+        sequence: "Space"
+        enabled: !(Window.activeFocusItem instanceof TextInput)
         onActivated: {
             if (SelectionManager.primaryId !== "")
                 SelectionManager.requestOpen(SelectionManager.primaryId)
