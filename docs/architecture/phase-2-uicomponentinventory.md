@@ -439,7 +439,7 @@ Filtering and discovery system.
 
 ### Purpose
 
-Bottom collapsible bar for category filtering.
+Bottom collapsible bar for category filtering and creation.
 
 ### Used In
 
@@ -452,9 +452,10 @@ Centered on the bottom edge. Triangle points downward when open, upward when col
 
 ### Contains
 
-- Horizontally scrolling list of all categories
-- Each category is a tri-state filter chip (off / include / exclude)
+- Fixed "+" button anchored to the left edge (remains visible while the chip list scrolls)
+- Horizontally scrolling list of CategoryChip instances
 - All categories always shown (category count is expected to remain limited)
+- NewCategoryField (inline — activated by the "+" button)
 
 ---
 
@@ -654,6 +655,49 @@ Inline create-new-collection UI.
 
 - Inline text entry
 - Validation
+
+---
+
+## NewCategoryField
+
+### Purpose
+
+Inline create-new-category UI, embedded in the CategoriesBar.
+
+### Activation
+
+Triggered by the fixed "+" button on the left of the CategoriesBar chip strip.
+
+### Features
+
+- Dims the chip strip while active
+- Centered text input with immediate focus
+- Enter confirms creation (non-empty name required)
+- Escape dismisses without creating
+
+---
+
+## CategoryChip
+
+### Purpose
+
+Single category entry in the CategoriesBar. Acts as both a filter control and a drag-drop assignment target.
+
+### Used In
+
+- CategoriesBar
+
+### States
+
+- off — neutral/unfiltered appearance
+- include — green highlight; images must have this category to appear
+- exclude — red highlight; images with this category are hidden
+- drag-hover — highlighted border/background when an image is dragged over the chip
+
+### Interactions
+
+- Click: cycles filter state (off → include → exclude → off)
+- Drop: adds the dropped image(s) to this category via the bulk categories endpoint
 
 ---
 

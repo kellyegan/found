@@ -24,6 +24,7 @@ import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
 from frontend.library.view_model import LibraryViewModel
+from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.navigation.navigation_manager import NavigationManager
@@ -129,6 +130,46 @@ def test_splash_screen_has_error_is_writable(engine):
     assert obj.property("hasError") is True
 
 
+def test_splash_screen_app_version_defaults_to_empty(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    assert obj.property("appVersion") == ""
+
+
+def test_splash_screen_app_version_is_writable(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    obj.setProperty("appVersion", "0.1.0")
+    assert obj.property("appVersion") == "0.1.0"
+
+
+def test_splash_screen_app_license_defaults_to_empty(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    assert obj.property("appLicense") == ""
+
+
+def test_splash_screen_app_license_is_writable(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    obj.setProperty("appLicense", "GNU GPL v3.0")
+    assert obj.property("appLicense") == "GNU GPL v3.0"
+
+
+def test_splash_screen_is_ready_defaults_to_false(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    assert obj.property("isReady") is False
+
+
+def test_splash_screen_is_ready_is_writable(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    obj.setProperty("isReady", True)
+    assert obj.property("isReady") is True
+
+
+def test_splash_screen_has_dismissed_signal(engine):
+    obj = load_component(engine, "SplashScreen.qml")
+    received = []
+    obj.dismissed.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
 # ---------------------------------------------------------------------------
 # MainRouter
 # ---------------------------------------------------------------------------
@@ -225,9 +266,13 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
+    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
+    e.rootContext().setContextProperty("CategoriesState", categories_state)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
+    e.rootContext().setContextProperty("foundVersion", "0.1.0")
+    e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
     e.load(str(QML_DIR / "main.qml"))
     assert e.rootObjects(), "main.qml failed to load"
 
@@ -296,36 +341,36 @@ def test_thumbnail_grid_has_scroll_x_property(engine):
 
 
 # ---------------------------------------------------------------------------
-# NavigationBar
+# TitleBar
 # ---------------------------------------------------------------------------
 
 
-def test_navigation_bar_qml_exists():
-    assert (QML_DIR / "NavigationBar.qml").exists()
+def test_title_bar_qml_exists():
+    assert (QML_DIR / "TitleBar.qml").exists()
 
 
-def test_navigation_bar_loads(engine):
-    load_component(engine, "NavigationBar.qml")
+def test_title_bar_loads(engine):
+    load_component(engine, "TitleBar.qml")
 
 
-def test_navigation_bar_can_go_back_defaults_to_false(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_can_go_back_defaults_to_false(engine):
+    obj = load_component(engine, "TitleBar.qml")
     assert obj.property("canGoBack") is False
 
 
-def test_navigation_bar_can_go_back_is_writable(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_can_go_back_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
     obj.setProperty("canGoBack", True)
     assert obj.property("canGoBack") is True
 
 
-def test_navigation_bar_view_title_defaults_to_empty(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_view_title_defaults_to_empty(engine):
+    obj = load_component(engine, "TitleBar.qml")
     assert obj.property("viewTitle") == ""
 
 
-def test_navigation_bar_view_title_is_writable(engine):
-    obj = load_component(engine, "NavigationBar.qml")
+def test_title_bar_view_title_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
     obj.setProperty("viewTitle", "Library")
     assert obj.property("viewTitle") == "Library"
 
@@ -496,8 +541,67 @@ def test_collections_sidebar_has_image_dropped_signal(engine):
     assert isinstance(received, list)  # signal attribute exists
 
 
+def test_collections_sidebar_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "CollectionsSidebar.qml")
+    received = []
+    obj.toggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_title_bar_has_no_sidebar_open_property(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("sidebarOpen") is None
+
+
 def test_thumbnail_tile_still_loads_with_drag_support(engine):
     load_component(engine, "ThumbnailTile.qml")
+
+
+# ---------------------------------------------------------------------------
+# CategoriesBar
+# ---------------------------------------------------------------------------
+
+
+def test_categories_bar_qml_exists():
+    assert (QML_DIR / "CategoriesBar.qml").exists()
+
+
+def test_categories_bar_loads(engine):
+    load_component(engine, "CategoriesBar.qml")
+
+
+def test_categories_bar_open_defaults_to_true(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    assert obj.property("open") is True  # component default; MainRouter starts it closed
+
+
+def test_categories_bar_open_is_writable(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    obj.setProperty("open", False)
+    assert obj.property("open") is False
+
+
+def test_categories_bar_categories_defaults_to_empty(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    from PySide6.QtQml import QJSValue
+    val = obj.property("categories")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_categories_bar_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    received = []
+    obj.toggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_categories_bar_has_filter_toggled_signal(engine):
+    obj = load_component(engine, "CategoriesBar.qml")
+    received = []
+    obj.filterToggled.connect(lambda cat_id: received.append(cat_id))
+    assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------

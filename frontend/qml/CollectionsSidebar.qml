@@ -9,9 +9,34 @@ Item {
     signal collectionClicked(string collectionId, string collectionName)
     signal createCollectionRequested(string name)
     signal imageDropped(string collectionId, string imageId)
-    signal closed()
+    signal toggleRequested()
 
     implicitWidth: 260
+
+    // Edge tab — follows the panel's right edge, always visible
+    Rectangle {
+        id: edgeTab
+        width: 16
+        height: 48
+        x: panel.x + panel.width
+        y: (parent.height - height) / 2
+        color: "#1a1a1a"
+        radius: 2
+        z: 1
+
+        Text {
+            anchors.centerIn: parent
+            text: root.open ? "◄" : "►"
+            font.pixelSize: 10
+            color: "#888888"
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.toggleRequested()
+        }
+    }
 
     // Slide-in panel
     Rectangle {
@@ -35,20 +60,6 @@ Item {
                 font.pixelSize: 14
                 font.weight: Font.Medium
                 color: "#ffffff"
-            }
-
-            MouseArea {
-                width: 32
-                height: 32
-                anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
-                onClicked: root.closed()
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "✕"
-                    font.pixelSize: 14
-                    color: "#888888"
-                }
             }
         }
 

@@ -17,7 +17,9 @@ from frontend.library.view_model import LibraryViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
+from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.theme.theme import ThemeManager
+from frontend.version import get_app_metadata
 
 
 def _make_collections_fetcher(base_url: str):
@@ -117,6 +119,46 @@ def _make_conflict_resolver(base_url: str):
     return resolve
 
 
+def _make_categories_fetcher(base_url: str):
+    def fetch():
+        try:
+            response = httpx.get(f"{base_url}/api/v1/categories", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
+def _make_category_creator(base_url: str):
+    def create(name: str):
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/categories",
+                json={"name": name, "description": ""},
+                timeout=10.0,
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+    return create
+
+
+def _make_category_images_adder(base_url: str):
+    def add(category_id: str, image_ids: list):
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/images/bulk/categories",
+                json={"image_ids": image_ids, "add_category_ids": [category_id]},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return add
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None):
         try:
@@ -152,6 +194,11 @@ def main():
     base_url = f"http://{process_manager._host}:{process_manager._port}"
 
     library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url))
+    categories_state = CategoriesViewModel(
+        categories_fetcher=_make_categories_fetcher(base_url),
+        category_creator=_make_category_creator(base_url),
+        images_adder=_make_category_images_adder(base_url),
+    )
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
     selection_manager = SelectionManager()
     navigation_manager = NavigationManager()
@@ -175,14 +222,19 @@ def main():
         library_view_model=library_state,
     )
 
+    app_metadata = get_app_metadata()
+
     engine = QQmlApplicationEngine()
     engine.addImageProvider("thumbnails", thumbnail_provider)
     engine.rootContext().setContextProperty("Theme", theme)
+    engine.rootContext().setContextProperty("foundVersion", app_metadata["version"])
+    engine.rootContext().setContextProperty("foundLicense", app_metadata["license"])
     engine.rootContext().setContextProperty("AppState", app_state)
     engine.rootContext().setContextProperty("BackendConnection", connection_monitor)
     engine.rootContext().setContextProperty("LibraryState", library_state)
     engine.rootContext().setContextProperty("SelectionManager", selection_manager)
     engine.rootContext().setContextProperty("NavigationManager", navigation_manager)
+    engine.rootContext().setContextProperty("CategoriesState", categories_state)
     engine.rootContext().setContextProperty("CollectionsState", collections_state)
     engine.rootContext().setContextProperty("ImportState", import_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)

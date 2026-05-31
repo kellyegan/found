@@ -10,27 +10,35 @@ Item {
     property string libraryLoadingState: "Loading"
 
     SplashScreen {
+        id: splashScreen
         anchors.fill: parent
-        visible: root.appState !== "Ready"
+        visible: !splashDismissed
         statusText: root.statusMessage
         hasError: root.hasError
+        appVersion: foundVersion
+        appLicense: foundLicense
+        isReady: root.appState === "Ready"
+        onDismissed: splashDismissed = true
+        z: 1
     }
+
+    property bool splashDismissed: false
 
     // Ready state — navigation bar + view router
     Item {
         id: readyContainer
         anchors.fill: parent
-        visible: root.appState === "Ready"
+        visible: root.appState === "Ready" && splashDismissed
 
         property bool sidebarOpen: false
+        property bool categoriesBarOpen: false
 
-        NavigationBar {
-            id: navBar
+        TitleBar {
+            id: titleBar
             anchors { top: parent.top; left: parent.left; right: parent.right }
             height: NavigationManager.immersiveMode ? 0 : 48
             visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
-            sidebarOpen: readyContainer.sidebarOpen
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
@@ -40,13 +48,32 @@ Item {
                 }
             }
             onGoBackRequested: NavigationManager.goBack()
-            onSidebarToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
+        }
+
+        // Categories bar — structural bottom zone for library/collection views
+        CategoriesBar {
+            id: categoriesBar
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            open: readyContainer.categoriesBarOpen
+            visible: NavigationManager.currentView === "library" || NavigationManager.currentView === "collection"
+            categories: CategoriesState.categories
+            onToggleRequested: readyContainer.categoriesBarOpen = !readyContainer.categoriesBarOpen
+            onFilterToggled: function(categoryId) { CategoriesState.cycleFilter(categoryId) }
+            onCreateCategoryRequested: function(name) { CategoriesState.createCategory(name) }
+            onImageDropped: function(categoryId, imageId) {
+                var ids = SelectionManager.isSelected(imageId)
+                    ? SelectionManager.selectedIds
+                    : [imageId]
+                CategoriesState.addImagesToCategory(categoryId, ids)
+            }
+            z: 5
         }
 
         // Library view
         LibraryView {
             id: libraryView
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
@@ -81,12 +108,13 @@ Item {
             }
         }
 
-        // Load collections when app becomes ready
+        // Load collections and categories when app becomes ready
         Connections {
             target: AppState
             function onStateNameChanged(name) {
                 if (name === "Ready") {
                     CollectionsState.load()
+                    CategoriesState.load()
                 }
             }
         }
@@ -109,7 +137,8 @@ Item {
 
         // Collection view
         CollectionView {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             visible: NavigationManager.currentView === "collection"
             collectionName: NavigationManager.currentView === "collection"
                             ? (NavigationManager.currentEntry.collection_name ?? "") : ""
@@ -119,7 +148,7 @@ Item {
 
         // Image view (Slice 5)
         ImageView {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "image"
             imageId:   NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.image_id ?? "") : ""
             imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
@@ -132,13 +161,13 @@ Item {
 
         // Sidebar overlay — rendered above content, below nav bar
         CollectionsSidebar {
-            anchors { top: navBar.bottom; left: parent.left; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
             width: implicitWidth
             open: readyContainer.sidebarOpen
             collections: CollectionsState.collections
             z: 10
 
-            onClosed: readyContainer.sidebarOpen = false
+            onToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
 
             onCollectionClicked: function(collectionId, collectionName) {
                 readyContainer.sidebarOpen = false
@@ -160,7 +189,7 @@ Item {
 
         // Dim overlay behind sidebar
         Rectangle {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             color: "#000000"
             opacity: readyContainer.sidebarOpen ? 0.4 : 0.0
             z: 9
@@ -176,8 +205,9 @@ Item {
         }
 
         // File drop area — accepts files/directories dragged from Finder/Explorer
+        // Stops at categoriesBar.top so chip DropAreas are not blocked by this higher-z area
         DropArea {
-            anchors { top: navBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: categoriesBar.top }
             visible: NavigationManager.currentView === "library"
             z: 20
 
