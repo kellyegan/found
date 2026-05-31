@@ -786,6 +786,28 @@ DELETE /images/{image_id}/categories/{category_id}
 
 ---
 
+## Bulk Update Image Categories
+
+```http
+POST /images/bulk/categories
+```
+
+Adds and/or removes categories across multiple images in a single request. Duplicate assignments are silently ignored; removing a category not assigned to an image is also a no-op.
+
+### Request
+
+```json
+{
+  "image_ids": ["uuid", "uuid"],
+  "add_category_ids": ["uuid"],
+  "remove_category_ids": ["uuid"]
+}
+```
+
+Both `add_category_ids` and `remove_category_ids` are optional. An empty `image_ids` list is a no-op.
+
+---
+
 # Collections
 
 ## List Collections

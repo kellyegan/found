@@ -636,6 +636,7 @@ Clear selection.
 #### Supported Targets
 
 - Collections
+- Category chips (in CategoriesBar)
 - Main application window
 
 #### Collection Drag Behavior
@@ -645,6 +646,14 @@ Dragging images onto a collection in the sidebar:
 - adds images to that collection
 - displays hover feedback on the collection target
 - may display insertion animation
+
+#### Category Chip Drag Behavior
+
+Dragging images onto a category chip in the CategoriesBar:
+
+- adds all currently selected images to that category if the dragged image is part of the selection; otherwise adds only the dragged image
+- displays hover feedback on the chip target
+- uses the bulk category endpoint (`POST /images/bulk/categories`) — no per-image loop
 
 #### Main Window Drag Behavior
 
