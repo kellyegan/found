@@ -17,6 +17,7 @@ from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
 from frontend.metadata.metadata_view_model import MetadataViewModel
 from frontend.navigation.navigation_manager import NavigationManager
+from frontend.tag_search.tag_search_view_model import TagSearchViewModel
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
 from frontend.categories.categories_view_model import CategoriesViewModel
@@ -172,6 +173,17 @@ def _make_category_images_adder(base_url: str):
     return add
 
 
+def _make_tags_fetcher(base_url: str):
+    def fetch(term: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/tags", params={"search": term}, timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None, category=None, tag=None,
               file_status=None, exclude_category=None, exclude_tag=None):
@@ -244,6 +256,10 @@ def main():
         image_fetcher=_make_image_fetcher(base_url),
         selection_manager=selection_manager,
     )
+    tag_search_state = TagSearchViewModel(
+        tags_fetcher=_make_tags_fetcher(base_url),
+        filter_state=filter_state,
+    )
 
     controller = AppController(
         app_state,
@@ -269,6 +285,7 @@ def main():
     engine.rootContext().setContextProperty("ImportState", import_state)
     engine.rootContext().setContextProperty("FilterState", filter_state)
     engine.rootContext().setContextProperty("MetadataState", metadata_state)
+    engine.rootContext().setContextProperty("TagSearchState", tag_search_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"

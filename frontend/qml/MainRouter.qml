@@ -74,11 +74,23 @@ Item {
                 }
                 return result
             }
+            activeTags: {
+                var result = []
+                var tagFilters = FilterState.tagFilters
+                var tagNames = TagSearchState.tagNames
+                for (var tid in tagFilters) {
+                    var mode = tagFilters[tid]
+                    if (mode && mode !== "off")
+                        result.push({id: tid, name: tagNames[tid] ?? tid, mode: mode})
+                }
+                return result
+            }
             onClearAllRequested: {
                 FilterState.clearAllFilters()
                 readyContainer.filterDropdownOpen = false
             }
             onRemoveCategoryFilter: function(catId) { FilterState.setCategoryFilter(catId, "off") }
+            onRemoveTagFilter: function(tagId) { FilterState.setTagFilter(tagId, "off") }
             onToggleMissingOnlyRequested: FilterState.setShowMissingOnly(!FilterState.showMissingOnly)
             z: 40
         }

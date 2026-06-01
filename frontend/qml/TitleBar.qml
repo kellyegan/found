@@ -71,6 +71,17 @@ Item {
             right: parent.right
         }
 
+        // Tag search field — left of filter icon
+        TagSearchField {
+            id: tagSearchField
+            anchors {
+                left: parent.left; leftMargin: 8
+                right: filterIconBtn.left; rightMargin: 4
+                verticalCenter: parent.verticalCenter
+            }
+            height: 28
+        }
+
         // Filter icon — grey when inactive, accent when filters are active
         Item {
             id: filterIconBtn

@@ -29,6 +29,7 @@ from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.metadata.metadata_view_model import MetadataViewModel
+from frontend.tag_search.tag_search_view_model import TagSearchViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 
@@ -48,14 +49,17 @@ def engine(qapp):
     navigation = NavigationManager()
     filter_state = FilterStateManager()
     e = QQmlEngine()
+    tag_search = TagSearchViewModel(tags_fetcher=lambda term: [])
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
     e.rootContext().setContextProperty("FilterState", filter_state)
+    e.rootContext().setContextProperty("TagSearchState", tag_search)
     theme.setParent(e)
     selection.setParent(e)
     navigation.setParent(e)
     filter_state.setParent(e)
+    tag_search.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -271,6 +275,7 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("FilterState", FilterStateManager())
     e.rootContext().setContextProperty("MetadataState", MetadataViewModel(image_fetcher=lambda image_id: None))
+    e.rootContext().setContextProperty("TagSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.rootContext().setContextProperty("foundVersion", "0.1.0")
     e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
@@ -929,3 +934,16 @@ def test_metadata_overlay_meta_loading_state_is_writable(engine):
     obj = load_component(engine, "MetadataOverlay.qml")
     obj.setProperty("metaLoadingState", "Ready")
     assert obj.property("metaLoadingState") == "Ready"
+
+
+# ---------------------------------------------------------------------------
+# TagSearchField — Commit 10
+# ---------------------------------------------------------------------------
+
+
+def test_tag_search_field_qml_exists():
+    assert (QML_DIR / "TagSearchField.qml").exists()
+
+
+def test_tag_search_field_loads(engine):
+    load_component(engine, "TagSearchField.qml")
