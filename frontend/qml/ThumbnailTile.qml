@@ -12,19 +12,6 @@ Item {
     signal tileClicked(string imageId, int modifiers)
     signal tileDoubleClicked(string imageId)
 
-    // DragHandler tracks the gesture without moving the tile
-    DragHandler {
-        id: dragHandler
-        target: null
-        onActiveChanged: {
-            if (active) {
-                dragProxy.Drag.active = true
-            } else {
-                dragProxy.Drag.drop()
-            }
-        }
-    }
-
     // Floating proxy parented to the window so it can move across the whole scene
     Item {
         id: dragProxy
@@ -72,6 +59,19 @@ Item {
         anchors { fill: parent; margins: root.inset }
         color: Theme.surface
         opacity: dragHandler.active ? 0.4 : 1.0
+
+        // DragHandler scoped to the visual tile only — gestures in the gap scroll the grid
+        DragHandler {
+            id: dragHandler
+            target: null
+            onActiveChanged: {
+                if (active) {
+                    dragProxy.Drag.active = true
+                } else {
+                    dragProxy.Drag.drop()
+                }
+            }
+        }
 
         Image {
             id: img

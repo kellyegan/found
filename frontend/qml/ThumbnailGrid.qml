@@ -41,6 +41,21 @@ Item {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
+        // Convert vertical mouse-wheel to horizontal scroll; trackpad horizontal swipe
+        // is already handled by the Flickable natively.
+        WheelHandler {
+            target: null
+            onWheel: function(event) {
+                if (event.angleDelta.y !== 0 && event.angleDelta.x === 0) {
+                    var delta = -event.angleDelta.y / 120 * 80
+                    var minX = -grid.leftMargin
+                    var maxX = Math.max(minX, grid.contentWidth - grid.width + grid.rightMargin)
+                    grid.contentX = Math.max(minX, Math.min(grid.contentX + delta, maxX))
+                    event.accepted = true
+                }
+            }
+        }
+
         delegate: ThumbnailTile {
             width: grid.cellWidth
             height: grid.cellHeight
