@@ -47,7 +47,7 @@ Item {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
                     case "collection": return "Collection"
-                    case "image":      return "Image"
+                    case "image":      return ""
                     default:           return ""
                 }
             }
