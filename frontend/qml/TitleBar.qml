@@ -5,8 +5,10 @@ Item {
 
     property bool canGoBack: false
     property string viewTitle: ""
+    property bool filterActive: false
 
     signal goBackRequested()
+    signal filterToggleRequested()
 
     // ── Title zone (left) ────────────────────────────────────────────────────
     Item {
@@ -68,6 +70,26 @@ Item {
             left: statusZone.right
             right: parent.right
         }
-        // Keyword search and filter dropdown will be added in a later commit
+
+        // Filter icon — grey when inactive, accent when filters are active
+        Item {
+            id: filterIconBtn
+            width: 36
+            height: parent.height
+            anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+
+            Text {
+                anchors.centerIn: parent
+                text: "⊟"
+                font.pixelSize: 16
+                color: root.filterActive ? Theme.accent : Theme.textMuted
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.filterToggleRequested()
+            }
+        }
     }
 }

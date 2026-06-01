@@ -66,51 +66,10 @@ Item {
         }
     }
 
-    // Active filter bar — driven by FilterState
-    Rectangle {
-        id: filterBar
-        anchors { top: parent.top; left: parent.left; right: parent.right }
-        height: FilterState.hasActiveFilters ? 40 : 0
-        visible: FilterState.hasActiveFilters
-        color: "transparent"
-
-        Rectangle {
-            anchors { left: parent.left; verticalCenter: parent.verticalCenter; leftMargin: Theme.spacingMd }
-            width: filterLabel.implicitWidth + clearBtn.width + Theme.spacingMd * 2 + 8
-            height: 28
-            radius: 14
-            color: Theme.surface
-
-            Text {
-                id: filterLabel
-                anchors { left: parent.left; verticalCenter: parent.verticalCenter; leftMargin: Theme.spacingMd }
-                text: FilterState.importJobId !== "" ? "Showing recent import" : "Filters active"
-                font.pixelSize: Theme.fontSizeSm
-                font.family: Theme.fontFamily
-                color: Theme.textMuted
-            }
-
-            Text {
-                id: clearBtn
-                anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: Theme.spacingMd }
-                text: "✕"
-                font.pixelSize: Theme.fontSizeSm
-                font.family: Theme.fontFamily
-                color: Theme.textMuted
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: FilterState.clearAllFilters()
-                }
-            }
-        }
-    }
-
     // Thumbnail grid
     ThumbnailGrid {
         id: thumbnailGrid
-        anchors { top: filterBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+        anchors { top: parent.top; left: parent.left; right: parent.right; bottom: parent.bottom }
         visible: root.loadingState === "Ready"
         model: root.gridModel
         onLoadMoreRequested: root.loadMoreRequested()

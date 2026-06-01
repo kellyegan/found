@@ -725,3 +725,127 @@ def test_import_panel_has_conflict_choice_changed_signal(engine):
 def test_import_panel_updated_count_defaults_to_zero(engine):
     obj = load_component(engine, "ImportPanel.qml")
     assert obj.property("updatedCount") == 0
+
+
+# ---------------------------------------------------------------------------
+# FilterChip — Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_filter_chip_qml_exists():
+    assert (QML_DIR / "FilterChip.qml").exists()
+
+
+def test_filter_chip_loads(engine):
+    load_component(engine, "FilterChip.qml")
+
+
+def test_filter_chip_label_defaults_to_empty(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    assert obj.property("label") == ""
+
+
+def test_filter_chip_label_is_writable(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    obj.setProperty("label", "architecture")
+    assert obj.property("label") == "architecture"
+
+
+def test_filter_chip_filter_mode_defaults_to_include(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    assert obj.property("filterMode") == "include"
+
+
+def test_filter_chip_filter_mode_is_writable(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    obj.setProperty("filterMode", "exclude")
+    assert obj.property("filterMode") == "exclude"
+
+
+def test_filter_chip_has_remove_requested_signal(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    received = []
+    obj.removeRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# FilterDropdown — Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_filter_dropdown_qml_exists():
+    assert (QML_DIR / "FilterDropdown.qml").exists()
+
+
+def test_filter_dropdown_loads(engine):
+    load_component(engine, "FilterDropdown.qml")
+
+
+def test_filter_dropdown_open_defaults_to_false(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    assert obj.property("open") is False
+
+
+def test_filter_dropdown_open_is_writable(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("open", True)
+    assert obj.property("open") is True
+
+
+def test_filter_dropdown_has_clear_all_requested_signal(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    received = []
+    obj.clearAllRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_filter_dropdown_active_categories_defaults_to_empty(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    from PySide6.QtQml import QJSValue
+    val = obj.property("activeCategories")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_filter_dropdown_show_missing_only_defaults_to_false(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    assert obj.property("showMissingOnly") is False
+
+
+def test_filter_dropdown_has_remove_category_filter_signal(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    received = []
+    obj.removeCategoryFilter.connect(lambda cat_id: received.append(cat_id))
+    assert isinstance(received, list)
+
+
+def test_filter_dropdown_has_toggle_missing_only_requested_signal(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    received = []
+    obj.toggleMissingOnlyRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# TitleBar search zone additions — Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_title_bar_filter_active_defaults_to_false(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("filterActive") is False
+
+
+def test_title_bar_filter_active_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("filterActive", True)
+    assert obj.property("filterActive") is True
+
+
+def test_title_bar_has_filter_toggle_requested_signal(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    received = []
+    obj.filterToggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
