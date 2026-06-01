@@ -10,6 +10,15 @@ Item {
     property bool hasNext: false
     property bool hasPrev: false
 
+    // Inset from left/right edges so buttons clear the panel edge tabs.
+    // 40 = 16px edge-tab + 24px gap (panels closed).
+    // 300 = 260px panel + 16px edge-tab + 24px gap (panels open).
+    property real leftInset: 40
+    property real rightInset: 40
+
+    signal prevRequested()
+    signal nextRequested()
+
     property real zoomLevel: 1.0
     property real panOffsetX: 0.0
     property real panOffsetY: 0.0
@@ -179,6 +188,76 @@ Item {
         // Double-click resets zoom and pan
         TapHandler {
             onTapped: { if (tapCount >= 2) root.resetView() }
+        }
+
+        // ── Prev / Next hover buttons ─────────────────────────────────────
+        // The Item spans full height so the MouseArea captures hover anywhere
+        // along the edge. The visible square badge is centered within it.
+
+        Item {
+            id: prevBtn
+            anchors { left: parent.left; leftMargin: root.leftInset; top: parent.top; bottom: parent.bottom }
+            width: 108
+            z: 2
+            visible: root.hasPrev
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 100
+                height: 100
+                radius: 4
+                color: "#cc000000"
+                opacity: prevBtnArea.containsMouse ? 0.75 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "◀"
+                    color: "#d9d9d9"
+                    font.pixelSize: 50
+                }
+            }
+
+            MouseArea {
+                id: prevBtnArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.prevRequested()
+            }
+        }
+
+        Item {
+            id: nextBtn
+            anchors { right: parent.right; rightMargin: root.rightInset; top: parent.top; bottom: parent.bottom }
+            width: 108
+            z: 2
+            visible: root.hasNext
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 100
+                height: 100
+                radius: 4
+                color: "#cc000000"
+                opacity: nextBtnArea.containsMouse ? 0.75 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "▶"
+                    color: "#d9d9d9"
+                    font.pixelSize: 50
+                }
+            }
+
+            MouseArea {
+                id: nextBtnArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.nextRequested()
+            }
         }
     }
 }

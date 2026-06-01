@@ -455,6 +455,37 @@ def test_image_view_pan_offset_y_defaults_to_zero(engine):
 
 
 # ---------------------------------------------------------------------------
+# ImageView prev/next hover buttons — Commit 12
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_has_prev_requested_signal(engine):
+    obj = load_component(engine, "ImageView.qml")
+    received = []
+    obj.prevRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_image_view_has_next_requested_signal(engine):
+    obj = load_component(engine, "ImageView.qml")
+    received = []
+    obj.nextRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_image_view_has_next_is_writable(engine):
+    obj = load_component(engine, "ImageView.qml")
+    obj.setProperty("hasNext", True)
+    assert obj.property("hasNext") is True
+
+
+def test_image_view_has_prev_is_writable(engine):
+    obj = load_component(engine, "ImageView.qml")
+    obj.setProperty("hasPrev", True)
+    assert obj.property("hasPrev") is True
+
+
+# ---------------------------------------------------------------------------
 # CollectionItem
 # ---------------------------------------------------------------------------
 

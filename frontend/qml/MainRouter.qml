@@ -200,6 +200,10 @@ Item {
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
             hasNext: NavigationManager.hasNext
             hasPrev: NavigationManager.hasPrev
+            leftInset: readyContainer.sidebarOpen ? 300 : 40
+            rightInset: readyContainer.metadataOverlayOpen ? 300 : 40
+            onPrevRequested: NavigationManager.goPrev()
+            onNextRequested: NavigationManager.goNext()
         }
 
         // Sidebar overlay — rendered above content, below nav bar
