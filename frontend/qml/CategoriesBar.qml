@@ -20,7 +20,7 @@ Item {
     // ── Toggle tab — sits at the top of the bar ──────────────────────────────
     Rectangle {
         id: toggleTab
-        width: 48
+        width: 72
         height: root._tabHeight
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
         color: "#1a1a1a"

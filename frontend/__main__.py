@@ -15,7 +15,10 @@ from frontend.filters.filter_state_manager import FilterStateManager
 from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
+from frontend.metadata.metadata_view_model import MetadataViewModel
 from frontend.navigation.navigation_manager import NavigationManager
+from frontend.tag_editor.tag_editor_view_model import TagEditorViewModel
+from frontend.tag_search.tag_search_view_model import TagSearchViewModel
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
 from frontend.categories.categories_view_model import CategoriesViewModel
@@ -146,6 +149,17 @@ def _make_category_creator(base_url: str):
     return create
 
 
+def _make_image_fetcher(base_url: str):
+    def fetch(image_id: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/images/{image_id}", timeout=10.0)
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
 def _make_category_images_adder(base_url: str):
     def add(category_id: str, image_ids: list):
         try:
@@ -158,6 +172,75 @@ def _make_category_images_adder(base_url: str):
         except Exception:
             return False
     return add
+
+
+def _make_tag_creator(base_url: str):
+    def create(name: str):
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/tags",
+                json={"name": name},
+                timeout=10.0,
+            )
+            data = response.json()
+            if data.get("success"):
+                return data.get("data")
+            # Tag already exists (409) — find it by exact name
+            if response.status_code == 409:
+                search = httpx.get(
+                    f"{base_url}/api/v1/tags/search",
+                    params={"q": name},
+                    timeout=10.0,
+                )
+                search_data = search.json()
+                tags = search_data.get("data", []) if search_data.get("success") else []
+                for tag in tags:
+                    if tag.get("name", "").lower() == name.lower():
+                        return tag
+            return None
+        except Exception:
+            return None
+    return create
+
+
+def _make_tags_fetcher(base_url: str):
+    def fetch(term: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/tags/search", params={"q": term}, timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
+def _make_image_tags_fetcher(base_url: str):
+    def fetch(image_id: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/images/{image_id}/tags", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
+def _make_bulk_tag_modifier(base_url: str):
+    def modify(image_ids: list, add_tag_ids: list, remove_tag_ids: list) -> bool:
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/images/bulk/tags",
+                json={
+                    "image_ids": image_ids,
+                    "add_tag_ids": add_tag_ids,
+                    "remove_tag_ids": remove_tag_ids,
+                },
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return modify
 
 
 def _make_page_fetcher(base_url: str):
@@ -228,6 +311,23 @@ def main():
         job_fetcher=_make_job_fetcher(base_url),
         conflict_resolver=_make_conflict_resolver(base_url),
     )
+    metadata_state = MetadataViewModel(
+        image_fetcher=_make_image_fetcher(base_url),
+        selection_manager=selection_manager,
+    )
+    tag_search_state = TagSearchViewModel(
+        tags_fetcher=_make_tags_fetcher(base_url),
+        filter_state=filter_state,
+    )
+    tag_editor_search_state = TagSearchViewModel(
+        tags_fetcher=_make_tags_fetcher(base_url),
+    )
+    tag_editor_state = TagEditorViewModel(
+        image_tags_fetcher=_make_image_tags_fetcher(base_url),
+        tag_modifier=_make_bulk_tag_modifier(base_url),
+        tag_creator=_make_tag_creator(base_url),
+        selection_manager=selection_manager,
+    )
 
     controller = AppController(
         app_state,
@@ -252,6 +352,10 @@ def main():
     engine.rootContext().setContextProperty("CollectionsState", collections_state)
     engine.rootContext().setContextProperty("ImportState", import_state)
     engine.rootContext().setContextProperty("FilterState", filter_state)
+    engine.rootContext().setContextProperty("MetadataState", metadata_state)
+    engine.rootContext().setContextProperty("TagSearchState", tag_search_state)
+    engine.rootContext().setContextProperty("TagEditorSearchState", tag_editor_search_state)
+    engine.rootContext().setContextProperty("TagEditorState", tag_editor_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"
