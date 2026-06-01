@@ -905,6 +905,41 @@ def test_title_bar_has_filter_toggle_requested_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# TitleBar read-only search zone — Commit 13
+# ---------------------------------------------------------------------------
+
+
+def test_title_bar_search_read_only_defaults_to_false(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("searchReadOnly") is False
+
+
+def test_title_bar_search_read_only_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("searchReadOnly", True)
+    assert obj.property("searchReadOnly") is True
+
+
+def test_title_bar_active_filters_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "TitleBar.qml")
+    val = obj.property("activeFilters")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_title_bar_active_filters_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("activeFilters", [{"name": "nature", "mode": "include"}])
+    from PySide6.QtQml import QJSValue
+    val = obj.property("activeFilters")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert len(val) == 1
+
+
+# ---------------------------------------------------------------------------
 # MetadataOverlay — Commit 9
 # ---------------------------------------------------------------------------
 

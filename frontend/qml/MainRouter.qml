@@ -50,6 +50,25 @@ Item {
                     default:           return ""
                 }
             }
+            searchReadOnly: NavigationManager.currentView === "image"
+            activeFilters: {
+                var result = []
+                var catFilters = FilterState.categoryFilters
+                var cats = CategoriesState.categories
+                for (var i = 0; i < cats.length; i++) {
+                    var catMode = catFilters[cats[i].id]
+                    if (catMode && catMode !== "off")
+                        result.push({ name: cats[i].name, mode: catMode })
+                }
+                var tagFilters = FilterState.tagFilters
+                var tagNames = TagSearchState.tagNames
+                for (var tid in tagFilters) {
+                    var tagMode = tagFilters[tid]
+                    if (tagMode && tagMode !== "off")
+                        result.push({ name: tagNames[tid] ?? tid, mode: tagMode })
+                }
+                return result
+            }
             onGoBackRequested: NavigationManager.goBack()
             onFilterToggleRequested: readyContainer.filterDropdownOpen = !readyContainer.filterDropdownOpen
         }
