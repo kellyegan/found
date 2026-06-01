@@ -115,7 +115,7 @@ frontend/
 
 ### Test Driven Development
 
-This project uses TDD. Always write failing tests before writing implementation code:
+This project uses TDD. Always write failing tests first, before writing implementation code:
 
 1. Write a test that captures the intended behaviour — confirm it fails for the right reason (missing feature, not a setup error)
 2. Write the minimum implementation to make it pass

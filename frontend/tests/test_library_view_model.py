@@ -1,5 +1,5 @@
 """
-Tests for LibraryViewModel — Commit 5 (updated for ThumbnailGridModel integration).
+Tests for LibraryViewModel.
 
 Covers:
 - Initial loadingState is "Loading" before load() is called
@@ -12,6 +12,8 @@ Covers:
 - load() populates gridModel with returned items
 - load_more() fetches next page and appends to gridModel
 - load_more() is a no-op when hasMore is False
+- reload() clears and refetches
+- FilterStateManager integration: query params forwarded, filter change triggers reload
 """
 
 import pytest
@@ -19,6 +21,7 @@ from PySide6.QtCore import QEventLoop, QTimer
 
 from frontend.library.view_model import LibraryViewModel
 from frontend.library.thumbnail_grid_model import ThumbnailGridModel
+from frontend.filters.filter_state_manager import FilterStateManager
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +179,6 @@ def test_load_more_appends_next_page(qapp):
     assert vm.gridModel.count == 2
 
     vm.load_more()
-    # Wait briefly for the thread to finish
     loop = QEventLoop()
     QTimer.singleShot(500, loop.quit)
     loop.exec()
@@ -193,14 +195,14 @@ def test_load_more_is_noop_when_no_more_pages(qapp):
 
 
 # ---------------------------------------------------------------------------
-# reload() — Slice 9 Commit 3
+# reload()
 # ---------------------------------------------------------------------------
 
 
 def test_reload_clears_and_refetches(qapp):
     calls = []
 
-    def fetcher(cursor=None, limit=100, import_job=None):
+    def fetcher(cursor=None, limit=100):
         calls.append(cursor)
         return _page(items=SAMPLE_ITEMS)
 
@@ -213,7 +215,7 @@ def test_reload_clears_and_refetches(qapp):
 
 
 def test_reload_resets_grid_before_refetch(qapp):
-    vm = _make_vm(fetcher=lambda cursor=None, limit=100, import_job=None: _page(items=SAMPLE_ITEMS))
+    vm = _make_vm(fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS))
     vm.load()
     wait_for_state(vm, "Ready")
     assert vm.gridModel.count == 2
@@ -224,64 +226,65 @@ def test_reload_resets_grid_before_refetch(qapp):
 
 
 # ---------------------------------------------------------------------------
-# Import-job filter — Slice 9 Commit 3
+# FilterStateManager integration
 # ---------------------------------------------------------------------------
 
 
-def _make_filtering_vm(captured=None):
-    """VM whose fetcher records the import_job kwarg passed to it."""
-    calls = captured if captured is not None else []
+def test_filter_state_triggers_reload_on_filter_change(qapp):
+    fsm = FilterStateManager()
+    calls = []
 
     def fetcher(cursor=None, limit=100, import_job=None):
         calls.append(import_job)
         return _page(items=SAMPLE_ITEMS)
 
-    vm = LibraryViewModel(page_fetcher=fetcher)
-    return vm, calls
-
-
-def test_is_filtered_defaults_to_false(qapp):
-    vm = _make_vm()
-    assert vm.isFiltered is False
-
-
-def test_filter_by_job_id_sets_is_filtered(qapp):
-    vm, _ = _make_filtering_vm()
-    vm.filterByJobId("job-123")
-    wait_for_state(vm, "Ready")
-    assert vm.isFiltered is True
-
-
-def test_filter_by_job_id_passes_job_id_to_fetcher(qapp):
-    vm, calls = _make_filtering_vm()
-    vm.filterByJobId("job-abc")
-    wait_for_state(vm, "Ready")
-    assert "job-abc" in calls
-
-
-def test_filter_by_job_id_triggers_reload(qapp):
-    vm, calls = _make_filtering_vm()
+    vm = LibraryViewModel(page_fetcher=fetcher, filter_state=fsm)
     vm.load()
     wait_for_state(vm, "Ready")
     count_before = len(calls)
-    vm.filterByJobId("job-xyz")
+    fsm.setImportJobFilter("job-123")
     wait_for_state(vm, "Ready")
     assert len(calls) > count_before
 
 
-def test_clear_filter_resets_is_filtered(qapp):
-    vm, _ = _make_filtering_vm()
-    vm.filterByJobId("job-123")
+def test_filter_state_passes_import_job_to_fetcher(qapp):
+    fsm = FilterStateManager()
+    fsm.setImportJobFilter("job-xyz")
+    captured = []
+
+    def fetcher(cursor=None, limit=100, import_job=None):
+        captured.append(import_job)
+        return _page(items=SAMPLE_ITEMS)
+
+    vm = LibraryViewModel(page_fetcher=fetcher, filter_state=fsm)
+    vm.load()
     wait_for_state(vm, "Ready")
-    vm.clearFilter()
-    wait_for_state(vm, "Ready")
-    assert vm.isFiltered is False
+    assert "job-xyz" in captured
 
 
-def test_clear_filter_fetches_without_job_id(qapp):
-    vm, calls = _make_filtering_vm()
-    vm.filterByJobId("job-123")
+def test_filter_state_passes_category_to_fetcher(qapp):
+    fsm = FilterStateManager()
+    fsm.setCategoryFilter("cat-1", "include")
+    captured = []
+
+    def fetcher(cursor=None, limit=100, category=None):
+        captured.append(category)
+        return _page(items=SAMPLE_ITEMS)
+
+    vm = LibraryViewModel(page_fetcher=fetcher, filter_state=fsm)
+    vm.load()
     wait_for_state(vm, "Ready")
-    vm.clearFilter()
+    assert "cat-1" in captured
+
+
+def test_no_filter_state_fetches_without_extra_params(qapp):
+    captured_kwargs = []
+
+    def fetcher(**kwargs):
+        captured_kwargs.append(kwargs)
+        return _page(items=SAMPLE_ITEMS)
+
+    vm = LibraryViewModel(page_fetcher=fetcher)
+    vm.load()
     wait_for_state(vm, "Ready")
-    assert calls[-1] is None  # last fetch had no import_job filter
+    assert captured_kwargs[0] == {"cursor": None, "limit": 100}

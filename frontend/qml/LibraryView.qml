@@ -6,10 +6,8 @@ Item {
 
     property string loadingState: "Loading"
     property var gridModel: null
-    property bool isFiltered: false
 
     signal loadMoreRequested()
-    signal clearFilterRequested()
 
     // Keyboard shortcuts — active application-wide, no focus required
     Shortcut {
@@ -68,12 +66,12 @@ Item {
         }
     }
 
-    // "Showing recent import" filter bar
+    // Active filter bar — driven by FilterState
     Rectangle {
         id: filterBar
         anchors { top: parent.top; left: parent.left; right: parent.right }
-        height: root.isFiltered ? 40 : 0
-        visible: root.isFiltered
+        height: FilterState.hasActiveFilters ? 40 : 0
+        visible: FilterState.hasActiveFilters
         color: "transparent"
 
         Rectangle {
@@ -86,7 +84,7 @@ Item {
             Text {
                 id: filterLabel
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter; leftMargin: Theme.spacingMd }
-                text: "Showing recent import"
+                text: FilterState.importJobId !== "" ? "Showing recent import" : "Filters active"
                 font.pixelSize: Theme.fontSizeSm
                 font.family: Theme.fontFamily
                 color: Theme.textMuted
@@ -103,7 +101,7 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.clearFilterRequested()
+                    onClicked: FilterState.clearAllFilters()
                 }
             }
         }

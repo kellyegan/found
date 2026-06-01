@@ -23,6 +23,7 @@ from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
 import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
+from frontend.filters.filter_state_manager import FilterStateManager
 from frontend.library.view_model import LibraryViewModel
 from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
@@ -40,17 +41,20 @@ QML_DIR = Path(frontend.__file__).parent / "qml"
 
 @pytest.fixture
 def engine(qapp):
-    """QQmlEngine with Theme, SelectionManager, and NavigationManager registered."""
+    """QQmlEngine with Theme, SelectionManager, NavigationManager, and FilterState registered."""
     theme = ThemeManager()
     selection = SelectionManager()
     navigation = NavigationManager()
+    filter_state = FilterStateManager()
     e = QQmlEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
+    e.rootContext().setContextProperty("FilterState", filter_state)
     theme.setParent(e)
     selection.setParent(e)
     navigation.setParent(e)
+    filter_state.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -224,15 +228,9 @@ def test_library_view_loading_state_is_writable(engine):
     assert obj.property("loadingState") == "Empty"
 
 
-def test_library_view_is_filtered_defaults_to_false(engine):
+def test_library_view_has_no_is_filtered_property(engine):
     obj = load_component(engine, "LibraryView.qml")
-    assert obj.property("isFiltered") is False
-
-
-def test_library_view_is_filtered_is_writable(engine):
-    obj = load_component(engine, "LibraryView.qml")
-    obj.setProperty("isFiltered", True)
-    assert obj.property("isFiltered") is True
+    assert obj.property("isFiltered") is None
 
 
 # ---------------------------------------------------------------------------
@@ -270,6 +268,7 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("CategoriesState", categories_state)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
+    e.rootContext().setContextProperty("FilterState", FilterStateManager())
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.rootContext().setContextProperty("foundVersion", "0.1.0")
     e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")

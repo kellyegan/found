@@ -16,16 +16,22 @@ class CategoriesViewModel(QObject):
         categories_fetcher: Callable,
         category_creator: Optional[Callable] = None,
         images_adder: Optional[Callable] = None,
+        filter_state=None,
         parent=None,
     ):
         super().__init__(parent)
         self._categories_fetcher = categories_fetcher
         self._category_creator = category_creator
         self._images_adder = images_adder
+        self._filter_state = filter_state
         self._categories: list = []
-        self._filter_states: dict[str, str] = {}
+        self._filter_states: dict[str, str] = {}  # used only when filter_state is None
         self._loading_state = "Idle"
         self._fetch_thread: Optional[_FetchThread] = None
+
+        if filter_state is not None:
+            filter_state.filtersChanged.connect(self.categoriesChanged.emit)
+            filter_state.filtersChanged.connect(self.filterChanged.emit)
 
     # ------------------------------------------------------------------
     # Properties
@@ -37,6 +43,12 @@ class CategoriesViewModel(QObject):
 
     @Property(list, notify=categoriesChanged)
     def categories(self) -> list:
+        if self._filter_state is not None:
+            cat_filters = self._filter_state.categoryFilters
+            return [
+                {**cat, "filterState": cat_filters.get(cat["id"], "off")}
+                for cat in self._categories
+            ]
         return [
             {**cat, "filterState": self._filter_states.get(cat["id"], "off")}
             for cat in self._categories
@@ -44,6 +56,8 @@ class CategoriesViewModel(QObject):
 
     @Property("QVariant", notify=filterChanged)
     def activeFilters(self) -> dict:
+        if self._filter_state is not None:
+            return self._filter_state.categoryFilters
         return {
             cat_id: state
             for cat_id, state in self._filter_states.items()
@@ -65,10 +79,13 @@ class CategoriesViewModel(QObject):
 
     @Slot(str)
     def cycleFilter(self, category_id: str) -> None:
-        current = self._filter_states.get(category_id, "off")
-        self._filter_states[category_id] = _CYCLE[current]
-        self.categoriesChanged.emit()
-        self.filterChanged.emit()
+        if self._filter_state is not None:
+            self._filter_state.cycleCategoryFilter(category_id)
+        else:
+            current = self._filter_states.get(category_id, "off")
+            self._filter_states[category_id] = _CYCLE[current]
+            self.categoriesChanged.emit()
+            self.filterChanged.emit()
 
     @Slot(str)
     def createCategory(self, name: str) -> None:
@@ -94,9 +111,12 @@ class CategoriesViewModel(QObject):
 
     @Slot()
     def clearFilters(self) -> None:
-        self._filter_states.clear()
-        self.categoriesChanged.emit()
-        self.filterChanged.emit()
+        if self._filter_state is not None:
+            self._filter_state.clearCategoryFilters()
+        else:
+            self._filter_states.clear()
+            self.categoriesChanged.emit()
+            self.filterChanged.emit()
 
     # ------------------------------------------------------------------
     # Private
@@ -107,7 +127,8 @@ class CategoriesViewModel(QObject):
             self._set_state("Error")
             return
         self._categories = sorted(data, key=lambda c: c["name"].lower())
-        self._filter_states.clear()
+        if self._filter_state is None:
+            self._filter_states.clear()
         self.categoriesChanged.emit()
         self._set_state("Ready")
 
