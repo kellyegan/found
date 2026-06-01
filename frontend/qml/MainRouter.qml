@@ -266,7 +266,13 @@ Item {
             metaFileSize: MetadataState.fileSize
             metaDateAdded: MetadataState.dateAdded
             metaIsMissing: MetadataState.isMissing
+            tagEditorTags: TagEditorState.tags
+            tagEditorLoadingState: TagEditorState.loadingState
+            tagEditorSelectionMode: TagEditorState.selectionMode
             onToggleRequested: readyContainer.metadataOverlayOpen = !readyContainer.metadataOverlayOpen
+            onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
+            onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
+            onAddTagByNameRequested: function(name) { TagEditorState.addTagByName(name) }
             z: 10
         }
 

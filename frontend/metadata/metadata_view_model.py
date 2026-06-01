@@ -23,7 +23,7 @@ class MetadataViewModel(QObject):
         self._file_size = 0
         self._date_added = ""
         self._is_missing = False
-        self._fetch_thread: Optional[_FetchThread] = None
+        self._active_fetch_threads: list = []
 
         if selection_manager is not None:
             selection_manager.selectionChanged.connect(self._on_selection_changed)
@@ -74,10 +74,16 @@ class MetadataViewModel(QObject):
     @Slot(str)
     def loadImage(self, image_id: str) -> None:
         self._set_state("Loading")
+        for t in list(self._active_fetch_threads):
+            try:
+                t.result.disconnect(self._on_result)
+            except RuntimeError:
+                pass
         thread = _FetchThread(self._image_fetcher, image_id)
         thread.result.connect(self._on_result)
+        self._active_fetch_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._active_fetch_threads.remove(t) if t in self._active_fetch_threads else None)
         thread.finished.connect(thread.deleteLater)
-        self._fetch_thread = thread
         thread.start()
 
     @Slot()

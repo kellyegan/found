@@ -29,6 +29,7 @@ from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.metadata.metadata_view_model import MetadataViewModel
+from frontend.tag_editor.tag_editor_view_model import TagEditorViewModel
 from frontend.tag_search.tag_search_view_model import TagSearchViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
@@ -50,16 +51,25 @@ def engine(qapp):
     filter_state = FilterStateManager()
     e = QQmlEngine()
     tag_search = TagSearchViewModel(tags_fetcher=lambda term: [])
+    tag_editor_search = TagSearchViewModel(tags_fetcher=lambda term: [])
+    tag_editor = TagEditorViewModel(
+        image_tags_fetcher=lambda image_id: [],
+        tag_modifier=lambda image_ids, add_ids, remove_ids: True,
+    )
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
     e.rootContext().setContextProperty("FilterState", filter_state)
     e.rootContext().setContextProperty("TagSearchState", tag_search)
+    e.rootContext().setContextProperty("TagEditorSearchState", tag_editor_search)
+    e.rootContext().setContextProperty("TagEditorState", tag_editor)
     theme.setParent(e)
     selection.setParent(e)
     navigation.setParent(e)
     filter_state.setParent(e)
     tag_search.setParent(e)
+    tag_editor_search.setParent(e)
+    tag_editor.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -276,6 +286,11 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("FilterState", FilterStateManager())
     e.rootContext().setContextProperty("MetadataState", MetadataViewModel(image_fetcher=lambda image_id: None))
     e.rootContext().setContextProperty("TagSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
+    e.rootContext().setContextProperty("TagEditorSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
+    e.rootContext().setContextProperty("TagEditorState", TagEditorViewModel(
+        image_tags_fetcher=lambda image_id: [],
+        tag_modifier=lambda image_ids, add_ids, remove_ids: True,
+    ))
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.rootContext().setContextProperty("foundVersion", "0.1.0")
     e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
@@ -947,3 +962,70 @@ def test_tag_search_field_qml_exists():
 
 def test_tag_search_field_loads(engine):
     load_component(engine, "TagSearchField.qml")
+
+
+# ---------------------------------------------------------------------------
+# MetadataOverlay tag editor additions — Commit 11
+# ---------------------------------------------------------------------------
+
+
+def test_metadata_overlay_tag_editor_tags_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "MetadataOverlay.qml")
+    val = obj.property("tagEditorTags")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_metadata_overlay_tag_editor_tags_is_writable(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    obj.setProperty("tagEditorTags", [{"id": "tag-1", "name": "nature"}])
+    from PySide6.QtQml import QJSValue
+    val = obj.property("tagEditorTags")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert len(val) == 1
+
+
+def test_metadata_overlay_tag_editor_loading_state_defaults_to_idle(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("tagEditorLoadingState") == "Idle"
+
+
+def test_metadata_overlay_tag_editor_loading_state_is_writable(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    obj.setProperty("tagEditorLoadingState", "Ready")
+    assert obj.property("tagEditorLoadingState") == "Ready"
+
+
+def test_metadata_overlay_tag_editor_selection_mode_defaults_to_none(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("tagEditorSelectionMode") == "none"
+
+
+def test_metadata_overlay_tag_editor_selection_mode_is_writable(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    obj.setProperty("tagEditorSelectionMode", "single")
+    assert obj.property("tagEditorSelectionMode") == "single"
+
+
+def test_metadata_overlay_has_add_tag_requested_signal(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    received = []
+    obj.addTagRequested.connect(lambda tag_id, tag_name: received.append((tag_id, tag_name)))
+    assert isinstance(received, list)
+
+
+def test_metadata_overlay_has_remove_tag_requested_signal(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    received = []
+    obj.removeTagRequested.connect(lambda tag_id: received.append(tag_id))
+    assert isinstance(received, list)
+
+
+def test_metadata_overlay_has_add_tag_by_name_requested_signal(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    received = []
+    obj.addTagByNameRequested.connect(lambda name: received.append(name))
+    assert isinstance(received, list)
