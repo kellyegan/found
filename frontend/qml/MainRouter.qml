@@ -34,6 +34,7 @@ Item {
         property bool categoriesBarOpen: false
         property bool filterDropdownOpen: false
         property bool metadataOverlayOpen: false
+        property string _lastView: ""
 
         TitleBar {
             id: titleBar
@@ -154,11 +155,14 @@ Item {
             }
         }
 
-        // Restore selection + scroll when navigating back to library
+        // Central navigation handler — restores library state and collapses
+        // panels on first entry into image view (not on prev/next within it).
         Connections {
             target: NavigationManager
             function onNavigationChanged() {
-                if (NavigationManager.currentView === "library") {
+                var view = NavigationManager.currentView
+
+                if (view === "library") {
                     var entry = NavigationManager.currentEntry
                     SelectionManager.restore(
                         entry.selection_ids,
@@ -167,6 +171,13 @@ Item {
                     )
                     libraryView.scrollToX(entry.scroll_x)
                 }
+
+                if (view === "image" && readyContainer._lastView !== "image") {
+                    readyContainer.metadataOverlayOpen = false
+                    readyContainer.sidebarOpen = false
+                }
+
+                readyContainer._lastView = view
             }
         }
 
@@ -301,16 +312,6 @@ Item {
             z: 10
         }
 
-        // Collapse metadata overlay when entering image view
-        Connections {
-            target: NavigationManager
-            function onCurrentViewChanged() {
-                if (NavigationManager.currentView === "image") {
-                    readyContainer.metadataOverlayOpen = false
-                    readyContainer.sidebarOpen = false
-                }
-            }
-        }
 
         // File drop area — accepts files/directories dragged from Finder/Explorer
         // Stops at categoriesBar.top so chip DropAreas are not blocked by this higher-z area
