@@ -9,14 +9,16 @@ Item {
 
     signal loadMoreRequested()
 
-    // Keyboard shortcuts — active application-wide, no focus required
+    // Keyboard shortcuts — scoped to this view via root.visible
     Shortcut {
         sequence: "Escape"
+        enabled: root.visible
         onActivated: SelectionManager.clear()
     }
 
     Shortcut {
         sequence: StandardKey.SelectAll
+        enabled: root.visible
         onActivated: {
             if (root.loadingState === "Ready" && root.gridModel)
                 SelectionManager.selectAll(root.gridModel.allIds)
@@ -25,7 +27,7 @@ Item {
 
     Shortcut {
         sequence: "Space"
-        enabled: !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
         onActivated: {
             if (SelectionManager.primaryId !== "")
                 SelectionManager.requestOpen(SelectionManager.primaryId)

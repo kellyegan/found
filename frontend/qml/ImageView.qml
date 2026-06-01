@@ -43,17 +43,24 @@ Item {
 
     onImageIdChanged: resetView()
 
+    // All shortcuts scoped to this view via enabled: root.visible
+
     // Arrow key navigation
-    Shortcut { sequence: "Right";   onActivated: if (root.hasNext) NavigationManager.goNext() }
-    Shortcut { sequence: "Left";    onActivated: if (root.hasPrev) NavigationManager.goPrev() }
+    Shortcut { sequence: "Right";   enabled: root.visible; onActivated: if (root.hasNext) NavigationManager.goNext() }
+    Shortcut { sequence: "Left";    enabled: root.visible; onActivated: if (root.hasPrev) NavigationManager.goPrev() }
+
+    // Space — toggle back to the grid (same key that opened image view)
+    Shortcut { sequence: "Space";   enabled: root.visible; onActivated: NavigationManager.goBack() }
 
     // Immersive / fullscreen
     Shortcut {
         sequence: "F"
+        enabled: root.visible
         onActivated: NavigationManager.toggleImmersive()
     }
     Shortcut {
         sequence: "Escape"
+        enabled: root.visible
         onActivated: {
             if (NavigationManager.immersiveMode) NavigationManager.setImmersive(false)
             else NavigationManager.goBack()
@@ -61,10 +68,10 @@ Item {
     }
 
     // Keyboard zoom — steps without cursor anchoring
-    Shortcut { sequence: "="; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
-    Shortcut { sequence: "+"; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
-    Shortcut { sequence: "-"; onActivated: { root.zoomLevel = Math.max(root._minZoom, root.zoomLevel / 1.25); root._clampPan() } }
-    Shortcut { sequence: "0"; onActivated: root.resetView() }
+    Shortcut { sequence: "="; enabled: root.visible; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
+    Shortcut { sequence: "+"; enabled: root.visible; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
+    Shortcut { sequence: "-"; enabled: root.visible; onActivated: { root.zoomLevel = Math.max(root._minZoom, root.zoomLevel / 1.25); root._clampPan() } }
+    Shortcut { sequence: "0"; enabled: root.visible; onActivated: root.resetView() }
 
     Rectangle {
         id: viewport
