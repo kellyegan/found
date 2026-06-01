@@ -158,12 +158,12 @@ def test_category_filter_composes_with_cursor(client, make_image):
     for img in categorised:
         client.post(f"/api/v1/images/{img.id}/categories", json={"category_ids": [cat_id]})
 
-    resp1 = client.get("/api/v1/images?categories=Landscape&limit=2").json()
+    resp1 = client.get(f"/api/v1/images?categories={cat_id}&limit=2").json()
     assert len(resp1["data"]) == 2
     assert resp1["has_more"] is True
 
     resp2 = client.get(
-        f"/api/v1/images?categories=Landscape&limit=2&cursor={resp1['next_cursor']}"
+        f"/api/v1/images?categories={cat_id}&limit=2&cursor={resp1['next_cursor']}"
     ).json()
     assert len(resp2["data"]) == 1
     assert resp2["has_more"] is False

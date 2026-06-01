@@ -11,6 +11,7 @@ from frontend.app.controller import AppController
 from frontend.backend.connection_monitor import BackendConnectionManager
 from frontend.backend.process_manager import BackendProcessManager
 from frontend.collections.collections_view_model import CollectionsViewModel
+from frontend.filters.filter_state_manager import FilterStateManager
 from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
@@ -160,14 +161,25 @@ def _make_category_images_adder(base_url: str):
 
 
 def _make_page_fetcher(base_url: str):
-    def fetch(cursor=None, limit=100, import_job=None):
+    def fetch(cursor=None, limit=100, import_job=None, category=None, tag=None,
+              file_status=None, exclude_category=None, exclude_tag=None):
         try:
-            url = f"{base_url}/api/v1/images?view=grid&limit={limit}"
+            params: dict = {"view": "grid", "limit": limit}
             if cursor:
-                url += f"&cursor={cursor}"
+                params["cursor"] = cursor
             if import_job:
-                url += f"&import_job={import_job}"
-            response = httpx.get(url, timeout=10.0)
+                params["import_job"] = import_job
+            if category:
+                params["categories"] = category        # API uses plural
+            if exclude_category:
+                params["exclude_categories"] = exclude_category
+            if tag:
+                params["tags"] = tag                   # API uses plural
+            if exclude_tag:
+                params["exclude_tags"] = exclude_tag
+            if file_status == "missing":
+                params["missing"] = True               # API uses boolean flag
+            response = httpx.get(f"{base_url}/api/v1/images", params=params, timeout=10.0)
             data = response.json()
             if data.get("success"):
                 return {
@@ -193,11 +205,13 @@ def main():
     )
     base_url = f"http://{process_manager._host}:{process_manager._port}"
 
-    library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url))
+    filter_state = FilterStateManager()
+    library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url), filter_state=filter_state)
     categories_state = CategoriesViewModel(
         categories_fetcher=_make_categories_fetcher(base_url),
         category_creator=_make_category_creator(base_url),
         images_adder=_make_category_images_adder(base_url),
+        filter_state=filter_state,
     )
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
     selection_manager = SelectionManager()
@@ -237,6 +251,7 @@ def main():
     engine.rootContext().setContextProperty("CategoriesState", categories_state)
     engine.rootContext().setContextProperty("CollectionsState", collections_state)
     engine.rootContext().setContextProperty("ImportState", import_state)
+    engine.rootContext().setContextProperty("FilterState", filter_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"

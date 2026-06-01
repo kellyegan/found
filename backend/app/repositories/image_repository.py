@@ -69,19 +69,17 @@ class ImageRepository:
             )
             query = query.where(~Image.id.in_(subq))
 
-        for cat_name in (categories or []):
+        for cat_id in (categories or []):
             subq = (
                 select(ImageCategory.image_id)
-                .join(Category, Category.id == ImageCategory.category_id)
-                .where(Category.name == cat_name)
+                .where(ImageCategory.category_id == UUID(cat_id))
             )
             query = query.where(Image.id.in_(subq))
 
-        for cat_name in (exclude_categories or []):
+        for cat_id in (exclude_categories or []):
             subq = (
                 select(ImageCategory.image_id)
-                .join(Category, Category.id == ImageCategory.category_id)
-                .where(Category.name == cat_name)
+                .where(ImageCategory.category_id == UUID(cat_id))
             )
             query = query.where(~Image.id.in_(subq))
 

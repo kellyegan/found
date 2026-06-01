@@ -23,6 +23,7 @@ from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
 import frontend
 from frontend.theme.theme import ThemeManager
 from frontend.state.app_state import AppStateManager
+from frontend.filters.filter_state_manager import FilterStateManager
 from frontend.library.view_model import LibraryViewModel
 from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
@@ -40,17 +41,20 @@ QML_DIR = Path(frontend.__file__).parent / "qml"
 
 @pytest.fixture
 def engine(qapp):
-    """QQmlEngine with Theme, SelectionManager, and NavigationManager registered."""
+    """QQmlEngine with Theme, SelectionManager, NavigationManager, and FilterState registered."""
     theme = ThemeManager()
     selection = SelectionManager()
     navigation = NavigationManager()
+    filter_state = FilterStateManager()
     e = QQmlEngine()
     e.rootContext().setContextProperty("Theme", theme)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
+    e.rootContext().setContextProperty("FilterState", filter_state)
     theme.setParent(e)
     selection.setParent(e)
     navigation.setParent(e)
+    filter_state.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -224,15 +228,9 @@ def test_library_view_loading_state_is_writable(engine):
     assert obj.property("loadingState") == "Empty"
 
 
-def test_library_view_is_filtered_defaults_to_false(engine):
+def test_library_view_has_no_is_filtered_property(engine):
     obj = load_component(engine, "LibraryView.qml")
-    assert obj.property("isFiltered") is False
-
-
-def test_library_view_is_filtered_is_writable(engine):
-    obj = load_component(engine, "LibraryView.qml")
-    obj.setProperty("isFiltered", True)
-    assert obj.property("isFiltered") is True
+    assert obj.property("isFiltered") is None
 
 
 # ---------------------------------------------------------------------------
@@ -270,6 +268,7 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("CategoriesState", categories_state)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
+    e.rootContext().setContextProperty("FilterState", FilterStateManager())
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.rootContext().setContextProperty("foundVersion", "0.1.0")
     e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
@@ -726,3 +725,127 @@ def test_import_panel_has_conflict_choice_changed_signal(engine):
 def test_import_panel_updated_count_defaults_to_zero(engine):
     obj = load_component(engine, "ImportPanel.qml")
     assert obj.property("updatedCount") == 0
+
+
+# ---------------------------------------------------------------------------
+# FilterChip — Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_filter_chip_qml_exists():
+    assert (QML_DIR / "FilterChip.qml").exists()
+
+
+def test_filter_chip_loads(engine):
+    load_component(engine, "FilterChip.qml")
+
+
+def test_filter_chip_label_defaults_to_empty(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    assert obj.property("label") == ""
+
+
+def test_filter_chip_label_is_writable(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    obj.setProperty("label", "architecture")
+    assert obj.property("label") == "architecture"
+
+
+def test_filter_chip_filter_mode_defaults_to_include(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    assert obj.property("filterMode") == "include"
+
+
+def test_filter_chip_filter_mode_is_writable(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    obj.setProperty("filterMode", "exclude")
+    assert obj.property("filterMode") == "exclude"
+
+
+def test_filter_chip_has_remove_requested_signal(engine):
+    obj = load_component(engine, "FilterChip.qml")
+    received = []
+    obj.removeRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# FilterDropdown — Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_filter_dropdown_qml_exists():
+    assert (QML_DIR / "FilterDropdown.qml").exists()
+
+
+def test_filter_dropdown_loads(engine):
+    load_component(engine, "FilterDropdown.qml")
+
+
+def test_filter_dropdown_open_defaults_to_false(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    assert obj.property("open") is False
+
+
+def test_filter_dropdown_open_is_writable(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("open", True)
+    assert obj.property("open") is True
+
+
+def test_filter_dropdown_has_clear_all_requested_signal(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    received = []
+    obj.clearAllRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_filter_dropdown_active_categories_defaults_to_empty(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    from PySide6.QtQml import QJSValue
+    val = obj.property("activeCategories")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_filter_dropdown_show_missing_only_defaults_to_false(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    assert obj.property("showMissingOnly") is False
+
+
+def test_filter_dropdown_has_remove_category_filter_signal(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    received = []
+    obj.removeCategoryFilter.connect(lambda cat_id: received.append(cat_id))
+    assert isinstance(received, list)
+
+
+def test_filter_dropdown_has_toggle_missing_only_requested_signal(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    received = []
+    obj.toggleMissingOnlyRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# TitleBar search zone additions — Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_title_bar_filter_active_defaults_to_false(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("filterActive") is False
+
+
+def test_title_bar_filter_active_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("filterActive", True)
+    assert obj.property("filterActive") is True
+
+
+def test_title_bar_has_filter_toggle_requested_signal(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    received = []
+    obj.filterToggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)

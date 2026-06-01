@@ -32,6 +32,7 @@ Item {
 
         property bool sidebarOpen: false
         property bool categoriesBarOpen: false
+        property bool filterDropdownOpen: false
 
         TitleBar {
             id: titleBar
@@ -39,6 +40,7 @@ Item {
             height: NavigationManager.immersiveMode ? 0 : 48
             visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
+            filterActive: FilterState.hasActiveFilters
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
@@ -48,6 +50,36 @@ Item {
                 }
             }
             onGoBackRequested: NavigationManager.goBack()
+            onFilterToggleRequested: readyContainer.filterDropdownOpen = !readyContainer.filterDropdownOpen
+        }
+
+        // Filter dropdown — anchored below TitleBar on the right, z above grid
+        FilterDropdown {
+            id: filterDropdown
+            anchors { top: titleBar.bottom; right: parent.right; rightMargin: Theme.spacingMd }
+            width: 280
+            implicitHeight: 160
+            open: readyContainer.filterDropdownOpen
+            showMissingOnly: FilterState.showMissingOnly
+            importJobActive: FilterState.importJobId !== ""
+            activeCategories: {
+                var result = []
+                var filters = FilterState.categoryFilters
+                var cats = CategoriesState.categories
+                for (var i = 0; i < cats.length; i++) {
+                    var mode = filters[cats[i].id]
+                    if (mode && mode !== "off")
+                        result.push({id: cats[i].id, name: cats[i].name, mode: mode})
+                }
+                return result
+            }
+            onClearAllRequested: {
+                FilterState.clearAllFilters()
+                readyContainer.filterDropdownOpen = false
+            }
+            onRemoveCategoryFilter: function(catId) { FilterState.setCategoryFilter(catId, "off") }
+            onToggleMissingOnlyRequested: FilterState.setShowMissingOnly(!FilterState.showMissingOnly)
+            z: 40
         }
 
         // Categories bar — structural bottom zone for library/collection views
@@ -77,9 +109,7 @@ Item {
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
-            isFiltered: LibraryState.isFiltered
             onLoadMoreRequested: LibraryState.load_more()
-            onClearFilterRequested: LibraryState.clearFilter()
         }
 
         // After import completes, filter library to show only the new images
@@ -87,7 +117,7 @@ Item {
             target: ImportState
             function onLoadingStateChanged(state) {
                 if (state === "Complete") {
-                    LibraryState.filterByJobId(ImportState.jobId)
+                    FilterState.setImportJobFilter(ImportState.jobId)
                 }
             }
         }

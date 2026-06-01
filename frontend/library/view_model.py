@@ -15,11 +15,11 @@ class LibraryLoadingState(Enum):
 
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
-    isFilteredChanged = Signal(bool)
 
     def __init__(
         self,
         page_fetcher: Callable[..., dict | None],
+        filter_state=None,
         parent=None,
     ):
         super().__init__(parent)
@@ -28,7 +28,9 @@ class LibraryViewModel(QObject):
         self._grid_model = ThumbnailGridModel(parent=self)
         self._thread: _PageThread | None = None
         self._is_fetching = False
-        self._job_filter: str | None = None
+        self._filter_state = filter_state
+        if filter_state is not None:
+            filter_state.filtersChanged.connect(self.load)
 
     @Property(str, notify=loadingStateChanged)
     def loadingState(self) -> str:
@@ -37,10 +39,6 @@ class LibraryViewModel(QObject):
     @Property(QObject, constant=True)
     def gridModel(self) -> ThumbnailGridModel:
         return self._grid_model
-
-    @Property(bool, notify=isFilteredChanged)
-    def isFiltered(self) -> bool:
-        return self._job_filter is not None
 
     def load(self) -> None:
         self._grid_model.clear()
@@ -58,27 +56,11 @@ class LibraryViewModel(QObject):
             return
         self._start_fetch(cursor=self._grid_model.cursor or None, is_initial=False)
 
-    @Slot(str)
-    def filterByJobId(self, job_id: str) -> None:
-        was_filtered = self.isFiltered
-        self._job_filter = job_id
-        if not was_filtered:
-            self.isFilteredChanged.emit(True)
-        self.load()
-
-    @Slot()
-    def clearFilter(self) -> None:
-        if self._job_filter is None:
-            return
-        self._job_filter = None
-        self.isFilteredChanged.emit(False)
-        self.load()
-
     def _start_fetch(self, cursor: str | None, is_initial: bool) -> None:
         self._is_fetching = True
         fetch_kwargs: dict = {"cursor": cursor, "limit": 100}
-        if self._job_filter is not None:
-            fetch_kwargs["import_job"] = self._job_filter
+        if self._filter_state is not None:
+            fetch_kwargs.update(self._filter_state.queryParams)
         self._thread = _PageThread(self._page_fetcher, fetch_kwargs)
         self._thread.result.connect(lambda page: self._on_result(page, is_initial))
         self._thread.start()
