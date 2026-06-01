@@ -20,7 +20,7 @@ class TagSearchViewModel(QObject):
         self._raw_suggestions: list = []
         self._loading_state = "Idle"
         self._tag_names: dict[str, str] = {}
-        self._fetch_thread: Optional[_FetchThread] = None
+        self._active_fetch_threads: list = []
 
         if filter_state is not None:
             filter_state.filtersChanged.connect(self._on_filters_changed)
@@ -56,10 +56,16 @@ class TagSearchViewModel(QObject):
         if not term:
             return
         self._set_state("Loading")
+        for t in list(self._active_fetch_threads):
+            try:
+                t.result.disconnect(self._on_result)
+            except RuntimeError:
+                pass
         thread = _FetchThread(self._tags_fetcher, term)
         thread.result.connect(self._on_result)
+        self._active_fetch_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._active_fetch_threads.remove(t) if t in self._active_fetch_threads else None)
         thread.finished.connect(thread.deleteLater)
-        self._fetch_thread = thread
         thread.start()
 
     @Slot()

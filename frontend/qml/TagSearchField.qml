@@ -5,6 +5,16 @@ Item {
 
     property bool _showDropdown: false
 
+    function _commitFirstSuggestion() {
+        var sug = TagSearchState.suggestions
+        if (sug && sug.length > 0) {
+            hideTimer.stop()
+            TagSearchState.selectTag(sug[0].id, sug[0].name)
+            inputField.text = ""
+            root._showDropdown = false
+        }
+    }
+
     Timer {
         id: hideTimer
         interval: 200
@@ -40,11 +50,38 @@ Item {
             color: Theme.textMuted
         }
 
+        // Submit button — visible when suggestions are ready
+        Rectangle {
+            id: submitBtn
+            visible: root._showDropdown && TagSearchState.loadingState === "Ready"
+            anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+            width: 22
+            height: 22
+            radius: 11
+            color: submitBtnArea.containsMouse ? "#3a5a3a" : "transparent"
+
+            Text {
+                anchors.centerIn: parent
+                text: "↵"
+                font.pixelSize: 11
+                color: "#88cc88"
+            }
+
+            MouseArea {
+                id: submitBtnArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root._commitFirstSuggestion()
+            }
+        }
+
         TextInput {
             id: inputField
             anchors {
                 left: searchIcon.right; leftMargin: 4
-                right: parent.right; rightMargin: 8
+                right: submitBtn.left
+                rightMargin: 2
                 verticalCenter: parent.verticalCenter
             }
             color: Theme.text
@@ -76,7 +113,20 @@ Item {
                 }
             }
 
-            Keys.onEscapePressed: {
+            Keys.priority: Keys.BeforeItem
+
+            Keys.onReturnPressed: function(event) {
+                event.accepted = true
+                root._commitFirstSuggestion()
+            }
+
+            Keys.onEnterPressed: function(event) {
+                event.accepted = true
+                root._commitFirstSuggestion()
+            }
+
+            Keys.onEscapePressed: function(event) {
+                event.accepted = true
                 text = ""
                 TagSearchState.clear()
                 root._showDropdown = false
