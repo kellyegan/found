@@ -10,6 +10,21 @@ Item {
     property bool hasNext: false
     property bool hasPrev: false
 
+    // Inset from left/right edges so buttons clear the panel edge tabs.
+    // 40 = 16px edge-tab + 24px gap. Measured from the viewport edge, so
+    // rightInset stays 40 whether the metadata panel is open or not —
+    // the viewport itself shrinks via rightPanelWidth.
+    property real leftInset: 40
+    property real rightInset: 40
+
+    // Width of the metadata panel when open; shrinks the viewport so the
+    // image re-centres in the remaining area. Animated to match panel slide.
+    property real rightPanelWidth: 0
+    Behavior on rightPanelWidth { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
+
+    signal prevRequested()
+    signal nextRequested()
+
     property real zoomLevel: 1.0
     property real panOffsetX: 0.0
     property real panOffsetY: 0.0
@@ -34,17 +49,24 @@ Item {
 
     onImageIdChanged: resetView()
 
+    // All shortcuts scoped to this view via enabled: root.visible
+
     // Arrow key navigation
-    Shortcut { sequence: "Right";   onActivated: if (root.hasNext) NavigationManager.goNext() }
-    Shortcut { sequence: "Left";    onActivated: if (root.hasPrev) NavigationManager.goPrev() }
+    Shortcut { sequence: "Right";   enabled: root.visible; onActivated: if (root.hasNext) NavigationManager.goNext() }
+    Shortcut { sequence: "Left";    enabled: root.visible; onActivated: if (root.hasPrev) NavigationManager.goPrev() }
+
+    // Space — toggle back to the grid (same key that opened image view)
+    Shortcut { sequence: "Space";   enabled: root.visible; onActivated: NavigationManager.goBack() }
 
     // Immersive / fullscreen
     Shortcut {
         sequence: "F"
+        enabled: root.visible
         onActivated: NavigationManager.toggleImmersive()
     }
     Shortcut {
         sequence: "Escape"
+        enabled: root.visible
         onActivated: {
             if (NavigationManager.immersiveMode) NavigationManager.setImmersive(false)
             else NavigationManager.goBack()
@@ -52,14 +74,19 @@ Item {
     }
 
     // Keyboard zoom — steps without cursor anchoring
-    Shortcut { sequence: "="; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
-    Shortcut { sequence: "+"; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
-    Shortcut { sequence: "-"; onActivated: { root.zoomLevel = Math.max(root._minZoom, root.zoomLevel / 1.25); root._clampPan() } }
-    Shortcut { sequence: "0"; onActivated: root.resetView() }
+    Shortcut { sequence: "="; enabled: root.visible; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
+    Shortcut { sequence: "+"; enabled: root.visible; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
+    Shortcut { sequence: "-"; enabled: root.visible; onActivated: { root.zoomLevel = Math.max(root._minZoom, root.zoomLevel / 1.25); root._clampPan() } }
+    Shortcut { sequence: "0"; enabled: root.visible; onActivated: root.resetView() }
+
+    // Background fills the full root area so the bottom margin strip matches the viewport.
+    Rectangle { anchors.fill: parent; color: "#111111" }
 
     Rectangle {
         id: viewport
         anchors.fill: parent
+        anchors.bottomMargin: NavigationManager.immersiveMode ? 0 : 48
+        anchors.rightMargin: root.rightPanelWidth
         color: "#111111"
         clip: true
 
@@ -179,6 +206,76 @@ Item {
         // Double-click resets zoom and pan
         TapHandler {
             onTapped: { if (tapCount >= 2) root.resetView() }
+        }
+
+        // ── Prev / Next hover buttons ─────────────────────────────────────
+        // The Item spans full height so the MouseArea captures hover anywhere
+        // along the edge. The visible square badge is centered within it.
+
+        Item {
+            id: prevBtn
+            anchors { left: parent.left; leftMargin: root.leftInset; top: parent.top; bottom: parent.bottom }
+            width: 108
+            z: 2
+            visible: root.hasPrev
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 100
+                height: 100
+                radius: 4
+                color: "#cc000000"
+                opacity: prevBtnArea.containsMouse ? 0.75 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "◀"
+                    color: "#d9d9d9"
+                    font.pixelSize: 50
+                }
+            }
+
+            MouseArea {
+                id: prevBtnArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.prevRequested()
+            }
+        }
+
+        Item {
+            id: nextBtn
+            anchors { right: parent.right; rightMargin: root.rightInset; top: parent.top; bottom: parent.bottom }
+            width: 108
+            z: 2
+            visible: root.hasNext
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 100
+                height: 100
+                radius: 4
+                color: "#cc000000"
+                opacity: nextBtnArea.containsMouse ? 0.75 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "▶"
+                    color: "#d9d9d9"
+                    font.pixelSize: 50
+                }
+            }
+
+            MouseArea {
+                id: nextBtnArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.nextRequested()
+            }
         }
     }
 }

@@ -187,7 +187,7 @@ Item {
 
         Text {
             anchors.centerIn: parent
-            text: root.open ? "►" : "◄"
+            text: root.open ? "▶" : "◀"
             font.pixelSize: 10
             color: "#888888"
         }

@@ -455,6 +455,37 @@ def test_image_view_pan_offset_y_defaults_to_zero(engine):
 
 
 # ---------------------------------------------------------------------------
+# ImageView prev/next hover buttons — Commit 12
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_has_prev_requested_signal(engine):
+    obj = load_component(engine, "ImageView.qml")
+    received = []
+    obj.prevRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_image_view_has_next_requested_signal(engine):
+    obj = load_component(engine, "ImageView.qml")
+    received = []
+    obj.nextRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_image_view_has_next_is_writable(engine):
+    obj = load_component(engine, "ImageView.qml")
+    obj.setProperty("hasNext", True)
+    assert obj.property("hasNext") is True
+
+
+def test_image_view_has_prev_is_writable(engine):
+    obj = load_component(engine, "ImageView.qml")
+    obj.setProperty("hasPrev", True)
+    assert obj.property("hasPrev") is True
+
+
+# ---------------------------------------------------------------------------
 # CollectionItem
 # ---------------------------------------------------------------------------
 
@@ -871,6 +902,41 @@ def test_title_bar_has_filter_toggle_requested_signal(engine):
     received = []
     obj.filterToggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# TitleBar read-only search zone — Commit 13
+# ---------------------------------------------------------------------------
+
+
+def test_title_bar_search_read_only_defaults_to_false(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("searchReadOnly") is False
+
+
+def test_title_bar_search_read_only_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("searchReadOnly", True)
+    assert obj.property("searchReadOnly") is True
+
+
+def test_title_bar_active_filters_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "TitleBar.qml")
+    val = obj.property("activeFilters")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_title_bar_active_filters_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("activeFilters", [{"name": "nature", "mode": "include"}])
+    from PySide6.QtQml import QJSValue
+    val = obj.property("activeFilters")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert len(val) == 1
 
 
 # ---------------------------------------------------------------------------

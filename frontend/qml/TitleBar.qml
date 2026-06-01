@@ -6,6 +6,8 @@ Item {
     property bool canGoBack: false
     property string viewTitle: ""
     property bool filterActive: false
+    property bool searchReadOnly: false
+    property var activeFilters: []
 
     signal goBackRequested()
     signal filterToggleRequested()
@@ -71,9 +73,10 @@ Item {
             right: parent.right
         }
 
-        // Tag search field — left of filter icon
+        // Interactive mode: tag search field + filter icon (library/collection)
         TagSearchField {
             id: tagSearchField
+            visible: !root.searchReadOnly
             anchors {
                 left: parent.left; leftMargin: 8
                 right: filterIconBtn.left; rightMargin: 4
@@ -82,9 +85,9 @@ Item {
             height: 28
         }
 
-        // Filter icon — grey when inactive, accent when filters are active
         Item {
             id: filterIconBtn
+            visible: !root.searchReadOnly
             width: 36
             height: parent.height
             anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
@@ -100,6 +103,60 @@ Item {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.filterToggleRequested()
+            }
+        }
+
+        // Read-only mode: non-interactive filter chips (image view)
+        Flow {
+            visible: root.searchReadOnly
+            anchors {
+                left: parent.left; leftMargin: 8
+                right: parent.right; rightMargin: 8
+                verticalCenter: parent.verticalCenter
+            }
+            spacing: 4
+
+            Repeater {
+                model: root.activeFilters
+
+                delegate: Item {
+                    required property var modelData
+                    implicitWidth: roChipRow.implicitWidth + 20
+                    height: 22
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: height / 2
+                        color: modelData.mode === "exclude" ? "#2a1515" : "#152030"
+                        border.color: modelData.mode === "exclude" ? "#884444" : "#446688"
+                        border.width: 1
+
+                        Row {
+                            id: roChipRow
+                            anchors {
+                                left: parent.left; leftMargin: 8
+                                right: parent.right; rightMargin: 8
+                                verticalCenter: parent.verticalCenter
+                            }
+                            spacing: 4
+
+                            Text {
+                                text: modelData.mode === "exclude" ? "−" : "+"
+                                font.pixelSize: 10
+                                color: modelData.mode === "exclude" ? "#cc6666" : "#6699cc"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                text: modelData.name ?? ""
+                                font.pixelSize: Theme.fontSizeSm
+                                font.family: Theme.fontFamily
+                                color: Theme.text
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -34,6 +34,7 @@ Item {
         property bool categoriesBarOpen: false
         property bool filterDropdownOpen: false
         property bool metadataOverlayOpen: false
+        property string _lastView: ""
 
         TitleBar {
             id: titleBar
@@ -46,9 +47,28 @@ Item {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
                     case "collection": return "Collection"
-                    case "image":      return "Image"
+                    case "image":      return ""
                     default:           return ""
                 }
+            }
+            searchReadOnly: NavigationManager.currentView === "image"
+            activeFilters: {
+                var result = []
+                var catFilters = FilterState.categoryFilters
+                var cats = CategoriesState.categories
+                for (var i = 0; i < cats.length; i++) {
+                    var catMode = catFilters[cats[i].id]
+                    if (catMode && catMode !== "off")
+                        result.push({ name: cats[i].name, mode: catMode })
+                }
+                var tagFilters = FilterState.tagFilters
+                var tagNames = TagSearchState.tagNames
+                for (var tid in tagFilters) {
+                    var tagMode = tagFilters[tid]
+                    if (tagMode && tagMode !== "off")
+                        result.push({ name: tagNames[tid] ?? tid, mode: tagMode })
+                }
+                return result
             }
             onGoBackRequested: NavigationManager.goBack()
             onFilterToggleRequested: readyContainer.filterDropdownOpen = !readyContainer.filterDropdownOpen
@@ -135,11 +155,14 @@ Item {
             }
         }
 
-        // Restore selection + scroll when navigating back to library
+        // Central navigation handler — restores library state and collapses
+        // panels on first entry into image view (not on prev/next within it).
         Connections {
             target: NavigationManager
             function onNavigationChanged() {
-                if (NavigationManager.currentView === "library") {
+                var view = NavigationManager.currentView
+
+                if (view === "library") {
                     var entry = NavigationManager.currentEntry
                     SelectionManager.restore(
                         entry.selection_ids,
@@ -148,6 +171,13 @@ Item {
                     )
                     libraryView.scrollToX(entry.scroll_x)
                 }
+
+                if (view === "image" && readyContainer._lastView !== "image") {
+                    readyContainer.metadataOverlayOpen = false
+                    readyContainer.sidebarOpen = false
+                }
+
+                readyContainer._lastView = view
             }
         }
 
@@ -200,12 +230,18 @@ Item {
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
             hasNext: NavigationManager.hasNext
             hasPrev: NavigationManager.hasPrev
+            leftInset: 40
+            rightInset: 40
+            rightPanelWidth: readyContainer.metadataOverlayOpen ? 260 : 0
+            onPrevRequested: NavigationManager.goPrev()
+            onNextRequested: NavigationManager.goNext()
         }
 
         // Sidebar overlay — rendered above content, below nav bar
         CollectionsSidebar {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
             width: implicitWidth
+            visible: NavigationManager.currentView !== "image"
             open: readyContainer.sidebarOpen
             collections: CollectionsState.collections
             z: 10
@@ -276,15 +312,6 @@ Item {
             z: 10
         }
 
-        // Collapse metadata overlay when entering image view
-        Connections {
-            target: NavigationManager
-            function onCurrentViewChanged() {
-                if (NavigationManager.currentView === "image") {
-                    readyContainer.metadataOverlayOpen = false
-                }
-            }
-        }
 
         // File drop area — accepts files/directories dragged from Finder/Explorer
         // Stops at categoriesBar.top so chip DropAreas are not blocked by this higher-z area
