@@ -5,6 +5,8 @@ Item {
 
     property var model: null
     property int targetThumbnailSize: 180
+    property int tileGap: 50
+    property int gridEdgeMargin: 40
     readonly property real scrollX: grid.contentX
 
     signal loadMoreRequested()
@@ -15,7 +17,13 @@ Item {
 
     GridView {
         id: grid
-        anchors.fill: parent
+        anchors {
+            fill: parent
+            topMargin: Theme.spacingMd
+            bottomMargin: Theme.spacingMd
+        }
+        leftMargin: root.gridEdgeMargin
+        rightMargin: root.gridEdgeMargin
         model: root.model
 
         // Horizontal multi-row layout: items fill top-to-bottom, columns flow left-to-right
@@ -36,6 +44,7 @@ Item {
         delegate: ThumbnailTile {
             width: grid.cellWidth
             height: grid.cellHeight
+            inset: root.tileGap / 2
             imageId: model.imageId ?? ""
             thumbnailUrl: model.thumbnailUrl ?? ""
             fileStatus: model.fileStatus ?? "available"
@@ -62,7 +71,7 @@ Item {
 
         function _checkLoadMore() {
             if (!root.model || !root.model.hasMore) return
-            var distanceToEnd = grid.contentWidth - grid.contentX - grid.width
+            var distanceToEnd = grid.contentWidth - grid.rightMargin - (grid.contentX + grid.width)
             if (distanceToEnd < grid.width * 3) {
                 root.loadMoreRequested()
             }

@@ -337,6 +337,11 @@ def test_thumbnail_tile_image_id_is_writable(engine):
     assert obj.property("imageId") == "test-uuid-123"
 
 
+def test_thumbnail_tile_has_inset_property(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    assert obj.property("inset") == 0
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailGrid
 # ---------------------------------------------------------------------------
@@ -358,7 +363,18 @@ def test_thumbnail_grid_has_model_property(engine):
 
 def test_thumbnail_grid_has_scroll_x_property(engine):
     obj = load_component(engine, "ThumbnailGrid.qml")
-    assert obj.property("scrollX") == 0.0
+    edge_margin = obj.property("gridEdgeMargin")
+    assert obj.property("scrollX") == -float(edge_margin)
+
+
+def test_thumbnail_grid_has_tile_gap_property(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    assert obj.property("tileGap") == 50
+
+
+def test_thumbnail_grid_has_grid_edge_margin_property(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    assert obj.property("gridEdgeMargin") == 40
 
 
 # ---------------------------------------------------------------------------

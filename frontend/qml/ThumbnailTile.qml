@@ -7,6 +7,7 @@ Item {
     property string thumbnailUrl: ""
     property string fileStatus: "available"
     property bool selected: false
+    property int inset: 0
 
     signal tileClicked(string imageId, int modifiers)
     signal tileDoubleClicked(string imageId)
@@ -28,8 +29,8 @@ Item {
     Item {
         id: dragProxy
         parent: root.Window.contentItem ?? root
-        width: root.width
-        height: root.height
+        width: root.width - 2 * root.inset
+        height: root.height - 2 * root.inset
         visible: Drag.active
 
         x: {
@@ -68,7 +69,7 @@ Item {
     }
 
     Rectangle {
-        anchors.fill: parent
+        anchors { fill: parent; margins: root.inset }
         color: Theme.surface
         opacity: dragHandler.active ? 0.4 : 1.0
 
@@ -132,16 +133,17 @@ Item {
             border.color: Theme.accent
             border.width: root.selected ? 2 : 0
         }
+    }
 
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: function(mouse) {
-                root.tileClicked(root.imageId, mouse.modifiers)
-            }
-            onDoubleClicked: function(mouse) {
-                root.tileDoubleClicked(root.imageId)
-            }
+    // MouseArea covers the full cell so the gap between tiles is also clickable
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton
+        onClicked: function(mouse) {
+            root.tileClicked(root.imageId, mouse.modifiers)
+        }
+        onDoubleClicked: function(mouse) {
+            root.tileDoubleClicked(root.imageId)
         }
     }
 }
