@@ -219,7 +219,7 @@ Item {
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
             hasNext: NavigationManager.hasNext
             hasPrev: NavigationManager.hasPrev
-            leftInset: readyContainer.sidebarOpen ? 300 : 40
+            leftInset: 40
             rightInset: readyContainer.metadataOverlayOpen ? 300 : 40
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
@@ -229,6 +229,7 @@ Item {
         CollectionsSidebar {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
             width: implicitWidth
+            visible: NavigationManager.currentView !== "image"
             open: readyContainer.sidebarOpen
             collections: CollectionsState.collections
             z: 10
@@ -305,6 +306,7 @@ Item {
             function onCurrentViewChanged() {
                 if (NavigationManager.currentView === "image") {
                     readyContainer.metadataOverlayOpen = false
+                    readyContainer.sidebarOpen = false
                 }
             }
         }
