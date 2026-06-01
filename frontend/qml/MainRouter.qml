@@ -33,6 +33,7 @@ Item {
         property bool sidebarOpen: false
         property bool categoriesBarOpen: false
         property bool filterDropdownOpen: false
+        property bool metadataOverlayOpen: false
 
         TitleBar {
             id: titleBar
@@ -231,6 +232,39 @@ Item {
                 anchors.fill: parent
                 enabled: readyContainer.sidebarOpen
                 onClicked: readyContainer.sidebarOpen = false
+            }
+        }
+
+        // Metadata overlay — right-edge collapsible panel; open by default, collapses in image view
+        MetadataOverlay {
+            id: metadataOverlay
+            anchors {
+                top: titleBar.bottom
+                right: parent.right
+                bottom: parent.bottom
+            }
+            anchors.bottomMargin: (NavigationManager.currentView === "library" || NavigationManager.currentView === "collection")
+                                  ? (categoriesBar._tabHeight + categoriesBar._stripHeight) : 0
+            width: implicitWidth
+            open: readyContainer.metadataOverlayOpen
+            metaLoadingState: MetadataState.loadingState
+            metaFilename: MetadataState.filename
+            metaPath: MetadataState.path
+            metaDimensions: MetadataState.dimensions
+            metaFileSize: MetadataState.fileSize
+            metaDateAdded: MetadataState.dateAdded
+            metaIsMissing: MetadataState.isMissing
+            onToggleRequested: readyContainer.metadataOverlayOpen = !readyContainer.metadataOverlayOpen
+            z: 10
+        }
+
+        // Collapse metadata overlay when entering image view
+        Connections {
+            target: NavigationManager
+            function onCurrentViewChanged() {
+                if (NavigationManager.currentView === "image") {
+                    readyContainer.metadataOverlayOpen = false
+                }
             }
         }
 

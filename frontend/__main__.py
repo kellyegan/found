@@ -15,6 +15,7 @@ from frontend.filters.filter_state_manager import FilterStateManager
 from frontend.import_workflow.import_view_model import ImportViewModel
 from frontend.library.thumbnail_provider import ThumbnailProvider
 from frontend.library.view_model import LibraryViewModel
+from frontend.metadata.metadata_view_model import MetadataViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 from frontend.state.app_state import AppStateManager
@@ -146,6 +147,17 @@ def _make_category_creator(base_url: str):
     return create
 
 
+def _make_image_fetcher(base_url: str):
+    def fetch(image_id: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/images/{image_id}", timeout=10.0)
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
 def _make_category_images_adder(base_url: str):
     def add(category_id: str, image_ids: list):
         try:
@@ -228,6 +240,10 @@ def main():
         job_fetcher=_make_job_fetcher(base_url),
         conflict_resolver=_make_conflict_resolver(base_url),
     )
+    metadata_state = MetadataViewModel(
+        image_fetcher=_make_image_fetcher(base_url),
+        selection_manager=selection_manager,
+    )
 
     controller = AppController(
         app_state,
@@ -252,6 +268,7 @@ def main():
     engine.rootContext().setContextProperty("CollectionsState", collections_state)
     engine.rootContext().setContextProperty("ImportState", import_state)
     engine.rootContext().setContextProperty("FilterState", filter_state)
+    engine.rootContext().setContextProperty("MetadataState", metadata_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"

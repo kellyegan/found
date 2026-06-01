@@ -28,6 +28,7 @@ from frontend.library.view_model import LibraryViewModel
 from frontend.categories.categories_view_model import CategoriesViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.import_workflow.import_view_model import ImportViewModel
+from frontend.metadata.metadata_view_model import MetadataViewModel
 from frontend.navigation.navigation_manager import NavigationManager
 from frontend.selection.selection_manager import SelectionManager
 
@@ -269,6 +270,7 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("FilterState", FilterStateManager())
+    e.rootContext().setContextProperty("MetadataState", MetadataViewModel(image_fetcher=lambda image_id: None))
     e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
     e.rootContext().setContextProperty("foundVersion", "0.1.0")
     e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
@@ -849,3 +851,81 @@ def test_title_bar_has_filter_toggle_requested_signal(engine):
     received = []
     obj.filterToggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# MetadataOverlay — Commit 9
+# ---------------------------------------------------------------------------
+
+
+def test_metadata_overlay_qml_exists():
+    assert (QML_DIR / "MetadataOverlay.qml").exists()
+
+
+def test_metadata_overlay_loads(engine):
+    load_component(engine, "MetadataOverlay.qml")
+
+
+def test_metadata_overlay_open_defaults_to_false(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("open") is False
+
+
+def test_metadata_overlay_open_is_writable(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    obj.setProperty("open", True)
+    assert obj.property("open") is True
+
+
+def test_metadata_overlay_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    received = []
+    obj.toggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_metadata_overlay_meta_filename_defaults_to_empty(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("metaFilename") == ""
+
+
+def test_metadata_overlay_meta_filename_is_writable(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    obj.setProperty("metaFilename", "photo.jpg")
+    assert obj.property("metaFilename") == "photo.jpg"
+
+
+def test_metadata_overlay_meta_path_defaults_to_empty(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("metaPath") == ""
+
+
+def test_metadata_overlay_meta_dimensions_defaults_to_empty(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("metaDimensions") == ""
+
+
+def test_metadata_overlay_meta_file_size_defaults_to_zero(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("metaFileSize") == 0
+
+
+def test_metadata_overlay_meta_date_added_defaults_to_empty(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("metaDateAdded") == ""
+
+
+def test_metadata_overlay_meta_is_missing_defaults_to_false(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("metaIsMissing") is False
+
+
+def test_metadata_overlay_meta_loading_state_defaults_to_idle(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    assert obj.property("metaLoadingState") == "Idle"
+
+
+def test_metadata_overlay_meta_loading_state_is_writable(engine):
+    obj = load_component(engine, "MetadataOverlay.qml")
+    obj.setProperty("metaLoadingState", "Ready")
+    assert obj.property("metaLoadingState") == "Ready"
