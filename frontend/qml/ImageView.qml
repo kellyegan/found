@@ -11,10 +11,16 @@ Item {
     property bool hasPrev: false
 
     // Inset from left/right edges so buttons clear the panel edge tabs.
-    // 40 = 16px edge-tab + 24px gap (panels closed).
-    // 300 = 260px panel + 16px edge-tab + 24px gap (panels open).
+    // 40 = 16px edge-tab + 24px gap. Measured from the viewport edge, so
+    // rightInset stays 40 whether the metadata panel is open or not —
+    // the viewport itself shrinks via rightPanelWidth.
     property real leftInset: 40
     property real rightInset: 40
+
+    // Width of the metadata panel when open; shrinks the viewport so the
+    // image re-centres in the remaining area. Animated to match panel slide.
+    property real rightPanelWidth: 0
+    Behavior on rightPanelWidth { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
     signal prevRequested()
     signal nextRequested()
@@ -80,6 +86,7 @@ Item {
         id: viewport
         anchors.fill: parent
         anchors.bottomMargin: NavigationManager.immersiveMode ? 0 : 48
+        anchors.rightMargin: root.rightPanelWidth
         color: "#111111"
         clip: true
 
