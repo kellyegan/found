@@ -36,7 +36,7 @@ def test_filter_by_category(client, make_image):
     ).json()["data"]["id"]
     client.post(f"/api/v1/images/{img_a}/categories", json={"category_ids": [cat_id]})
 
-    result = client.get("/api/v1/images?categories=Architecture").json()["data"]
+    result = client.get(f"/api/v1/images?categories={cat_id}").json()["data"]
     assert len(result) == 1
     assert result[0]["id"] == img_a
 

@@ -75,7 +75,7 @@ def test_multiple_categories_returns_only_images_with_all_categories(client, mak
     _categorise_image(client, img_both.id, arch_id, design_id)
     _categorise_image(client, img_one.id, arch_id)
 
-    result = _ids(client.get("/api/v1/images?categories=Architecture,Design").json()["data"])
+    result = _ids(client.get(f"/api/v1/images?categories={arch_id},{design_id}").json()["data"])
     assert str(img_both.id) in result
     assert str(img_one.id)  not in result
 
@@ -86,7 +86,7 @@ def test_single_category_param_works(client, make_image):
     cat_id = _category(client, "Reference")
     _categorise_image(client, img_a.id, cat_id)
 
-    result = _ids(client.get("/api/v1/images?categories=Reference").json()["data"])
+    result = _ids(client.get(f"/api/v1/images?categories={cat_id}").json()["data"])
     assert str(img_a.id) in result
     assert str(img_b.id) not in result
 
@@ -128,7 +128,7 @@ def test_exclude_single_category_removes_matching_images(client, make_image):
     cat_id = _category(client, "Temporary")
     _categorise_image(client, img_cat.id, cat_id)
 
-    result = _ids(client.get("/api/v1/images?exclude_categories=Temporary").json()["data"])
+    result = _ids(client.get(f"/api/v1/images?exclude_categories={cat_id}").json()["data"])
     assert str(img_cat.id)   not in result
     assert str(img_clean.id) in result
 
@@ -161,6 +161,6 @@ def test_include_tags_and_exclude_categories_combined(client, make_image):
     _tag_image(client, img_exclude.id, nature_id)
     _categorise_image(client, img_exclude.id, temp_id)
 
-    result = _ids(client.get("/api/v1/images?tags=nature&exclude_categories=Temporary").json()["data"])
+    result = _ids(client.get(f"/api/v1/images?tags=nature&exclude_categories={temp_id}").json()["data"])
     assert str(img_keep.id)    in result
     assert str(img_exclude.id) not in result
