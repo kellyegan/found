@@ -169,11 +169,11 @@ def _make_page_fetcher(base_url: str):
             if import_job:
                 params["import_job"] = import_job
             if category:
-                params["category"] = category
+                params["categories"] = category        # API uses plural
             if tag:
-                params["tag"] = tag
-            if file_status:
-                params["file_status"] = file_status
+                params["tags"] = tag                   # API uses plural
+            if file_status == "missing":
+                params["missing"] = True               # API uses boolean flag
             response = httpx.get(f"{base_url}/api/v1/images", params=params, timeout=10.0)
             data = response.json()
             if data.get("success"):
