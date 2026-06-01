@@ -164,7 +164,7 @@ Item {
     Rectangle {
         id: edgeTab
         width: 16
-        height: 48
+        height: 72
         x: panel.x - width
         y: (parent.height - height) / 2
         color: "#1a1a1a"
