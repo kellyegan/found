@@ -73,9 +73,13 @@ Item {
     Shortcut { sequence: "-"; enabled: root.visible; onActivated: { root.zoomLevel = Math.max(root._minZoom, root.zoomLevel / 1.25); root._clampPan() } }
     Shortcut { sequence: "0"; enabled: root.visible; onActivated: root.resetView() }
 
+    // Background fills the full root area so the bottom margin strip matches the viewport.
+    Rectangle { anchors.fill: parent; color: "#111111" }
+
     Rectangle {
         id: viewport
         anchors.fill: parent
+        anchors.bottomMargin: NavigationManager.immersiveMode ? 0 : 48
         color: "#111111"
         clip: true
 
