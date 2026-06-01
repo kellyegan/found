@@ -46,11 +46,13 @@ class FilterStateManager(QObject):
         for cat_id, mode in self._category_filters.items():
             if mode == "include":
                 params["category"] = cat_id
-                break
+            elif mode == "exclude":
+                params["exclude_category"] = cat_id
         for tag_id, mode in self._tag_filters.items():
             if mode == "include":
                 params["tag"] = tag_id
-                break
+            elif mode == "exclude":
+                params["exclude_tag"] = tag_id
         if self._show_missing_only:
             params["file_status"] = "missing"
         if self._import_job:

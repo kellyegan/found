@@ -161,7 +161,8 @@ def _make_category_images_adder(base_url: str):
 
 
 def _make_page_fetcher(base_url: str):
-    def fetch(cursor=None, limit=100, import_job=None, category=None, tag=None, file_status=None):
+    def fetch(cursor=None, limit=100, import_job=None, category=None, tag=None,
+              file_status=None, exclude_category=None, exclude_tag=None):
         try:
             params: dict = {"view": "grid", "limit": limit}
             if cursor:
@@ -170,8 +171,12 @@ def _make_page_fetcher(base_url: str):
                 params["import_job"] = import_job
             if category:
                 params["categories"] = category        # API uses plural
+            if exclude_category:
+                params["exclude_categories"] = exclude_category
             if tag:
                 params["tags"] = tag                   # API uses plural
+            if exclude_tag:
+                params["exclude_tags"] = exclude_tag
             if file_status == "missing":
                 params["missing"] = True               # API uses boolean flag
             response = httpx.get(f"{base_url}/api/v1/images", params=params, timeout=10.0)

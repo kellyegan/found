@@ -104,9 +104,10 @@ def test_category_include_appears_in_query_params(qapp):
     assert fsm.queryParams.get("category") == "cat-1"
 
 
-def test_category_exclude_not_in_query_params(qapp):
+def test_category_exclude_appears_in_query_params(qapp):
     fsm = FilterStateManager()
     fsm.setCategoryFilter("cat-1", "exclude")
+    assert fsm.queryParams.get("exclude_category") == "cat-1"
     assert "category" not in fsm.queryParams
 
 
@@ -183,9 +184,10 @@ def test_tag_include_appears_in_query_params(qapp):
     assert fsm.queryParams.get("tag") == "tag-1"
 
 
-def test_tag_exclude_not_in_query_params(qapp):
+def test_tag_exclude_appears_in_query_params(qapp):
     fsm = FilterStateManager()
     fsm.setTagFilter("tag-1", "exclude")
+    assert fsm.queryParams.get("exclude_tag") == "tag-1"
     assert "tag" not in fsm.queryParams
 
 
@@ -342,6 +344,24 @@ def test_combined_all_filters(qapp):
     assert params.get("tag") == "tag-1"
     assert params.get("file_status") == "missing"
     assert params.get("import_job") == "job-123"
+
+
+def test_combined_include_and_exclude_category(qapp):
+    fsm = FilterStateManager()
+    fsm.setCategoryFilter("cat-1", "include")
+    fsm.setCategoryFilter("cat-2", "exclude")
+    params = fsm.queryParams
+    assert params.get("category") == "cat-1"
+    assert params.get("exclude_category") == "cat-2"
+
+
+def test_combined_include_and_exclude_tag(qapp):
+    fsm = FilterStateManager()
+    fsm.setTagFilter("tag-1", "include")
+    fsm.setTagFilter("tag-2", "exclude")
+    params = fsm.queryParams
+    assert params.get("tag") == "tag-1"
+    assert params.get("exclude_tag") == "tag-2"
 
 
 # ---------------------------------------------------------------------------
