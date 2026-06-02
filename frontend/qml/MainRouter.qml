@@ -46,7 +46,7 @@ Item {
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
-                    case "collection": return "Collection"
+                    case "collection": return NavigationManager.currentEntry.collection_name ?? "Collection"
                     case "image":      return ""
                     default:           return ""
                 }

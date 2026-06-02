@@ -9,6 +9,7 @@ from PySide6.QtQml import QJSValue
 class NavigationEntry:
     view: str
     collection_id: Optional[str] = None
+    collection_name: Optional[str] = None
     image_id: Optional[str] = None
     scroll_x: float = 0.0
     selection_ids: list = field(default_factory=list)
@@ -20,6 +21,7 @@ class NavigationEntry:
         return {
             "view": self.view,
             "collection_id": self.collection_id,
+            "collection_name": self.collection_name,
             "image_id": self.image_id,
             "scroll_x": self.scroll_x,
             "selection_ids": list(self.selection_ids),
@@ -88,6 +90,7 @@ class NavigationManager(QObject):
             view=view,
             image_id=params.get("image_id"),
             collection_id=params.get("collection_id"),
+            collection_name=params.get("collection_name"),
             context_ids=list(params.get("context_ids") or []),
         )
         self.navigationChanged.emit()
