@@ -64,8 +64,13 @@ class ImportService:
         invalid = []
 
         for path in paths:
-            if self.image_repo.get_by_path(path):
-                already_imported.append(path)
+            existing_by_path = self.image_repo.get_by_path(path)
+            if existing_by_path:
+                already_imported.append({
+                    "image_id": existing_by_path.id,
+                    "path": existing_by_path.path,
+                    "filename": existing_by_path.filename,
+                })
                 continue
             try:
                 hash_value = sha256(path)

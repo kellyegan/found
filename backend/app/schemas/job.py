@@ -18,9 +18,15 @@ class ConflictItem(BaseModel):
     existing_filename: str
 
 
+class AlreadyImportedItem(BaseModel):
+    image_id: UUID
+    path: str
+    filename: str
+
+
 class ImportPreviewResponse(BaseModel):
     new: List[str]
-    already_imported: List[str]
+    already_imported: List[AlreadyImportedItem]
     conflicts: List[ConflictItem]
     invalid: List[str]
 
