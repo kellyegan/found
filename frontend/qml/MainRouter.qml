@@ -142,6 +142,8 @@ Item {
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
+            leftPanelOpen: readyContainer.sidebarOpen
+            rightPanelOpen: readyContainer.metadataOverlayOpen
             onLoadMoreRequested: LibraryState.load_more()
         }
 
@@ -217,6 +219,8 @@ Item {
                             ? (NavigationManager.currentEntry.collection_name ?? "") : ""
             gridModel: CollectionsState.collectionGridModel
             loadingState: CollectionsState.loadingState
+            leftPanelOpen: readyContainer.sidebarOpen
+            rightPanelOpen: readyContainer.metadataOverlayOpen
         }
 
         // Image view (Slice 5)
@@ -232,7 +236,7 @@ Item {
             hasPrev: NavigationManager.hasPrev
             leftInset: 40
             rightInset: 40
-            rightPanelWidth: readyContainer.metadataOverlayOpen ? 260 : 0
+            rightPanelWidth: readyContainer.metadataOverlayOpen ? Theme.overlayWidth : 0
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
         }

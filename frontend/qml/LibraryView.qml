@@ -6,6 +6,8 @@ Item {
 
     property string loadingState: "Loading"
     property var gridModel: null
+    property bool leftPanelOpen: false
+    property bool rightPanelOpen: false
 
     signal loadMoreRequested()
 
@@ -74,6 +76,8 @@ Item {
         anchors { top: parent.top; left: parent.left; right: parent.right; bottom: parent.bottom }
         visible: root.loadingState === "Ready"
         model: root.gridModel
+        leftPanelOpen: root.leftPanelOpen
+        rightPanelOpen: root.rightPanelOpen
         onLoadMoreRequested: root.loadMoreRequested()
         onScrollXChanged: function(x) { NavigationManager.updateScrollX(x) }
     }

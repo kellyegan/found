@@ -7,29 +7,17 @@ Item {
     property string thumbnailUrl: ""
     property string fileStatus: "available"
     property bool selected: false
+    property int inset: 0
 
     signal tileClicked(string imageId, int modifiers)
     signal tileDoubleClicked(string imageId)
-
-    // DragHandler tracks the gesture without moving the tile
-    DragHandler {
-        id: dragHandler
-        target: null
-        onActiveChanged: {
-            if (active) {
-                dragProxy.Drag.active = true
-            } else {
-                dragProxy.Drag.drop()
-            }
-        }
-    }
 
     // Floating proxy parented to the window so it can move across the whole scene
     Item {
         id: dragProxy
         parent: root.Window.contentItem ?? root
-        width: root.width
-        height: root.height
+        width: root.width - 2 * root.inset
+        height: root.height - 2 * root.inset
         visible: Drag.active
 
         x: {
@@ -68,8 +56,8 @@ Item {
     }
 
     Rectangle {
-        anchors.fill: parent
-        color: Theme.surface
+        anchors { fill: parent; margins: root.inset }
+        color: "transparent"
         opacity: dragHandler.active ? 0.4 : 1.0
 
         Image {
@@ -79,6 +67,26 @@ Item {
             fillMode: Image.PreserveAspectFit
             asynchronous: true
             smooth: true
+
+            // DragHandler scoped to the painted image pixels — gestures on the
+            // transparent letterbox area fall through to the grid for scrolling
+            Item {
+                anchors.centerIn: parent
+                width: img.paintedWidth
+                height: img.paintedHeight
+
+                DragHandler {
+                    id: dragHandler
+                    target: null
+                    onActiveChanged: {
+                        if (active) {
+                            dragProxy.Drag.active = true
+                        } else {
+                            dragProxy.Drag.drop()
+                        }
+                    }
+                }
+            }
         }
 
         // Loading placeholder — visible while thumbnail is in flight or not yet assigned
@@ -132,16 +140,17 @@ Item {
             border.color: Theme.accent
             border.width: root.selected ? 2 : 0
         }
+    }
 
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton
-            onClicked: function(mouse) {
-                root.tileClicked(root.imageId, mouse.modifiers)
-            }
-            onDoubleClicked: function(mouse) {
-                root.tileDoubleClicked(root.imageId)
-            }
+    // MouseArea covers the full cell so the gap between tiles is also clickable
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.LeftButton
+        onClicked: function(mouse) {
+            root.tileClicked(root.imageId, mouse.modifiers)
+        }
+        onDoubleClicked: function(mouse) {
+            root.tileDoubleClicked(root.imageId)
         }
     }
 }

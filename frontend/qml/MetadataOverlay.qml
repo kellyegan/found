@@ -24,7 +24,7 @@ Item {
     signal removeTagRequested(string tagId)
     signal addTagByNameRequested(string name)
 
-    implicitWidth: 260
+    implicitWidth: Theme.overlayWidth
 
     function _formatSize(bytes) {
         if (bytes <= 0) return "—"

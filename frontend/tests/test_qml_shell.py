@@ -248,6 +248,16 @@ def test_library_view_has_no_is_filtered_property(engine):
     assert obj.property("isFiltered") is None
 
 
+def test_library_view_left_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    assert obj.property("leftPanelOpen") is False
+
+
+def test_library_view_right_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "LibraryView.qml")
+    assert obj.property("rightPanelOpen") is False
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
@@ -337,6 +347,11 @@ def test_thumbnail_tile_image_id_is_writable(engine):
     assert obj.property("imageId") == "test-uuid-123"
 
 
+def test_thumbnail_tile_has_inset_property(engine):
+    obj = load_component(engine, "ThumbnailTile.qml")
+    assert obj.property("inset") == 0
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailGrid
 # ---------------------------------------------------------------------------
@@ -358,7 +373,28 @@ def test_thumbnail_grid_has_model_property(engine):
 
 def test_thumbnail_grid_has_scroll_x_property(engine):
     obj = load_component(engine, "ThumbnailGrid.qml")
-    assert obj.property("scrollX") == 0.0
+    edge_margin = obj.property("gridEdgeMargin")
+    assert obj.property("scrollX") == -float(edge_margin)
+
+
+def test_thumbnail_grid_has_tile_gap_property(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    assert obj.property("tileGap") == 20
+
+
+def test_thumbnail_grid_has_grid_edge_margin_property(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    assert obj.property("gridEdgeMargin") == 40
+
+
+def test_thumbnail_grid_left_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    assert obj.property("leftPanelOpen") is False
+
+
+def test_thumbnail_grid_right_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "ThumbnailGrid.qml")
+    assert obj.property("rightPanelOpen") is False
 
 
 # ---------------------------------------------------------------------------
@@ -572,6 +608,16 @@ def test_collection_view_grid_model_defaults_to_none(engine):
 def test_collection_view_loading_state_defaults_to_idle(engine):
     obj = load_component(engine, "CollectionView.qml")
     assert obj.property("loadingState") == "Idle"
+
+
+def test_collection_view_left_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "CollectionView.qml")
+    assert obj.property("leftPanelOpen") is False
+
+
+def test_collection_view_right_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "CollectionView.qml")
+    assert obj.property("rightPanelOpen") is False
 
 
 # ---------------------------------------------------------------------------
