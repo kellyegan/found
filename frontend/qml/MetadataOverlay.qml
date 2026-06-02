@@ -40,6 +40,11 @@ Item {
 
     implicitWidth: Theme.overlayWidth
 
+    onOpenChanged: {
+        if (!open && Window.activeFocusItem instanceof TextInput)
+            root.forceActiveFocus()
+    }
+
     function _formatSize(bytes) {
         if (bytes <= 0) return "—"
         if (bytes < 1024) return bytes + " B"
@@ -63,8 +68,16 @@ Item {
 
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
-        // Prevents mouse events from reaching library content behind the panel
-        MouseArea { anchors.fill: parent; acceptedButtons: Qt.AllButtons }
+        // Prevents mouse events from reaching library content behind the panel;
+        // also clears TextInput focus when clicking on non-interactive panel areas
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onPressed: {
+                if (Window.activeFocusItem instanceof TextInput)
+                    root.forceActiveFocus()
+            }
+        }
 
         // Header
         Item {
@@ -348,6 +361,7 @@ Item {
                             rightMargin: 2
                             verticalCenter: parent.verticalCenter
                         }
+                        activeFocusOnTab: false
                         color: Theme.text
                         font.pixelSize: 11
                         font.family: Theme.fontFamily
@@ -622,6 +636,7 @@ Item {
                             right: catSubmitBtn.left; rightMargin: 2
                             verticalCenter: parent.verticalCenter
                         }
+                        activeFocusOnTab: false
                         color: Theme.text
                         font.pixelSize: 11
                         font.family: Theme.fontFamily
