@@ -90,15 +90,20 @@ Item {
                         Row {
                             spacing: 4
                             Repeater {
-                                model: Math.min(root.alreadyImportedFiles.length, 10)
+                                model: root.alreadyImportedFiles
                                 delegate: Rectangle {
+                                    id: importedTile
+                                    property var fileData: modelData
+                                    visible: index < 10
                                     width: 60; height: 60
                                     color: "#222222"
                                     radius: 3
                                     clip: true
                                     Image {
                                         anchors.fill: parent
-                                        source: root.alreadyImportedFiles[index] ? "image://thumbnails/" + root.alreadyImportedFiles[index].image_id : ""
+                                        source: importedTile.fileData && importedTile.fileData.image_id
+                                                ? "image://thumbnails/" + importedTile.fileData.image_id
+                                                : ""
                                         fillMode: Image.PreserveAspectCrop
                                     }
                                 }
@@ -122,15 +127,16 @@ Item {
                         Row {
                             spacing: 4
                             Repeater {
-                                model: Math.min(root.pendingFiles.length, 10)
+                                model: root.pendingFiles
                                 delegate: Rectangle {
+                                    visible: index < 10
                                     width: 60; height: 60
                                     color: "#222222"
                                     radius: 3
                                     clip: true
                                     Image {
                                         anchors.fill: parent
-                                        source: root.pendingFiles[index] ? "file://" + root.pendingFiles[index] : ""
+                                        source: modelData ? "file://" + modelData : ""
                                         fillMode: Image.PreserveAspectCrop
                                     }
                                 }
