@@ -311,6 +311,14 @@ def main():
         job_fetcher=_make_job_fetcher(base_url),
         conflict_resolver=_make_conflict_resolver(base_url),
     )
+
+    def _on_import_loading_state_changed(state: str) -> None:
+        if state == "Scanning":
+            filter_state.setImportJobFilter("")
+
+    import_state.loadingStateChanged.connect(_on_import_loading_state_changed)
+    import_state.importJobDone.connect(filter_state.setImportJobFilter)
+
     metadata_state = MetadataViewModel(
         image_fetcher=_make_image_fetcher(base_url),
         selection_manager=selection_manager,

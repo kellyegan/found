@@ -147,16 +147,6 @@ Item {
             onLoadMoreRequested: LibraryState.load_more()
         }
 
-        // After import completes, filter library to show only the new images
-        Connections {
-            target: ImportState
-            function onLoadingStateChanged(state) {
-                if (state === "Complete") {
-                    FilterState.setImportJobFilter(ImportState.jobId)
-                }
-            }
-        }
-
         // Central navigation handler — restores library state and collapses
         // panels on first entry into image view (not on prev/next within it).
         Connections {
@@ -342,15 +332,6 @@ Item {
                     font.pixelSize: 18
                     font.weight: Font.Medium
                 }
-            }
-        }
-
-        // Apply import-job filter when an import completes so the library
-        // shows only the newly imported images when the modal is dismissed.
-        Connections {
-            target: ImportState
-            function onImportJobDone(jobId) {
-                FilterState.setImportJobFilter(jobId)
             }
         }
 
