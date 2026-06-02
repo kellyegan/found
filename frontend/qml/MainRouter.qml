@@ -244,6 +244,7 @@ Item {
         // Sidebar overlay — rendered above content, below nav bar
         CollectionsSidebar {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             width: implicitWidth
             visible: NavigationManager.currentView === "library"
             open: readyContainer.sidebarOpen
