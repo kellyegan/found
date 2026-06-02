@@ -22,6 +22,7 @@ HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$")
 COLOR_PROPS = ["background", "surface", "text", "textMuted", "accent", "border"]
 FONT_SIZE_PROPS = ["fontSizeSm", "fontSizeMd", "fontSizeLg", "fontSizeXl"]
 SPACING_PROPS = ["spacingXs", "spacingSm", "spacingMd", "spacingLg", "spacingXl"]
+LAYOUT_PROPS = ["overlayWidth"]
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +84,24 @@ def test_spacing_values_are_strictly_increasing(qapp):
         < theme.spacingLg
         < theme.spacingXl
     )
+
+
+# ---------------------------------------------------------------------------
+# Layout properties
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("prop", LAYOUT_PROPS)
+def test_layout_property_is_positive_int(qapp, prop):
+    theme = ThemeManager()
+    value = getattr(theme, prop)
+    assert isinstance(value, int), f"{prop} should be an int"
+    assert value > 0, f"{prop} should be positive"
+
+
+def test_overlay_width_matches_sidebar_and_metadata_panel(qapp):
+    theme = ThemeManager()
+    assert theme.overlayWidth == 260
 
 
 # ---------------------------------------------------------------------------

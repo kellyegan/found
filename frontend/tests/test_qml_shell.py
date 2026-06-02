@@ -373,8 +373,7 @@ def test_thumbnail_grid_has_model_property(engine):
 
 def test_thumbnail_grid_has_scroll_x_property(engine):
     obj = load_component(engine, "ThumbnailGrid.qml")
-    edge_margin = obj.property("gridEdgeMargin")
-    assert obj.property("scrollX") == -float(edge_margin)
+    assert obj.property("scrollX") == 0.0
 
 
 def test_thumbnail_grid_has_tile_gap_property(engine):

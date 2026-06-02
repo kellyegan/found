@@ -236,7 +236,7 @@ Item {
             hasPrev: NavigationManager.hasPrev
             leftInset: 40
             rightInset: 40
-            rightPanelWidth: readyContainer.metadataOverlayOpen ? 260 : 0
+            rightPanelWidth: readyContainer.metadataOverlayOpen ? Theme.overlayWidth : 0
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
         }

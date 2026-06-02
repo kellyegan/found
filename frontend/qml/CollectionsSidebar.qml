@@ -11,7 +11,7 @@ Item {
     signal imageDropped(string collectionId, string imageId)
     signal toggleRequested()
 
-    implicitWidth: 260
+    implicitWidth: Theme.overlayWidth
 
     // Edge tab — follows the panel's right edge, always visible
     Rectangle {
