@@ -345,6 +345,15 @@ Item {
             }
         }
 
+        // Apply import-job filter when an import completes so the library
+        // shows only the newly imported images when the modal is dismissed.
+        Connections {
+            target: ImportState
+            function onImportJobDone(jobId) {
+                FilterState.setImportJobFilter(jobId)
+            }
+        }
+
         // Import panel overlay
         ImportPanel {
             anchors.fill: parent
