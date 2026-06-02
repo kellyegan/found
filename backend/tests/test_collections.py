@@ -91,3 +91,37 @@ def test_reorder_collection_images(client, collection_id, image_ids):
         for img in client.get(f"/api/v1/collections/{collection_id}/images").json()["data"]
     ]
     assert returned_ids == reversed_ids
+
+
+def test_get_image_collections(client, collection_id, image_ids):
+    client.post(
+        f"/api/v1/collections/{collection_id}/images",
+        json={"image_ids": [image_ids[0]]},
+    )
+    response = client.get(f"/api/v1/images/{image_ids[0]}/collections")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert len(data["data"]) == 1
+    assert data["data"][0]["id"] == collection_id
+
+
+def test_get_image_collections_empty(client, image_ids):
+    response = client.get(f"/api/v1/images/{image_ids[0]}/collections")
+    assert response.status_code == 200
+    assert response.json()["data"] == []
+
+
+def test_get_image_collections_multiple(client, image_ids):
+    col_b = client.post(
+        "/api/v1/collections", json={"name": "Moodboard", "description": ""}
+    ).json()["data"]["id"]
+    col_c = client.post(
+        "/api/v1/collections", json={"name": "References", "description": ""}
+    ).json()["data"]["id"]
+    client.post(f"/api/v1/collections/{col_b}/images", json={"image_ids": [image_ids[0]]})
+    client.post(f"/api/v1/collections/{col_c}/images", json={"image_ids": [image_ids[0]]})
+    data = client.get(f"/api/v1/images/{image_ids[0]}/collections").json()["data"]
+    assert len(data) == 2
+    returned_ids = {c["id"] for c in data}
+    assert returned_ids == {col_b, col_c}

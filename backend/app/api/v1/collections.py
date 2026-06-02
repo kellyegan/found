@@ -82,6 +82,15 @@ def delete_collection(
     return {"success": True, "data": None}
 
 
+@router.get("/images/{image_id}/collections", summary="Get collections for an image")
+def get_image_collections(
+    image_id: UUID, repo: CollectionRepository = Depends(_get_repo)
+):
+    """Return all collections that contain the given image."""
+    collections = repo.get_image_collections(image_id)
+    return {"success": True, "data": [CollectionRead.model_validate(c) for c in collections]}
+
+
 @router.get("/collections/{collection_id}/images", summary="Get collection images")
 def get_collection_images(
     collection_id: UUID, repo: CollectionRepository = Depends(_get_repo)
