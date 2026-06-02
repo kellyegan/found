@@ -245,7 +245,7 @@ Item {
         CollectionsSidebar {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
             width: implicitWidth
-            visible: NavigationManager.currentView !== "image"
+            visible: NavigationManager.currentView === "library"
             open: readyContainer.sidebarOpen
             collections: CollectionsState.collections
             z: 10
