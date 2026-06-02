@@ -285,10 +285,20 @@ Item {
             tagEditorTags: TagEditorState.tags
             tagEditorLoadingState: TagEditorState.loadingState
             tagEditorSelectionMode: TagEditorState.selectionMode
+            categoryEditorCategories: CategoryEditorState.categories
+            categoryEditorLoadingState: CategoryEditorState.loadingState
+            categoryEditorSelectionMode: CategoryEditorState.selectionMode
+            collectionEditorCollections: CollectionEditorState.collections
+            collectionEditorLoadingState: CollectionEditorState.loadingState
+            collectionEditorSelectionMode: CollectionEditorState.selectionMode
             onToggleRequested: readyContainer.metadataOverlayOpen = !readyContainer.metadataOverlayOpen
             onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
             onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
             onAddTagByNameRequested: function(name) { TagEditorState.addTagByName(name) }
+            onAddCategoryRequested: function(catId, catName) { CategoryEditorState.addCategory(catId, catName) }
+            onRemoveCategoryRequested: function(catId) { CategoryEditorState.removeCategory(catId) }
+            onAddToCollectionRequested: function(colId, colName) { CollectionEditorState.addToCollection(colId, colName) }
+            onRemoveFromCollectionRequested: function(colId) { CollectionEditorState.removeFromCollection(colId) }
             z: 10
         }
 
