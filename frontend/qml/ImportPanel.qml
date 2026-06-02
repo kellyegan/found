@@ -1,13 +1,13 @@
 import QtQuick
+import QtQuick.Controls
 
 Item {
     id: root
 
     property string loadingState: "Idle"
     property var pendingFiles: []
+    property var alreadyImportedFiles: []
     property var conflictFiles: []
-    property int duplicateCount: 0
-    property int conflictCount: 0
     property int invalidCount: 0
     property int importedCount: 0
     property int updatedCount: 0
@@ -33,20 +33,16 @@ Item {
         }
     }
 
-    // Sheet slides up from bottom
+    // Centered modal
     Rectangle {
         id: sheet
-        anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-        height: 340
+        anchors.centerIn: parent
+        width: Math.min(parent.width - 80, 680)
+        height: root.loadingState === "Previewing"
+                ? Math.min(parent.height - 80, 560)
+                : 180
         color: "#1c1c1c"
         radius: 10
-
-        // Rounded top corners only — cover the bottom corners
-        Rectangle {
-            anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
-            height: parent.radius
-            color: parent.color
-        }
 
         // ── Scanning ──────────────────────────────────────────────────
         Column {
@@ -67,180 +63,175 @@ Item {
             anchors { fill: parent; margins: 20 }
             visible: root.loadingState === "Previewing"
 
-            Text {
-                id: previewTitle
-                anchors { top: parent.top; left: parent.left }
-                text: root.pendingFiles.length + " file" + (root.pendingFiles.length === 1 ? "" : "s") + " ready to import"
-                color: "#ffffff"
-                font.pixelSize: 15
-                font.weight: Font.Medium
-            }
+            Flickable {
+                id: previewScroll
+                anchors { top: parent.top; left: parent.left; right: parent.right; bottom: buttonRow.top; bottomMargin: 12 }
+                contentWidth: width
+                contentHeight: previewColumn.implicitHeight
+                clip: true
 
-            // Summary chips
-            Row {
-                id: chipsRow
-                anchors { top: previewTitle.bottom; left: parent.left; topMargin: 10 }
-                spacing: 8
+                Column {
+                    id: previewColumn
+                    width: previewScroll.width
+                    spacing: 20
 
-                Repeater {
-                    model: [
-                        { label: root.duplicateCount + " duplicate" + (root.duplicateCount === 1 ? "" : "s"), show: root.duplicateCount > 0, color: "#555555" },
-                        { label: root.invalidCount + " unsupported", show: root.invalidCount > 0, color: "#663333" },
-                    ]
-                    delegate: Rectangle {
-                        visible: modelData.show
-                        height: 22
-                        width: chipLabel.width + 16
-                        radius: 11
-                        color: modelData.color
+                    // Already in library section
+                    Column {
+                        width: parent.width
+                        spacing: 8
+                        visible: root.alreadyImportedFiles.length > 0
 
                         Text {
-                            id: chipLabel
-                            anchors.centerIn: parent
-                            text: modelData.label
-                            color: "#cccccc"
-                            font.pixelSize: 11
+                            text: root.alreadyImportedFiles.length + " image" + (root.alreadyImportedFiles.length === 1 ? "" : "s") + " already in library, skipping."
+                            color: "#888888"
+                            font.pixelSize: 13
+                        }
+
+                        Row {
+                            spacing: 4
+                            Repeater {
+                                model: Math.min(root.alreadyImportedFiles.length, 10)
+                                delegate: Rectangle {
+                                    width: 60; height: 60
+                                    color: "#222222"
+                                    radius: 3
+                                    clip: true
+                                    Image {
+                                        anchors.fill: parent
+                                        source: root.alreadyImportedFiles[index] ? "image://thumbnails/" + root.alreadyImportedFiles[index].image_id : ""
+                                        fillMode: Image.PreserveAspectCrop
+                                    }
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            // New files list (only shown when no conflicts need resolving)
-            Rectangle {
-                id: newFilesList
-                anchors { top: chipsRow.bottom; topMargin: 8; left: parent.left; right: parent.right; bottom: buttonRow.top; bottomMargin: 12 }
-                visible: root.conflictFiles.length === 0
-                color: "#141414"
-                radius: 4
-
-                ListView {
-                    anchors { fill: parent; margins: 8 }
-                    clip: true
-                    model: root.pendingFiles
-                    delegate: Text {
-                        width: parent ? parent.width : 0
-                        text: {
-                            var parts = modelData.split("/")
-                            return parts[parts.length - 1]
-                        }
-                        color: "#888888"
-                        font.pixelSize: 11
-                        elide: Text.ElideRight
-                    }
-                }
-            }
-
-            // Conflict resolution list
-            Column {
-                anchors { top: chipsRow.bottom; topMargin: 8; left: parent.left; right: parent.right; bottom: buttonRow.top; bottomMargin: 12 }
-                visible: root.conflictFiles.length > 0
-                spacing: 0
-
-                Text {
-                    width: parent.width
-                    text: root.conflictFiles.length + " conflict" + (root.conflictFiles.length === 1 ? "" : "s") + " — choose how to handle each:"
-                    color: "#ccaa44"
-                    font.pixelSize: 12
-                    bottomPadding: 8
-                }
-
-                Rectangle {
-                    width: parent.width
-                    height: parent.height - 28
-                    color: "#141414"
-                    radius: 4
-
-                    ListView {
-                        anchors { fill: parent; margins: 8 }
-                        clip: true
-                        model: root.conflictFiles
+                    // Ready to import section
+                    Column {
+                        width: parent.width
                         spacing: 8
+                        visible: root.pendingFiles.length > 0
 
-                        delegate: Item {
-                            id: conflictDelegate
-                            width: parent ? parent.width : 0
-                            height: conflictContent.implicitHeight + 4
+                        Text {
+                            text: root.pendingFiles.length + " image" + (root.pendingFiles.length === 1 ? "" : "s") + " ready to import"
+                            color: "#ffffff"
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                        }
 
-                            property string currentChoice: "keep"
-                            property string conflictPath: modelData.path || ""
+                        Row {
+                            spacing: 4
+                            Repeater {
+                                model: Math.min(root.pendingFiles.length, 10)
+                                delegate: Rectangle {
+                                    width: 60; height: 60
+                                    color: "#222222"
+                                    radius: 3
+                                    clip: true
+                                    Image {
+                                        anchors.fill: parent
+                                        source: root.pendingFiles[index] ? "file://" + root.pendingFiles[index] : ""
+                                        fillMode: Image.PreserveAspectCrop
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-                            Column {
-                                id: conflictContent
+                    // Duplicates section
+                    Column {
+                        width: parent.width
+                        spacing: 12
+                        visible: root.conflictFiles.length > 0
+
+                        Text {
+                            text: "These images are duplicates"
+                            color: "#ccaa44"
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                        }
+
+                        Repeater {
+                            model: root.conflictFiles
+                            delegate: Row {
+                                id: conflictItem
                                 width: parent.width
-                                spacing: 2
+                                spacing: 12
+                                property string currentChoice: "keep"
+                                property var conflict: modelData
 
-                                Text {
-                                    width: parent.width
-                                    text: {
-                                        var parts = conflictDelegate.conflictPath.split("/")
-                                        return parts[parts.length - 1]
+                                // Thumbnail of existing library image
+                                Rectangle {
+                                    width: 56; height: 56
+                                    color: "#222222"
+                                    radius: 3
+                                    clip: true
+                                    Image {
+                                        anchors.fill: parent
+                                        source: conflictItem.conflict.existing_image_id ? "image://thumbnails/" + conflictItem.conflict.existing_image_id : ""
+                                        fillMode: Image.PreserveAspectCrop
                                     }
-                                    color: "#cccccc"
-                                    font.pixelSize: 11
-                                    elide: Text.ElideRight
                                 }
 
-                                Text {
-                                    width: parent.width
-                                    text: "Existing: " + (modelData.existing_filename || "")
-                                    color: "#666666"
-                                    font.pixelSize: 10
-                                    elide: Text.ElideRight
-                                }
+                                // Keep / Replace options
+                                Column {
+                                    spacing: 8
+                                    width: parent.width - 68
+                                    anchors.verticalCenter: parent.verticalCenter
 
-                                Row {
-                                    spacing: 6
-                                    topPadding: 2
-
-                                    Rectangle {
-                                        height: 20
-                                        width: keepLabel.implicitWidth + 14
-                                        radius: 10
-                                        color: conflictDelegate.currentChoice === "keep" ? "#885500" : "#2a2a2a"
-                                        border.color: conflictDelegate.currentChoice === "keep" ? "#cc8800" : "#444444"
-                                        border.width: 1
-
-                                        Text {
-                                            id: keepLabel
-                                            anchors.centerIn: parent
-                                            text: "Keep existing"
-                                            color: conflictDelegate.currentChoice === "keep" ? "#ffcc66" : "#888888"
-                                            font.pixelSize: 10
-                                        }
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                conflictDelegate.currentChoice = "keep"
-                                                root.conflictChoiceChanged(conflictDelegate.conflictPath, "keep")
+                                    Row {
+                                        spacing: 8
+                                        Rectangle {
+                                            width: 14; height: 14
+                                            radius: 7
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            color: conflictItem.currentChoice === "keep" ? "#cc8800" : "transparent"
+                                            border.color: conflictItem.currentChoice === "keep" ? "#cc8800" : "#555555"
+                                            border.width: 1
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    conflictItem.currentChoice = "keep"
+                                                    root.conflictChoiceChanged(conflictItem.conflict.path, "keep")
+                                                }
                                             }
+                                        }
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: "Keep \"" + (conflictItem.conflict.existing_path || "") + "\""
+                                            color: conflictItem.currentChoice === "keep" ? "#ffffff" : "#888888"
+                                            font.pixelSize: 11
+                                            elide: Text.ElideMiddle
+                                            width: parent.parent.width - 22
                                         }
                                     }
 
-                                    Rectangle {
-                                        height: 20
-                                        width: updateLabel.implicitWidth + 14
-                                        radius: 10
-                                        color: conflictDelegate.currentChoice === "update" ? "#885500" : "#2a2a2a"
-                                        border.color: conflictDelegate.currentChoice === "update" ? "#cc8800" : "#444444"
-                                        border.width: 1
-
-                                        Text {
-                                            id: updateLabel
-                                            anchors.centerIn: parent
-                                            text: "Update path"
-                                            color: conflictDelegate.currentChoice === "update" ? "#ffcc66" : "#888888"
-                                            font.pixelSize: 10
-                                        }
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                conflictDelegate.currentChoice = "update"
-                                                root.conflictChoiceChanged(conflictDelegate.conflictPath, "update")
+                                    Row {
+                                        spacing: 8
+                                        Rectangle {
+                                            width: 14; height: 14
+                                            radius: 7
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            color: conflictItem.currentChoice === "update" ? "#cc8800" : "transparent"
+                                            border.color: conflictItem.currentChoice === "update" ? "#cc8800" : "#555555"
+                                            border.width: 1
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    conflictItem.currentChoice = "update"
+                                                    root.conflictChoiceChanged(conflictItem.conflict.path, "update")
+                                                }
                                             }
+                                        }
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: "Replace with \"" + (conflictItem.conflict.path || "") + "\""
+                                            color: conflictItem.currentChoice === "update" ? "#ffffff" : "#888888"
+                                            font.pixelSize: 11
+                                            elide: Text.ElideMiddle
+                                            width: parent.parent.width - 22
                                         }
                                     }
                                 }
@@ -316,7 +307,6 @@ Item {
                 font.pixelSize: 15
             }
 
-            // Progress track
             Rectangle {
                 width: parent.width
                 height: 4

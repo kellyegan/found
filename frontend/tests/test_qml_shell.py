@@ -735,14 +735,13 @@ def test_import_panel_pending_files_defaults_to_empty(engine):
     assert val == []
 
 
-def test_import_panel_duplicate_count_defaults_to_zero(engine):
+def test_import_panel_already_imported_files_defaults_to_empty(engine):
     obj = load_component(engine, "ImportPanel.qml")
-    assert obj.property("duplicateCount") == 0
-
-
-def test_import_panel_conflict_count_defaults_to_zero(engine):
-    obj = load_component(engine, "ImportPanel.qml")
-    assert obj.property("conflictCount") == 0
+    from PySide6.QtQml import QJSValue
+    val = obj.property("alreadyImportedFiles")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == []
 
 
 def test_import_panel_invalid_count_defaults_to_zero(engine):

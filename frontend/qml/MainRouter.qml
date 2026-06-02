@@ -351,9 +351,8 @@ Item {
             z: 30
             loadingState: ImportState.loadingState
             pendingFiles: ImportState.pendingFiles
+            alreadyImportedFiles: ImportState.duplicateFiles
             conflictFiles: ImportState.conflictFiles
-            duplicateCount: ImportState.duplicateFiles.length
-            conflictCount: ImportState.conflictFiles.length
             invalidCount: ImportState.invalidFiles.length
             importedCount: ImportState.importedCount
             updatedCount: ImportState.updatedCount
