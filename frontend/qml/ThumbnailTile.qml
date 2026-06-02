@@ -57,21 +57,8 @@ Item {
 
     Rectangle {
         anchors { fill: parent; margins: root.inset }
-        color: Theme.surface
+        color: "transparent"
         opacity: dragHandler.active ? 0.4 : 1.0
-
-        // DragHandler scoped to the visual tile only — gestures in the gap scroll the grid
-        DragHandler {
-            id: dragHandler
-            target: null
-            onActiveChanged: {
-                if (active) {
-                    dragProxy.Drag.active = true
-                } else {
-                    dragProxy.Drag.drop()
-                }
-            }
-        }
 
         Image {
             id: img
@@ -80,6 +67,26 @@ Item {
             fillMode: Image.PreserveAspectFit
             asynchronous: true
             smooth: true
+
+            // DragHandler scoped to the painted image pixels — gestures on the
+            // transparent letterbox area fall through to the grid for scrolling
+            Item {
+                anchors.centerIn: parent
+                width: img.paintedWidth
+                height: img.paintedHeight
+
+                DragHandler {
+                    id: dragHandler
+                    target: null
+                    onActiveChanged: {
+                        if (active) {
+                            dragProxy.Drag.active = true
+                        } else {
+                            dragProxy.Drag.drop()
+                        }
+                    }
+                }
+            }
         }
 
         // Loading placeholder — visible while thumbnail is in flight or not yet assigned
