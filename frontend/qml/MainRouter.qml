@@ -83,7 +83,6 @@ Item {
             id: filterDropdown
             anchors { top: titleBar.bottom; right: parent.right; rightMargin: Theme.spacingMd }
             width: 280
-            implicitHeight: 160
             open: readyContainer.filterDropdownOpen
             showMissingOnly: FilterState.showMissingOnly
             importJobActive: FilterState.importJobId !== ""

@@ -927,6 +927,46 @@ def test_filter_dropdown_has_toggle_missing_only_requested_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# FilterDropdown group structure
+# ---------------------------------------------------------------------------
+
+
+def test_filter_dropdown_any_filter_active_defaults_to_false(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    val = obj.property("_anyFilterActive")
+    assert val is False
+
+
+def test_filter_dropdown_any_filter_active_when_missing_only(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("showMissingOnly", True)
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_any_filter_active_when_tags_active(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("activeTags", [{"id": "t1", "name": "nature", "mode": "include"}])
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_any_filter_active_when_categories_active(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("activeCategories", [{"id": "c1", "name": "Architecture", "mode": "include"}])
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_any_filter_active_when_import_job_active(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("importJobActive", True)
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_implicit_height_is_positive(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    assert obj.property("implicitHeight") > 0
+
+
+# ---------------------------------------------------------------------------
 # TitleBar search zone additions — Commit 7
 # ---------------------------------------------------------------------------
 
