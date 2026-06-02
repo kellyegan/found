@@ -46,7 +46,7 @@ Item {
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
-                    case "collection": return "Collection"
+                    case "collection": return NavigationManager.currentEntry.collection_name ?? "Collection"
                     case "image":      return ""
                     default:           return ""
                 }
@@ -244,8 +244,9 @@ Item {
         // Sidebar overlay — rendered above content, below nav bar
         CollectionsSidebar {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             width: implicitWidth
-            visible: NavigationManager.currentView !== "image"
+            visible: NavigationManager.currentView === "library"
             open: readyContainer.sidebarOpen
             collections: CollectionsState.collections
             z: 10
@@ -270,22 +271,7 @@ Item {
             }
         }
 
-        // Dim overlay behind sidebar
-        Rectangle {
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            color: "#000000"
-            opacity: readyContainer.sidebarOpen ? 0.4 : 0.0
-            z: 9
-            visible: opacity > 0
 
-            Behavior on opacity { NumberAnimation { duration: 200 } }
-
-            MouseArea {
-                anchors.fill: parent
-                enabled: readyContainer.sidebarOpen
-                onClicked: readyContainer.sidebarOpen = false
-            }
-        }
 
         // Metadata overlay — right-edge collapsible panel; open by default, collapses in image view
         MetadataOverlay {
