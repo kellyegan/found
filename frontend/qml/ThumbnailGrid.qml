@@ -5,7 +5,7 @@ Item {
 
     property var model: null
     property int targetThumbnailSize: 180
-    property int tileGap: 50
+    property int tileGap: 20
     property int gridEdgeMargin: 40
     property bool leftPanelOpen: false
     property bool rightPanelOpen: false
