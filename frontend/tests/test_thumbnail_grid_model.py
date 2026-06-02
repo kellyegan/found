@@ -234,3 +234,100 @@ def test_all_ids_empty_after_clear(qapp):
     model.appendPage(SAMPLE_ITEMS, None, False)
     model.clear()
     assert model.allIds == []
+
+
+# ---------------------------------------------------------------------------
+# missingCount
+# ---------------------------------------------------------------------------
+
+
+def test_missing_count_defaults_to_zero(qapp):
+    model = ThumbnailGridModel()
+    assert model.missingCount == 0
+
+
+def test_missing_count_counts_missing_items(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)  # one "missing" in SAMPLE_ITEMS
+    assert model.missingCount == 1
+
+
+def test_missing_count_accumulates_across_pages(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, "tok", True)
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert model.missingCount == 2
+
+
+def test_missing_count_zero_when_no_missing(qapp):
+    model = ThumbnailGridModel()
+    available_only = [{"id": "x-1", "filename": "x.jpg", "file_status": "available"}]
+    model.appendPage(available_only, None, False)
+    assert model.missingCount == 0
+
+
+def test_missing_count_resets_on_clear(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    model.clear()
+    assert model.missingCount == 0
+
+
+def test_missing_count_changed_signal_fires(qapp):
+    model = ThumbnailGridModel()
+    received = []
+    model.missingCountChanged.connect(received.append)
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert 1 in received
+
+
+# ---------------------------------------------------------------------------
+# updateItemStatus
+# ---------------------------------------------------------------------------
+
+
+def test_update_item_status_changes_stored_value(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    model.updateItemStatus("aaa-111", "missing")
+    idx = model.index(0, 0)
+    assert model.data(idx, ThumbnailGridModel.FileStatusRole) == "missing"
+
+
+def test_update_item_status_available_to_missing_increases_count(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    assert model.missingCount == 0
+    model.updateItemStatus("aaa-111", "missing")
+    assert model.missingCount == 1
+
+
+def test_update_item_status_missing_to_available_decreases_count(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "missing"}], None, False)
+    assert model.missingCount == 1
+    model.updateItemStatus("aaa-111", "available")
+    assert model.missingCount == 0
+
+
+def test_update_item_status_no_op_for_unknown_id(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    model.updateItemStatus("not-in-model", "missing")
+    assert model.missingCount == 0
+
+
+def test_update_item_status_same_status_no_count_change(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    model.updateItemStatus("aaa-111", "available")
+    assert model.missingCount == 0
+
+
+def test_update_item_status_emits_missing_count_changed(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    received = []
+    model.missingCountChanged.connect(received.append)
+    model.updateItemStatus("aaa-111", "missing")
+    assert 1 in received

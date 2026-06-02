@@ -927,6 +927,46 @@ def test_filter_dropdown_has_toggle_missing_only_requested_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# FilterDropdown group structure
+# ---------------------------------------------------------------------------
+
+
+def test_filter_dropdown_any_filter_active_defaults_to_false(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    val = obj.property("_anyFilterActive")
+    assert val is False
+
+
+def test_filter_dropdown_any_filter_active_when_missing_only(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("showMissingOnly", True)
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_any_filter_active_when_tags_active(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("activeTags", [{"id": "t1", "name": "nature", "mode": "include"}])
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_any_filter_active_when_categories_active(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("activeCategories", [{"id": "c1", "name": "Architecture", "mode": "include"}])
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_any_filter_active_when_import_job_active(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    obj.setProperty("importJobActive", True)
+    assert obj.property("_anyFilterActive") is True
+
+
+def test_filter_dropdown_implicit_height_is_positive(engine):
+    obj = load_component(engine, "FilterDropdown.qml")
+    assert obj.property("implicitHeight") > 0
+
+
+# ---------------------------------------------------------------------------
 # TitleBar search zone additions — Commit 7
 # ---------------------------------------------------------------------------
 
@@ -1140,3 +1180,52 @@ def test_metadata_overlay_has_add_tag_by_name_requested_signal(engine):
     received = []
     obj.addTagByNameRequested.connect(lambda name: received.append(name))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# TitleBar status zone — status indicators
+# ---------------------------------------------------------------------------
+
+
+def test_title_bar_import_state_defaults_to_idle(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("importState") == "Idle"
+
+
+def test_title_bar_import_state_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("importState", "Importing")
+    assert obj.property("importState") == "Importing"
+
+
+def test_title_bar_import_progress_defaults_to_zero(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("importProgress") == 0.0
+
+
+def test_title_bar_import_progress_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("importProgress", 0.75)
+    assert obj.property("importProgress") == pytest.approx(0.75)
+
+
+def test_title_bar_missing_count_defaults_to_zero(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("missingCount") == 0
+
+
+def test_title_bar_missing_count_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("missingCount", 5)
+    assert obj.property("missingCount") == 5
+
+
+def test_title_bar_backend_connected_defaults_to_true(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("backendConnected") is True
+
+
+def test_title_bar_backend_connected_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("backendConnected", False)
+    assert obj.property("backendConnected") is False

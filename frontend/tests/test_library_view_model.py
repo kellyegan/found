@@ -288,3 +288,106 @@ def test_no_filter_state_fetches_without_extra_params(qapp):
     vm.load()
     wait_for_state(vm, "Ready")
     assert captured_kwargs[0] == {"cursor": None, "limit": 100}
+
+
+# ---------------------------------------------------------------------------
+# missingCount
+# ---------------------------------------------------------------------------
+
+MISSING_ITEMS = [
+    {"id": "cc-0001", "filename": "c.jpg", "file_status": "missing"},
+    {"id": "dd-0002", "filename": "d.jpg", "file_status": "available"},
+]
+
+
+def test_missing_count_defaults_to_zero(qapp):
+    vm = _make_vm()
+    assert vm.missingCount == 0
+
+
+def test_missing_count_reflects_grid_model(qapp):
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=MISSING_ITEMS)
+    )
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert vm.missingCount == 1
+
+
+def test_missing_count_resets_on_reload(qapp):
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=MISSING_ITEMS)
+    )
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert vm.missingCount == 1
+    vm.reload()
+    wait_for_state(vm, "Ready")
+    assert vm.missingCount == 1  # reset + refilled, not doubled
+
+
+def test_missing_count_changed_signal_fires(qapp):
+    received = []
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=MISSING_ITEMS)
+    )
+    vm.missingCountChanged.connect(received.append)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert 1 in received
+
+
+# ---------------------------------------------------------------------------
+# verifyImage
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_verifier(verifier=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        image_verifier=verifier,
+    )
+
+
+def test_verify_image_calls_verifier(qapp):
+    calls = []
+    def verifier(image_id):
+        calls.append(image_id)
+        return "missing"
+
+    vm = _make_vm_with_verifier(verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    vm.gridModel.missingCountChanged.connect(lambda _: loop.quit())
+    QTimer.singleShot(2000, loop.quit)
+    vm.verifyImage("aaaa-0001")
+    loop.exec()
+
+    assert "aaaa-0001" in calls
+
+
+def test_verify_image_updates_grid_model_status(qapp):
+    def verifier(image_id):
+        return "missing"
+
+    vm = _make_vm_with_verifier(verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    vm.gridModel.missingCountChanged.connect(lambda _: loop.quit())
+    QTimer.singleShot(2000, loop.quit)
+    vm.verifyImage("aaaa-0001")
+    loop.exec()
+
+    assert vm.missingCount == 1
+
+
+def test_verify_image_no_op_when_no_verifier(qapp):
+    vm = _make_vm_with_verifier(verifier=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.verifyImage("aaaa-0001")  # must not raise
+    assert vm.missingCount == 0

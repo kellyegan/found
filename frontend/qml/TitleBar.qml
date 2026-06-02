@@ -9,6 +9,11 @@ Item {
     property bool searchReadOnly: false
     property var activeFilters: []
 
+    property string importState: "Idle"
+    property real importProgress: 0.0
+    property int missingCount: 0
+    property bool backendConnected: true
+
     signal goBackRequested()
     signal filterToggleRequested()
 
@@ -60,7 +65,105 @@ Item {
             left: titleZone.right
         }
         width: parent.width * 0.2
-        // Status indicators will be added in a later commit
+
+        Row {
+            anchors.centerIn: parent
+            spacing: 10
+
+            // Import indicator — shown while scanning or importing
+            Row {
+                visible: root.importState === "Scanning" || root.importState === "Importing"
+                spacing: 6
+
+                // Animated pulse dot
+                Rectangle {
+                    id: importDot
+                    width: 8; height: 8
+                    radius: 4
+                    color: Theme.accent
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    SequentialAnimation on opacity {
+                        running: importDot.visible
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.3; duration: 600; easing.type: Easing.InOutSine }
+                        NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutSine }
+                    }
+                }
+
+                Column {
+                    spacing: 2
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        text: root.importState === "Scanning" ? "Scanning…" : "Importing…"
+                        font.pixelSize: Theme.fontSizeSm
+                        font.family: Theme.fontFamily
+                        color: Theme.textMuted
+                    }
+
+                    // Progress bar — only during active import
+                    Rectangle {
+                        visible: root.importState === "Importing"
+                        width: 72; height: 3
+                        color: Theme.surface
+                        radius: 1.5
+
+                        Rectangle {
+                            width: parent.width * root.importProgress
+                            height: parent.height
+                            color: Theme.accent
+                            radius: 1.5
+
+                            Behavior on width { NumberAnimation { duration: 200 } }
+                        }
+                    }
+                }
+            }
+
+            // Missing images indicator
+            Row {
+                visible: root.missingCount > 0
+                spacing: 5
+
+                Text {
+                    text: "!"
+                    font.pixelSize: 13
+                    font.weight: Font.Bold
+                    color: "#ff8800"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: root.missingCount + " missing"
+                    font.pixelSize: Theme.fontSizeSm
+                    font.family: Theme.fontFamily
+                    color: "#ff8800"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+
+            // Backend connection indicator — hidden when connected
+            Row {
+                visible: !root.backendConnected
+                spacing: 5
+
+                Rectangle {
+                    width: 8; height: 8
+                    radius: 4
+                    color: "#ff4444"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: "Disconnected"
+                    font.pixelSize: Theme.fontSizeSm
+                    font.family: Theme.fontFamily
+                    color: "#ff4444"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
+        }
     }
 
     // ── Search zone (right) ──────────────────────────────────────────────────

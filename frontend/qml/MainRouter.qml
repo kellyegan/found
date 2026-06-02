@@ -43,6 +43,10 @@ Item {
             visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
             filterActive: FilterState.hasActiveFilters
+            importState: ImportState.loadingState
+            importProgress: ImportState.progress
+            missingCount: LibraryState.missingCount
+            backendConnected: BackendConnection.isConnected
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
@@ -79,7 +83,6 @@ Item {
             id: filterDropdown
             anchors { top: titleBar.bottom; right: parent.right; rightMargin: Theme.spacingMd }
             width: 280
-            implicitHeight: 160
             open: readyContainer.filterDropdownOpen
             showMissingOnly: FilterState.showMissingOnly
             importJobActive: FilterState.importJobId !== ""
@@ -229,6 +232,7 @@ Item {
             rightPanelWidth: readyContainer.metadataOverlayOpen ? Theme.overlayWidth : 0
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
+            onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
         }
 
         // Sidebar overlay — rendered above content, below nav bar

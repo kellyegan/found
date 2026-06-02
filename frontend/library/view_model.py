@@ -15,18 +15,23 @@ class LibraryLoadingState(Enum):
 
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
+    missingCountChanged = Signal(int)
 
     def __init__(
         self,
         page_fetcher: Callable[..., dict | None],
         filter_state=None,
+        image_verifier: Callable | None = None,
         parent=None,
     ):
         super().__init__(parent)
         self._page_fetcher = page_fetcher
+        self._image_verifier = image_verifier
         self._loading_state = LibraryLoadingState.Loading
         self._grid_model = ThumbnailGridModel(parent=self)
+        self._grid_model.missingCountChanged.connect(self.missingCountChanged)
         self._thread: _PageThread | None = None
+        self._verify_threads: list = []
         self._is_fetching = False
         self._filter_state = filter_state
         if filter_state is not None:
@@ -35,6 +40,10 @@ class LibraryViewModel(QObject):
     @Property(str, notify=loadingStateChanged)
     def loadingState(self) -> str:
         return self._loading_state.name
+
+    @Property(int, notify=missingCountChanged)
+    def missingCount(self) -> int:
+        return self._grid_model.missingCount
 
     @Property(QObject, constant=True)
     def gridModel(self) -> ThumbnailGridModel:
@@ -50,6 +59,17 @@ class LibraryViewModel(QObject):
     def reload(self) -> None:
         self.load()
 
+    @Slot(str)
+    def verifyImage(self, image_id: str) -> None:
+        if self._image_verifier is None:
+            return
+        thread = _VerifyThread(self._image_verifier, image_id)
+        thread.result.connect(lambda status, iid=image_id: self._on_verify_result(iid, status))
+        self._verify_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._verify_threads.remove(t) if t in self._verify_threads else None)
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+
     @Slot()
     def load_more(self) -> None:
         if not self._grid_model.hasMore or self._is_fetching:
@@ -64,6 +84,10 @@ class LibraryViewModel(QObject):
         self._thread = _PageThread(self._page_fetcher, fetch_kwargs)
         self._thread.result.connect(lambda page: self._on_result(page, is_initial))
         self._thread.start()
+
+    def _on_verify_result(self, image_id: str, status: str | None) -> None:
+        if status:
+            self._grid_model.updateItemStatus(image_id, status)
 
     def _on_result(self, page: dict | None, is_initial: bool) -> None:
         self._is_fetching = False
@@ -102,5 +126,21 @@ class _PageThread(QThread):
         try:
             page = self._fetcher(**self._fetch_kwargs)
             self.result.emit(page)
+        except Exception:
+            self.result.emit(None)
+
+
+class _VerifyThread(QThread):
+    result = Signal(object)  # str | None — the new file_status, or None on failure
+
+    def __init__(self, verifier: Callable, image_id: str, parent=None):
+        super().__init__(parent)
+        self._verifier = verifier
+        self._image_id = image_id
+
+    def run(self) -> None:
+        try:
+            status = self._verifier(self._image_id)
+            self.result.emit(status)
         except Exception:
             self.result.emit(None)
