@@ -583,3 +583,14 @@ def test_import_job_done_not_emitted_on_importer_raises(qapp):
     vm.executeImport()
     wait_for_state(vm, "Error")
     assert received == []
+
+
+def test_import_job_done_not_emitted_when_zero_imported(qapp):
+    received = []
+    vm = _vm(job_fetcher=lambda jid: {**SAMPLE_JOB_COMPLETE, "successful_imports": 0})
+    vm.importJobDone.connect(received.append)
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert received == []
