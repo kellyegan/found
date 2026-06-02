@@ -147,6 +147,7 @@ Item {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
         onClicked: function(mouse) {
+            forceActiveFocus()
             root.tileClicked(root.imageId, mouse.modifiers)
         }
         onDoubleClicked: function(mouse) {

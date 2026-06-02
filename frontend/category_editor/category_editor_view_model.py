@@ -3,26 +3,24 @@ from typing import Callable, Optional
 from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
 
 
-class TagEditorViewModel(QObject):
-    tagsChanged = Signal()
+class CategoryEditorViewModel(QObject):
+    categoriesChanged = Signal()
     loadingStateChanged = Signal(str)
     selectionModeChanged = Signal(str)
     modified = Signal()
 
     def __init__(
         self,
-        image_tags_fetcher: Callable,
-        tag_modifier: Callable,
-        tag_creator: Optional[Callable] = None,
+        image_categories_fetcher: Callable,
+        category_modifier: Callable,
         selection_manager=None,
         parent=None,
     ):
         super().__init__(parent)
-        self._image_tags_fetcher = image_tags_fetcher
-        self._tag_modifier = tag_modifier
-        self._tag_creator = tag_creator
+        self._image_categories_fetcher = image_categories_fetcher
+        self._category_modifier = category_modifier
         self._selection_manager = selection_manager
-        self._tags: list = []
+        self._categories: list = []
         self._loading_state = "Idle"
         self._selection_mode = "none"
         self._primary_id: str = ""
@@ -36,9 +34,9 @@ class TagEditorViewModel(QObject):
     # Properties
     # ------------------------------------------------------------------
 
-    @Property(list, notify=tagsChanged)
-    def tags(self) -> list:
-        return list(self._tags)
+    @Property(list, notify=categoriesChanged)
+    def categories(self) -> list:
+        return list(self._categories)
 
     @Property(str, notify=loadingStateChanged)
     def loadingState(self) -> str:
@@ -61,7 +59,7 @@ class TagEditorViewModel(QObject):
                 t.result.disconnect(self._on_fetch_result)
             except RuntimeError:
                 pass
-        thread = _FetchThread(self._image_tags_fetcher, image_id)
+        thread = _FetchThread(self._image_categories_fetcher, image_id)
         thread.result.connect(self._on_fetch_result)
         self._active_fetch_threads.append(thread)
         thread.finished.connect(lambda t=thread: self._active_fetch_threads.remove(t) if t in self._active_fetch_threads else None)
@@ -69,7 +67,7 @@ class TagEditorViewModel(QObject):
         thread.start()
 
     @Slot(str, str)
-    def addTag(self, tag_id: str, tag_name: str) -> None:
+    def addCategory(self, category_id: str, category_name: str) -> None:
         if self._selection_manager:
             image_ids = list(self._selection_manager.selectedIds)
         elif self._primary_id:
@@ -78,9 +76,9 @@ class TagEditorViewModel(QObject):
             return
         if not image_ids:
             return
-        thread = _ModifyThread(self._tag_modifier, image_ids, [tag_id], [])
+        thread = _ModifyThread(self._category_modifier, image_ids, [category_id], [])
         thread.result.connect(
-            lambda ok, _id=tag_id, _name=tag_name: self._on_add_result(ok, _id, _name)
+            lambda ok, _id=category_id, _name=category_name: self._on_add_result(ok, _id, _name)
         )
         self._active_modify_threads.append(thread)
         thread.finished.connect(lambda t=thread: self._active_modify_threads.remove(t) if t in self._active_modify_threads else None)
@@ -88,32 +86,11 @@ class TagEditorViewModel(QObject):
         thread.start()
 
     @Slot(str)
-    def removeTag(self, tag_id: str) -> None:
+    def removeCategory(self, category_id: str) -> None:
         if not self._primary_id:
             return
-        image_ids = [self._primary_id]
-        thread = _ModifyThread(self._tag_modifier, image_ids, [], [tag_id])
-        thread.result.connect(lambda ok, _id=tag_id: self._on_remove_result(ok, _id))
-        self._active_modify_threads.append(thread)
-        thread.finished.connect(lambda t=thread: self._active_modify_threads.remove(t) if t in self._active_modify_threads else None)
-        thread.finished.connect(thread.deleteLater)
-        thread.start()
-
-    @Slot(str)
-    def addTagByName(self, name: str) -> None:
-        name = name.strip().lower()
-        if not name or self._tag_creator is None:
-            return
-        if self._selection_manager:
-            image_ids = list(self._selection_manager.selectedIds)
-        elif self._primary_id:
-            image_ids = [self._primary_id]
-        else:
-            return
-        if not image_ids:
-            return
-        thread = _CreateAndAddThread(self._tag_creator, self._tag_modifier, name, image_ids)
-        thread.result.connect(self._on_create_add_result)
+        thread = _ModifyThread(self._category_modifier, [self._primary_id], [], [category_id])
+        thread.result.connect(lambda ok, _id=category_id: self._on_remove_result(ok, _id))
         self._active_modify_threads.append(thread)
         thread.finished.connect(lambda t=thread: self._active_modify_threads.remove(t) if t in self._active_modify_threads else None)
         thread.finished.connect(thread.deleteLater)
@@ -121,9 +98,9 @@ class TagEditorViewModel(QObject):
 
     @Slot()
     def clear(self) -> None:
-        self._tags = []
+        self._categories = []
         self._primary_id = ""
-        self.tagsChanged.emit()
+        self.categoriesChanged.emit()
         self._set_state("Idle")
 
     # ------------------------------------------------------------------
@@ -142,38 +119,32 @@ class TagEditorViewModel(QObject):
             self.loadImage(self._selection_manager.primaryId)
         else:
             self._set_selection_mode("multi")
-            self._tags = []
+            self._categories = []
             self._primary_id = ""
-            self.tagsChanged.emit()
+            self.categoriesChanged.emit()
             self._set_state("Idle")
 
     def _on_fetch_result(self, data: list | None) -> None:
         if data is None:
             self._set_state("Error")
             return
-        self._tags = list(data)
-        self.tagsChanged.emit()
+        self._categories = list(data)
+        self.categoriesChanged.emit()
         self._set_state("Ready")
 
-    def _on_add_result(self, ok: bool, tag_id: str, tag_name: str) -> None:
+    def _on_add_result(self, ok: bool, category_id: str, category_name: str) -> None:
         if ok:
             self.modified.emit()
             if self._selection_mode != "multi":
-                if not any(t["id"] == tag_id for t in self._tags):
-                    self._tags.append({"id": tag_id, "name": tag_name})
-                    self.tagsChanged.emit()
+                if not any(c["id"] == category_id for c in self._categories):
+                    self._categories.append({"id": category_id, "name": category_name})
+                    self.categoriesChanged.emit()
 
-    def _on_remove_result(self, ok: bool, tag_id: str) -> None:
+    def _on_remove_result(self, ok: bool, category_id: str) -> None:
         if ok:
             self.modified.emit()
-            self._tags = [t for t in self._tags if t["id"] != tag_id]
-            self.tagsChanged.emit()
-
-    def _on_create_add_result(self, tag: dict | None) -> None:
-        if tag is not None and self._selection_mode != "multi":
-            if not any(t["id"] == tag["id"] for t in self._tags):
-                self._tags.append(tag)
-                self.tagsChanged.emit()
+            self._categories = [c for c in self._categories if c["id"] != category_id]
+            self.categoriesChanged.emit()
 
     def _set_state(self, state: str) -> None:
         self._loading_state = state
@@ -223,32 +194,3 @@ class _ModifyThread(QThread):
             self.result.emit(bool(ok))
         except Exception:
             self.result.emit(False)
-
-
-class _CreateAndAddThread(QThread):
-    result = Signal(object)
-
-    def __init__(
-        self,
-        tag_creator: Callable,
-        tag_modifier: Callable,
-        name: str,
-        image_ids: list,
-        parent=None,
-    ):
-        super().__init__(parent)
-        self._tag_creator = tag_creator
-        self._tag_modifier = tag_modifier
-        self._name = name
-        self._image_ids = image_ids
-
-    def run(self) -> None:
-        try:
-            tag = self._tag_creator(self._name)
-            if tag is None:
-                self.result.emit(None)
-                return
-            self._tag_modifier(self._image_ids, [tag["id"]], [])
-            self.result.emit(tag)
-        except Exception:
-            self.result.emit(None)

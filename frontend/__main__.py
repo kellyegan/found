@@ -10,6 +10,8 @@ import httpx
 from frontend.app.controller import AppController
 from frontend.backend.connection_monitor import BackendConnectionManager
 from frontend.backend.process_manager import BackendProcessManager
+from frontend.category_editor.category_editor_view_model import CategoryEditorViewModel
+from frontend.collection_editor.collection_editor_view_model import CollectionEditorViewModel
 from frontend.collections.collections_view_model import CollectionsViewModel
 from frontend.filters.filter_state_manager import FilterStateManager
 from frontend.import_workflow.import_view_model import ImportViewModel
@@ -243,6 +245,84 @@ def _make_bulk_tag_modifier(base_url: str):
     return modify
 
 
+def _make_image_categories_fetcher(base_url: str):
+    def fetch(image_id: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/images/{image_id}/categories", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
+def _make_bulk_category_modifier(base_url: str):
+    def modify(image_ids: list, add_category_ids: list, remove_category_ids: list) -> bool:
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/images/bulk/categories",
+                json={
+                    "image_ids": image_ids,
+                    "add_category_ids": add_category_ids,
+                    "remove_category_ids": remove_category_ids,
+                },
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return modify
+
+
+def _make_category_searcher(base_url: str):
+    def search(term: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/categories/search", params={"q": term}, timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return search
+
+
+def _make_image_collections_fetcher(base_url: str):
+    def fetch(image_id: str):
+        try:
+            response = httpx.get(f"{base_url}/api/v1/images/{image_id}/collections", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+    return fetch
+
+
+def _make_collection_adder(base_url: str):
+    def add(collection_id: str, image_ids: list) -> bool:
+        try:
+            response = httpx.post(
+                f"{base_url}/api/v1/collections/{collection_id}/images",
+                json={"image_ids": image_ids},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return add
+
+
+def _make_collection_remover(base_url: str):
+    def remove(collection_id: str, image_id: str) -> bool:
+        try:
+            response = httpx.delete(
+                f"{base_url}/api/v1/collections/{collection_id}/images/{image_id}",
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+    return remove
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None, category=None, tag=None,
               file_status=None, exclude_category=None, exclude_tag=None):
@@ -319,6 +399,14 @@ def main():
     import_state.loadingStateChanged.connect(_on_import_loading_state_changed)
     import_state.importJobDone.connect(filter_state.setImportJobFilter)
 
+    def _on_tag_modified() -> None:
+        if filter_state.tagFilters:
+            library_state.reload()
+
+    def _on_category_modified() -> None:
+        if filter_state.categoryFilters:
+            library_state.reload()
+
     metadata_state = MetadataViewModel(
         image_fetcher=_make_image_fetcher(base_url),
         selection_manager=selection_manager,
@@ -336,6 +424,24 @@ def main():
         tag_creator=_make_tag_creator(base_url),
         selection_manager=selection_manager,
     )
+    category_editor_search_state = TagSearchViewModel(
+        tags_fetcher=_make_category_searcher(base_url),
+    )
+    category_editor_state = CategoryEditorViewModel(
+        image_categories_fetcher=_make_image_categories_fetcher(base_url),
+        category_modifier=_make_bulk_category_modifier(base_url),
+        selection_manager=selection_manager,
+    )
+    collection_editor_state = CollectionEditorViewModel(
+        image_collections_fetcher=_make_image_collections_fetcher(base_url),
+        collection_adder=_make_collection_adder(base_url),
+        collection_remover=_make_collection_remover(base_url),
+        selection_manager=selection_manager,
+    )
+
+    tag_editor_state.modified.connect(_on_tag_modified)
+    category_editor_state.modified.connect(_on_category_modified)
+    collection_editor_state.modified.connect(collections_state.reloadCollectionImages)
 
     controller = AppController(
         app_state,
@@ -364,6 +470,9 @@ def main():
     engine.rootContext().setContextProperty("TagSearchState", tag_search_state)
     engine.rootContext().setContextProperty("TagEditorSearchState", tag_editor_search_state)
     engine.rootContext().setContextProperty("TagEditorState", tag_editor_state)
+    engine.rootContext().setContextProperty("CategoryEditorSearchState", category_editor_search_state)
+    engine.rootContext().setContextProperty("CategoryEditorState", category_editor_state)
+    engine.rootContext().setContextProperty("CollectionEditorState", collection_editor_state)
     engine.rootContext().setContextProperty("baseUrl", base_url)
 
     qml_path = Path(__file__).parent / "qml" / "main.qml"

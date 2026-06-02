@@ -93,6 +93,13 @@ class CollectionRepository:
             self.session.add(collection)
             self.session.commit()
 
+    def get_image_collections(self, image_id: UUID) -> List[Collection]:
+        """Return all collections that contain the given image."""
+        rows = self.session.exec(
+            select(CollectionImage).where(CollectionImage.image_id == image_id)
+        ).all()
+        return [c for r in rows if (c := self.session.get(Collection, r.collection_id)) is not None]
+
     def reorder(self, collection_id: UUID, image_ids: List[UUID]) -> None:
         """Set sort_order for each image according to its position in image_ids."""
         for order, image_id in enumerate(image_ids):

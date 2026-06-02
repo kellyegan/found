@@ -464,3 +464,56 @@ def test_add_tag_by_name_emits_tags_changed_on_success(qapp):
     vm.addTagByName("urban")
     _spin()
     assert len(received) >= 1
+
+
+# ---------------------------------------------------------------------------
+# modified signal
+# ---------------------------------------------------------------------------
+
+def _collect_signal(signal):
+    received = []
+    signal.connect(lambda: received.append(1))
+    return received
+
+
+def test_modified_emitted_on_add_tag_success(qapp):
+    vm = _vm()
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.addTag("tag-3", "urban")
+    _spin()
+    assert len(received) >= 1
+
+
+def test_modified_not_emitted_on_add_tag_failure(qapp):
+    vm = _vm(modifier=lambda *_: False)
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.addTag("tag-3", "urban")
+    _spin()
+    assert received == []
+
+
+def test_modified_emitted_on_remove_tag_success(qapp):
+    vm = _vm()
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.removeTag("tag-1")
+    _spin()
+    assert len(received) >= 1
+
+
+def test_modified_not_emitted_on_remove_tag_failure(qapp):
+    vm = _vm(modifier=lambda *_: False)
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.removeTag("tag-1")
+    _spin()
+    assert received == []
+
+
+def test_modified_not_emitted_on_load(qapp):
+    vm = _vm()
+    received = _collect_signal(vm.modified)
+    _load(vm)
+    assert received == []
