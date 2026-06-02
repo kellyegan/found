@@ -323,6 +323,19 @@ def _make_collection_remover(base_url: str):
     return remove
 
 
+def _make_image_verifier(base_url: str):
+    def verify(image_id: str) -> str | None:
+        try:
+            response = httpx.post(f"{base_url}/api/v1/images/{image_id}/verify", timeout=10.0)
+            data = response.json()
+            if data.get("success"):
+                return data.get("data", {}).get("file_status")
+            return None
+        except Exception:
+            return None
+    return verify
+
+
 def _make_page_fetcher(base_url: str):
     def fetch(cursor=None, limit=100, import_job=None, category=None, tag=None,
               file_status=None, exclude_category=None, exclude_tag=None):
@@ -369,7 +382,11 @@ def main():
     base_url = f"http://{process_manager._host}:{process_manager._port}"
 
     filter_state = FilterStateManager()
-    library_state = LibraryViewModel(page_fetcher=_make_page_fetcher(base_url), filter_state=filter_state)
+    library_state = LibraryViewModel(
+        page_fetcher=_make_page_fetcher(base_url),
+        filter_state=filter_state,
+        image_verifier=_make_image_verifier(base_url),
+    )
     categories_state = CategoriesViewModel(
         categories_fetcher=_make_categories_fetcher(base_url),
         category_creator=_make_category_creator(base_url),

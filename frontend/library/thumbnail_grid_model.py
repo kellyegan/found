@@ -87,6 +87,23 @@ class ThumbnailGridModel(QAbstractListModel):
     def cursor(self) -> str:
         return self._cursor or ""
 
+    @Slot(str, str)
+    def updateItemStatus(self, image_id: str, file_status: str) -> None:
+        for i, item in enumerate(self._items):
+            if str(item.get("id", "")) == image_id:
+                old_status = item.get("file_status", "available")
+                if old_status == file_status:
+                    return
+                self._items[i] = {**item, "file_status": file_status}
+                if file_status == "missing" and old_status != "missing":
+                    self._missing_count += 1
+                elif old_status == "missing" and file_status != "missing":
+                    self._missing_count -= 1
+                idx = self.index(i, 0)
+                self.dataChanged.emit(idx, idx, [self.FileStatusRole])
+                self.missingCountChanged.emit(self._missing_count)
+                return
+
     @Property(int, notify=missingCountChanged)
     def missingCount(self) -> int:
         return self._missing_count

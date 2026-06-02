@@ -233,6 +233,7 @@ Item {
             rightPanelWidth: readyContainer.metadataOverlayOpen ? Theme.overlayWidth : 0
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
+            onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
         }
 
         // Sidebar overlay — rendered above content, below nav bar

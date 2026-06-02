@@ -24,6 +24,7 @@ Item {
 
     signal prevRequested()
     signal nextRequested()
+    signal imageLoadFailed(string imageId)
 
     property real zoomLevel: 1.0
     property real panOffsetX: 0.0
@@ -105,6 +106,10 @@ Item {
             asynchronous: true
             smooth: true
             visible: status === Image.Ready
+            onStatusChanged: {
+                if (status === Image.Error && root.imageUrl !== "")
+                    root.imageLoadFailed(root.imageId)
+            }
         }
 
         // Loading indicator
@@ -117,20 +122,10 @@ Item {
             z: 1
         }
 
-        // Load error
-        Text {
-            anchors.centerIn: parent
-            visible: img.status === Image.Error
-            text: "Failed to load image"
-            color: "#ff4444"
-            font.pixelSize: 14
-            z: 1
-        }
-
-        // Missing file overlay
+        // Missing file overlay — shown when status is known missing, or when image fails to load
         Column {
             anchors.centerIn: parent
-            visible: root.fileStatus === "missing"
+            visible: root.fileStatus === "missing" || (img.status === Image.Error && root.imageUrl !== "")
             spacing: 8
             z: 1
 

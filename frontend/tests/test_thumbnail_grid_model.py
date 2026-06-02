@@ -279,3 +279,55 @@ def test_missing_count_changed_signal_fires(qapp):
     model.missingCountChanged.connect(received.append)
     model.appendPage(SAMPLE_ITEMS, None, False)
     assert 1 in received
+
+
+# ---------------------------------------------------------------------------
+# updateItemStatus
+# ---------------------------------------------------------------------------
+
+
+def test_update_item_status_changes_stored_value(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    model.updateItemStatus("aaa-111", "missing")
+    idx = model.index(0, 0)
+    assert model.data(idx, ThumbnailGridModel.FileStatusRole) == "missing"
+
+
+def test_update_item_status_available_to_missing_increases_count(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    assert model.missingCount == 0
+    model.updateItemStatus("aaa-111", "missing")
+    assert model.missingCount == 1
+
+
+def test_update_item_status_missing_to_available_decreases_count(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "missing"}], None, False)
+    assert model.missingCount == 1
+    model.updateItemStatus("aaa-111", "available")
+    assert model.missingCount == 0
+
+
+def test_update_item_status_no_op_for_unknown_id(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    model.updateItemStatus("not-in-model", "missing")
+    assert model.missingCount == 0
+
+
+def test_update_item_status_same_status_no_count_change(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    model.updateItemStatus("aaa-111", "available")
+    assert model.missingCount == 0
+
+
+def test_update_item_status_emits_missing_count_changed(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage([{"id": "aaa-111", "file_status": "available"}], None, False)
+    received = []
+    model.missingCountChanged.connect(received.append)
+    model.updateItemStatus("aaa-111", "missing")
+    assert 1 in received
