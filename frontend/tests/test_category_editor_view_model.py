@@ -216,3 +216,56 @@ def test_add_category_uses_all_selected_ids_in_multi(qapp):
     _spin()
     assert len(calls) == 1
     assert set(calls[0]) == {"img-1", "img-2"}
+
+
+# ---------------------------------------------------------------------------
+# modified signal
+# ---------------------------------------------------------------------------
+
+def _collect_signal(signal):
+    received = []
+    signal.connect(lambda: received.append(1))
+    return received
+
+
+def test_modified_emitted_on_add_category_success(qapp):
+    vm = _vm()
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.addCategory("cat-3", "Abstract")
+    _spin()
+    assert len(received) >= 1
+
+
+def test_modified_not_emitted_on_add_category_failure(qapp):
+    vm = _vm(modifier=lambda *_: False)
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.addCategory("cat-3", "Abstract")
+    _spin()
+    assert received == []
+
+
+def test_modified_emitted_on_remove_category_success(qapp):
+    vm = _vm()
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.removeCategory("cat-1")
+    _spin()
+    assert len(received) >= 1
+
+
+def test_modified_not_emitted_on_remove_category_failure(qapp):
+    vm = _vm(modifier=lambda *_: False)
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.removeCategory("cat-1")
+    _spin()
+    assert received == []
+
+
+def test_modified_not_emitted_on_load(qapp):
+    vm = _vm()
+    received = _collect_signal(vm.modified)
+    _load(vm)
+    assert received == []

@@ -7,6 +7,7 @@ class CategoryEditorViewModel(QObject):
     categoriesChanged = Signal()
     loadingStateChanged = Signal(str)
     selectionModeChanged = Signal(str)
+    modified = Signal()
 
     def __init__(
         self,
@@ -132,13 +133,16 @@ class CategoryEditorViewModel(QObject):
         self._set_state("Ready")
 
     def _on_add_result(self, ok: bool, category_id: str, category_name: str) -> None:
-        if ok and self._selection_mode != "multi":
-            if not any(c["id"] == category_id for c in self._categories):
-                self._categories.append({"id": category_id, "name": category_name})
-                self.categoriesChanged.emit()
+        if ok:
+            self.modified.emit()
+            if self._selection_mode != "multi":
+                if not any(c["id"] == category_id for c in self._categories):
+                    self._categories.append({"id": category_id, "name": category_name})
+                    self.categoriesChanged.emit()
 
     def _on_remove_result(self, ok: bool, category_id: str) -> None:
         if ok:
+            self.modified.emit()
             self._categories = [c for c in self._categories if c["id"] != category_id]
             self.categoriesChanged.emit()
 

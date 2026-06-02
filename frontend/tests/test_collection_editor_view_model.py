@@ -217,3 +217,56 @@ def test_add_to_collection_uses_all_selected_in_multi(qapp):
     _spin()
     assert len(calls) == 1
     assert set(calls[0][1]) == {"img-1", "img-2"}
+
+
+# ---------------------------------------------------------------------------
+# modified signal
+# ---------------------------------------------------------------------------
+
+def _collect_signal(signal):
+    received = []
+    signal.connect(lambda: received.append(1))
+    return received
+
+
+def test_modified_emitted_on_add_to_collection_success(qapp):
+    vm = _vm()
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.addToCollection("col-3", "References")
+    _spin()
+    assert len(received) >= 1
+
+
+def test_modified_not_emitted_on_add_to_collection_failure(qapp):
+    vm = _vm(adder=lambda *_: False)
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.addToCollection("col-3", "References")
+    _spin()
+    assert received == []
+
+
+def test_modified_emitted_on_remove_from_collection_success(qapp):
+    vm = _vm()
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.removeFromCollection("col-1")
+    _spin()
+    assert len(received) >= 1
+
+
+def test_modified_not_emitted_on_remove_from_collection_failure(qapp):
+    vm = _vm(remover=lambda *_: False)
+    _load(vm)
+    received = _collect_signal(vm.modified)
+    vm.removeFromCollection("col-1")
+    _spin()
+    assert received == []
+
+
+def test_modified_not_emitted_on_load(qapp):
+    vm = _vm()
+    received = _collect_signal(vm.modified)
+    _load(vm)
+    assert received == []

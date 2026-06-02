@@ -27,6 +27,7 @@ class CollectionsViewModel(QObject):
         self._collections: list = []
         self._loading_state = "Idle"
         self._collection_grid_model = ThumbnailGridModel(parent=self)
+        self._current_collection_id: str = ""
         self._fetch_thread: Optional[_FetchThread] = None
         self._images_thread: Optional[_ImagesThread] = None
 
@@ -79,11 +80,17 @@ class CollectionsViewModel(QObject):
 
     @Slot(str)
     def loadCollectionImages(self, collection_id: str) -> None:
+        self._current_collection_id = collection_id
         self._collection_grid_model.clear()
         thread = _ImagesThread(self._collection_images_fetcher, collection_id)
         thread.result.connect(self._on_images_result)
         self._images_thread = thread
         thread.start()
+
+    @Slot()
+    def reloadCollectionImages(self) -> None:
+        if self._current_collection_id:
+            self.loadCollectionImages(self._current_collection_id)
 
     # ------------------------------------------------------------------
     # Private

@@ -308,3 +308,36 @@ def test_load_collection_images_handles_fetcher_error(qapp):
     vm.loadCollectionImages("col-1")
     wait_for_images(vm)
     assert vm.collectionGridModel.count == 0
+
+
+# ---------------------------------------------------------------------------
+# reloadCollectionImages()
+# ---------------------------------------------------------------------------
+
+def test_reload_collection_images_refetches_current_collection(qapp):
+    fetcher_calls = []
+
+    def fetcher(cid):
+        fetcher_calls.append(cid)
+        return SAMPLE_IMAGES if cid == "col-1" else []
+
+    vm = _vm(collection_images_fetcher=fetcher)
+    vm.loadCollectionImages("col-1")
+    wait_for_images(vm)
+    assert vm.collectionGridModel.count == 2
+
+    fetcher_calls.clear()
+    vm.reloadCollectionImages()
+    wait_for_images(vm)
+    assert fetcher_calls == ["col-1"]
+    assert vm.collectionGridModel.count == 2
+
+
+def test_reload_collection_images_noop_when_no_collection_loaded(qapp):
+    fetcher_calls = []
+    vm = _vm(collection_images_fetcher=lambda cid: fetcher_calls.append(cid) or [])
+    vm.reloadCollectionImages()
+    loop = QEventLoop()
+    QTimer.singleShot(100, loop.quit)
+    loop.exec()
+    assert fetcher_calls == []

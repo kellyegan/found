@@ -399,6 +399,14 @@ def main():
     import_state.loadingStateChanged.connect(_on_import_loading_state_changed)
     import_state.importJobDone.connect(filter_state.setImportJobFilter)
 
+    def _on_tag_modified() -> None:
+        if filter_state.tagFilters:
+            library_state.reload()
+
+    def _on_category_modified() -> None:
+        if filter_state.categoryFilters:
+            library_state.reload()
+
     metadata_state = MetadataViewModel(
         image_fetcher=_make_image_fetcher(base_url),
         selection_manager=selection_manager,
@@ -430,6 +438,10 @@ def main():
         collection_remover=_make_collection_remover(base_url),
         selection_manager=selection_manager,
     )
+
+    tag_editor_state.modified.connect(_on_tag_modified)
+    category_editor_state.modified.connect(_on_category_modified)
+    collection_editor_state.modified.connect(collections_state.reloadCollectionImages)
 
     controller = AppController(
         app_state,

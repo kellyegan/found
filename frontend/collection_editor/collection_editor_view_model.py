@@ -7,6 +7,7 @@ class CollectionEditorViewModel(QObject):
     collectionsChanged = Signal()
     loadingStateChanged = Signal(str)
     selectionModeChanged = Signal(str)
+    modified = Signal()
 
     def __init__(
         self,
@@ -134,13 +135,16 @@ class CollectionEditorViewModel(QObject):
         self._set_state("Ready")
 
     def _on_add_result(self, ok: bool, collection_id: str, collection_name: str) -> None:
-        if ok and self._selection_mode != "multi":
-            if not any(c["id"] == collection_id for c in self._collections):
-                self._collections.append({"id": collection_id, "name": collection_name})
-                self.collectionsChanged.emit()
+        if ok:
+            self.modified.emit()
+            if self._selection_mode != "multi":
+                if not any(c["id"] == collection_id for c in self._collections):
+                    self._collections.append({"id": collection_id, "name": collection_name})
+                    self.collectionsChanged.emit()
 
     def _on_remove_result(self, ok: bool, collection_id: str) -> None:
         if ok:
+            self.modified.emit()
             self._collections = [c for c in self._collections if c["id"] != collection_id]
             self.collectionsChanged.emit()
 

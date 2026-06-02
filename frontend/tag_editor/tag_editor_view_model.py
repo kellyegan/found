@@ -7,6 +7,7 @@ class TagEditorViewModel(QObject):
     tagsChanged = Signal()
     loadingStateChanged = Signal(str)
     selectionModeChanged = Signal(str)
+    modified = Signal()
 
     def __init__(
         self,
@@ -155,13 +156,16 @@ class TagEditorViewModel(QObject):
         self._set_state("Ready")
 
     def _on_add_result(self, ok: bool, tag_id: str, tag_name: str) -> None:
-        if ok and self._selection_mode != "multi":
-            if not any(t["id"] == tag_id for t in self._tags):
-                self._tags.append({"id": tag_id, "name": tag_name})
-                self.tagsChanged.emit()
+        if ok:
+            self.modified.emit()
+            if self._selection_mode != "multi":
+                if not any(t["id"] == tag_id for t in self._tags):
+                    self._tags.append({"id": tag_id, "name": tag_name})
+                    self.tagsChanged.emit()
 
     def _on_remove_result(self, ok: bool, tag_id: str) -> None:
         if ok:
+            self.modified.emit()
             self._tags = [t for t in self._tags if t["id"] != tag_id]
             self.tagsChanged.emit()
 
