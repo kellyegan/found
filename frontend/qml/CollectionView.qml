@@ -6,6 +6,8 @@ Item {
     property string collectionName: ""
     property var gridModel: null
     property string loadingState: "Idle"
+    property bool leftPanelOpen: false
+    property bool rightPanelOpen: false
 
     signal loadMoreRequested()
 
@@ -41,6 +43,8 @@ Item {
         anchors.fill: parent
         visible: root.loadingState === "Ready"
         model: root.gridModel
+        leftPanelOpen: root.leftPanelOpen
+        rightPanelOpen: root.rightPanelOpen
         onLoadMoreRequested: root.loadMoreRequested()
     }
 }

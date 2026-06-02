@@ -7,6 +7,8 @@ Item {
     property int targetThumbnailSize: 180
     property int tileGap: 50
     property int gridEdgeMargin: 40
+    property bool leftPanelOpen: false
+    property bool rightPanelOpen: false
     readonly property real scrollX: grid.contentX
 
     signal loadMoreRequested()
@@ -22,8 +24,8 @@ Item {
             topMargin: Theme.spacingMd
             bottomMargin: Theme.spacingMd
         }
-        leftMargin: root.gridEdgeMargin
-        rightMargin: root.gridEdgeMargin
+        leftMargin: root.leftPanelOpen ? Theme.overlayWidth : root.gridEdgeMargin
+        rightMargin: root.rightPanelOpen ? Theme.overlayWidth : root.gridEdgeMargin
         model: root.model
 
         // Horizontal multi-row layout: items fill top-to-bottom, columns flow left-to-right
