@@ -288,3 +288,50 @@ def test_no_filter_state_fetches_without_extra_params(qapp):
     vm.load()
     wait_for_state(vm, "Ready")
     assert captured_kwargs[0] == {"cursor": None, "limit": 100}
+
+
+# ---------------------------------------------------------------------------
+# missingCount
+# ---------------------------------------------------------------------------
+
+MISSING_ITEMS = [
+    {"id": "cc-0001", "filename": "c.jpg", "file_status": "missing"},
+    {"id": "dd-0002", "filename": "d.jpg", "file_status": "available"},
+]
+
+
+def test_missing_count_defaults_to_zero(qapp):
+    vm = _make_vm()
+    assert vm.missingCount == 0
+
+
+def test_missing_count_reflects_grid_model(qapp):
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=MISSING_ITEMS)
+    )
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert vm.missingCount == 1
+
+
+def test_missing_count_resets_on_reload(qapp):
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=MISSING_ITEMS)
+    )
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert vm.missingCount == 1
+    vm.reload()
+    wait_for_state(vm, "Ready")
+    assert vm.missingCount == 1  # reset + refilled, not doubled
+
+
+def test_missing_count_changed_signal_fires(qapp):
+    received = []
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=MISSING_ITEMS)
+    )
+    vm.missingCountChanged.connect(received.append)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert 1 in received

@@ -15,6 +15,7 @@ class LibraryLoadingState(Enum):
 
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
+    missingCountChanged = Signal(int)
 
     def __init__(
         self,
@@ -26,6 +27,7 @@ class LibraryViewModel(QObject):
         self._page_fetcher = page_fetcher
         self._loading_state = LibraryLoadingState.Loading
         self._grid_model = ThumbnailGridModel(parent=self)
+        self._grid_model.missingCountChanged.connect(self.missingCountChanged)
         self._thread: _PageThread | None = None
         self._is_fetching = False
         self._filter_state = filter_state
@@ -35,6 +37,10 @@ class LibraryViewModel(QObject):
     @Property(str, notify=loadingStateChanged)
     def loadingState(self) -> str:
         return self._loading_state.name
+
+    @Property(int, notify=missingCountChanged)
+    def missingCount(self) -> int:
+        return self._grid_model.missingCount
 
     @Property(QObject, constant=True)
     def gridModel(self) -> ThumbnailGridModel:

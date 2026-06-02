@@ -1140,3 +1140,52 @@ def test_metadata_overlay_has_add_tag_by_name_requested_signal(engine):
     received = []
     obj.addTagByNameRequested.connect(lambda name: received.append(name))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# TitleBar status zone — status indicators
+# ---------------------------------------------------------------------------
+
+
+def test_title_bar_import_state_defaults_to_idle(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("importState") == "Idle"
+
+
+def test_title_bar_import_state_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("importState", "Importing")
+    assert obj.property("importState") == "Importing"
+
+
+def test_title_bar_import_progress_defaults_to_zero(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("importProgress") == 0.0
+
+
+def test_title_bar_import_progress_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("importProgress", 0.75)
+    assert obj.property("importProgress") == pytest.approx(0.75)
+
+
+def test_title_bar_missing_count_defaults_to_zero(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("missingCount") == 0
+
+
+def test_title_bar_missing_count_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("missingCount", 5)
+    assert obj.property("missingCount") == 5
+
+
+def test_title_bar_backend_connected_defaults_to_true(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    assert obj.property("backendConnected") is True
+
+
+def test_title_bar_backend_connected_is_writable(engine):
+    obj = load_component(engine, "TitleBar.qml")
+    obj.setProperty("backendConnected", False)
+    assert obj.property("backendConnected") is False

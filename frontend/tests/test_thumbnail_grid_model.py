@@ -234,3 +234,48 @@ def test_all_ids_empty_after_clear(qapp):
     model.appendPage(SAMPLE_ITEMS, None, False)
     model.clear()
     assert model.allIds == []
+
+
+# ---------------------------------------------------------------------------
+# missingCount
+# ---------------------------------------------------------------------------
+
+
+def test_missing_count_defaults_to_zero(qapp):
+    model = ThumbnailGridModel()
+    assert model.missingCount == 0
+
+
+def test_missing_count_counts_missing_items(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)  # one "missing" in SAMPLE_ITEMS
+    assert model.missingCount == 1
+
+
+def test_missing_count_accumulates_across_pages(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, "tok", True)
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert model.missingCount == 2
+
+
+def test_missing_count_zero_when_no_missing(qapp):
+    model = ThumbnailGridModel()
+    available_only = [{"id": "x-1", "filename": "x.jpg", "file_status": "available"}]
+    model.appendPage(available_only, None, False)
+    assert model.missingCount == 0
+
+
+def test_missing_count_resets_on_clear(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    model.clear()
+    assert model.missingCount == 0
+
+
+def test_missing_count_changed_signal_fires(qapp):
+    model = ThumbnailGridModel()
+    received = []
+    model.missingCountChanged.connect(received.append)
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert 1 in received

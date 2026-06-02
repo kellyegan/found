@@ -43,6 +43,10 @@ Item {
             visible: !NavigationManager.immersiveMode
             canGoBack: NavigationManager.canGoBack
             filterActive: FilterState.hasActiveFilters
+            importState: ImportState.loadingState
+            importProgress: ImportState.progress
+            missingCount: LibraryState.missingCount
+            backendConnected: BackendConnection.isConnected
             viewTitle: {
                 switch (NavigationManager.currentView) {
                     case "library":    return "Library"
