@@ -28,6 +28,7 @@ class ImportViewModel(QObject):
     loadingStateChanged = Signal(str)
     pendingFilesChanged = Signal()
     importCompleted = Signal()
+    importJobDone = Signal(str)
     progressChanged = Signal(float)
     conflictChoicesChanged = Signal()
 
@@ -196,6 +197,8 @@ class ImportViewModel(QObject):
         self._progress = processed / total if total > 0 else 1.0
         self.progressChanged.emit(self._progress)
         self.importCompleted.emit()
+        if self._imported_count > 0:
+            self.importJobDone.emit(self._job_id)
         self._set_state("Complete")
 
     def _set_state(self, state: str) -> None:

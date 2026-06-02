@@ -147,16 +147,6 @@ Item {
             onLoadMoreRequested: LibraryState.load_more()
         }
 
-        // After import completes, filter library to show only the new images
-        Connections {
-            target: ImportState
-            function onLoadingStateChanged(state) {
-                if (state === "Complete") {
-                    FilterState.setImportJobFilter(ImportState.jobId)
-                }
-            }
-        }
-
         // Central navigation handler — restores library state and collapses
         // panels on first entry into image view (not on prev/next within it).
         Connections {
@@ -351,9 +341,8 @@ Item {
             z: 30
             loadingState: ImportState.loadingState
             pendingFiles: ImportState.pendingFiles
+            alreadyImportedFiles: ImportState.duplicateFiles
             conflictFiles: ImportState.conflictFiles
-            duplicateCount: ImportState.duplicateFiles.length
-            conflictCount: ImportState.conflictFiles.length
             invalidCount: ImportState.invalidFiles.length
             importedCount: ImportState.importedCount
             updatedCount: ImportState.updatedCount

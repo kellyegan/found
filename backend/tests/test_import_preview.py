@@ -31,9 +31,21 @@ def test_preview_detects_already_imported_path(client, image_file):
 
     response = client.post("/api/v1/images/import/preview", json={"paths": [str(image_file)]})
     data = response.json()["data"]
-    assert str(image_file) in data["already_imported"]
+    assert any(item["path"] == str(image_file) for item in data["already_imported"])
     assert data["new"] == []
     assert data["conflicts"] == []
+
+
+def test_preview_already_imported_item_has_image_id_and_filename(client, image_file):
+    client.post("/api/v1/images/import", json={"paths": [str(image_file)]})
+
+    response = client.post("/api/v1/images/import/preview", json={"paths": [str(image_file)]})
+    data = response.json()["data"]
+    assert len(data["already_imported"]) == 1
+    item = data["already_imported"][0]
+    assert item["path"] == str(image_file)
+    assert item["filename"] == "photo.jpg"
+    assert item["image_id"] is not None
 
 
 def test_preview_detects_hash_conflict(client, image_file, tmp_path):
@@ -82,7 +94,7 @@ def test_preview_mixed_buckets(client, image_file, tmp_path):
     assert response.status_code == 200
     data = response.json()["data"]
 
-    assert str(image_file) in data["already_imported"]
+    assert any(item["path"] == str(image_file) for item in data["already_imported"])
     assert str(new_img) in data["new"]
     assert any(c["path"] == str(conflict_img) for c in data["conflicts"])
     assert str(bad) in data["invalid"]

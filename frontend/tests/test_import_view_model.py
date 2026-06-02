@@ -21,7 +21,9 @@ from frontend.import_workflow.import_view_model import ImportViewModel
 
 SAMPLE_SCAN_RESULT = {
     "new": ["/path/a.jpg", "/path/b.png"],
-    "already_imported": ["/path/c.jpg"],
+    "already_imported": [
+        {"image_id": "uuid-2", "path": "/path/c.jpg", "filename": "c.jpg"}
+    ],
     "conflicts": [
         {
             "path": "/path/d.jpg",
@@ -182,7 +184,10 @@ def test_scan_populates_duplicate_files(qapp, tmp_path):
     vm = _vm(scanner=lambda paths: SAMPLE_SCAN_RESULT)
     vm.scanPaths([str(img)])
     wait_for_state(vm, "Previewing")
-    assert vm.duplicateFiles == ["/path/c.jpg"]
+    assert len(vm.duplicateFiles) == 1
+    assert vm.duplicateFiles[0]["path"] == "/path/c.jpg"
+    assert vm.duplicateFiles[0]["image_id"] == "uuid-2"
+    assert vm.duplicateFiles[0]["filename"] == "c.jpg"
 
 
 def test_scan_populates_conflict_files(qapp, tmp_path):
@@ -538,3 +543,54 @@ def test_updated_count_resets_on_cancel(qapp):
     wait_for_state(vm, "Complete")
     vm.cancel()
     assert vm.updatedCount == 0
+
+
+# ---------------------------------------------------------------------------
+# importJobDone signal — post-import library filter
+# ---------------------------------------------------------------------------
+
+
+def test_import_job_done_emitted_with_job_id(qapp):
+    received = []
+    vm = _vm(importer=lambda paths: "job-abc")
+    vm.importJobDone.connect(received.append)
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert received == ["job-abc"]
+
+
+def test_import_job_done_not_emitted_on_importer_failure(qapp):
+    received = []
+    vm = _vm(importer=lambda paths: None)
+    vm.importJobDone.connect(received.append)
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Error")
+    assert received == []
+
+
+def test_import_job_done_not_emitted_on_importer_raises(qapp):
+    received = []
+    def bad(paths):
+        raise RuntimeError("API error")
+    vm = _vm(importer=bad)
+    vm.importJobDone.connect(received.append)
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Error")
+    assert received == []
+
+
+def test_import_job_done_not_emitted_when_zero_imported(qapp):
+    received = []
+    vm = _vm(job_fetcher=lambda jid: {**SAMPLE_JOB_COMPLETE, "successful_imports": 0})
+    vm.importJobDone.connect(received.append)
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert received == []
