@@ -21,7 +21,7 @@ Covers:
 """
 
 import pytest
-from found_app.navigation.navigation_manager import NavigationManager
+from found_app.services.navigation import NavigationManager
 
 
 def _nm():

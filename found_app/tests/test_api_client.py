@@ -14,7 +14,7 @@ import pytest
 import httpx
 from unittest.mock import AsyncMock, MagicMock
 
-from found_app.api.client import ApiClient, ApiError, NetworkError, NotFoundError
+from found_app.core.api_client import ApiClient, ApiError, NetworkError, NotFoundError
 
 
 # ---------------------------------------------------------------------------

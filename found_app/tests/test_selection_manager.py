@@ -23,7 +23,7 @@ Covers:
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.selection.selection_manager import SelectionManager
+from found_app.services.selection import SelectionManager
 
 
 IDS = ["a", "b", "c", "d", "e"]

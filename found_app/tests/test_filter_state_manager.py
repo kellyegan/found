@@ -2,7 +2,7 @@
 
 import pytest
 
-from found_app.filters.filter_state_manager import FilterStateManager
+from found_app.services.filter_state import FilterStateManager
 
 
 # ---------------------------------------------------------------------------

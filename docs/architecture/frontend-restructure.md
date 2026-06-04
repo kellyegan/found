@@ -143,7 +143,7 @@ def main():
 
 ## Phased execution
 
-- [*] **Phase 0 — Package rename + ApiClient consolidation** _(Lowest blast radius — no logic changes)_ **COMPLETE**
+- [x] **Phase 0 — Package rename + ApiClient consolidation** _(Lowest blast radius — no logic changes)_ **COMPLETE**
 
 1. `git mv frontend found_app`
 2. Find/replace `from frontend.` → `from found_app.` across all source and test files
@@ -153,7 +153,7 @@ def main():
 
 ---
 
-- [ ] **Phase 1 — QML restructure** _(Impacts `test_qml_shell.py` only — no Python logic changes)_
+- [x] **Phase 1 — QML restructure** _(Impacts `test_qml_shell.py` only — no Python logic changes)_ **COMPLETE**
 
 1. Create `qml/shell/`, `qml/views/`, `qml/components/`
 2. Move QML files into subdirectories

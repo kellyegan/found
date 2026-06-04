@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
 from found_app.collection_editor.collection_editor_view_model import CollectionEditorViewModel
-from found_app.selection.selection_manager import SelectionManager
+from found_app.services.selection import SelectionManager
 
 
 SAMPLE_COLLECTIONS = [

@@ -10,7 +10,7 @@ Covers:
 """
 
 import pytest
-from found_app.state.app_state import AppState, AppStateManager
+from found_app.core.app_state import AppState, AppStateManager
 
 
 # ---------------------------------------------------------------------------

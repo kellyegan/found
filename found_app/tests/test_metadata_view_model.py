@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
 from found_app.metadata.metadata_view_model import MetadataViewModel
-from found_app.selection.selection_manager import SelectionManager
+from found_app.services.selection import SelectionManager
 
 
 SAMPLE_IMAGE = {
