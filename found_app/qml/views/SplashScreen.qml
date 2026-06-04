@@ -84,7 +84,7 @@ Item {
             anchors.right: parent.right
             anchors.rightMargin: (parent.width - titleBlock.width) / 2
             anchors.verticalCenter: parent.verticalCenter
-            text: root.appLicense.length > 0 ? "© 2026 Found — " + root.appLicense : ""
+            text: root.appLicense.length > 0 ? "©2026 Kelly Egan." + root.appLicense : ""
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
             color: Theme.textMuted
