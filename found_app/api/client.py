@@ -189,6 +189,60 @@ class ApiClient:
         except Exception:
             return False
 
+    def create_tag(self, name: str) -> dict | None:
+        try:
+            response = self._sync_client.post("/api/v1/tags", json={"name": name}, timeout=10.0)
+            data = response.json()
+            if data.get("success"):
+                return data.get("data")
+            if response.status_code == 409:
+                search = self._sync_client.get(
+                    "/api/v1/tags/search", params={"q": name}, timeout=10.0
+                )
+                search_data = search.json()
+                tags = search_data.get("data", []) if search_data.get("success") else []
+                for tag in tags:
+                    if tag.get("name", "").lower() == name.lower():
+                        return tag
+            return None
+        except Exception:
+            return None
+
+    def search_tags(self, term: str) -> list | None:
+        try:
+            response = self._sync_client.get(
+                "/api/v1/tags/search", params={"q": term}, timeout=10.0
+            )
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def fetch_image_tags(self, image_id: str) -> list | None:
+        try:
+            response = self._sync_client.get(f"/api/v1/images/{image_id}/tags", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def bulk_modify_tags(
+        self, image_ids: list, add_tag_ids: list, remove_tag_ids: list
+    ) -> bool:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/bulk/tags",
+                json={
+                    "image_ids": image_ids,
+                    "add_tag_ids": add_tag_ids,
+                    "remove_tag_ids": remove_tag_ids,
+                },
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
     async def close(self) -> None:
         await self._client.aclose()
 

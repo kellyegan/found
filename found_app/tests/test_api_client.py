@@ -508,3 +508,159 @@ def test_resolve_conflict_returns_false_on_exception():
     client, mock_http = make_sync_client()
     mock_http.patch.side_effect = Exception("timeout")
     assert client.resolve_conflict("img-1", "/new/path.jpg") is False
+
+
+# ---------------------------------------------------------------------------
+# create_tag
+# ---------------------------------------------------------------------------
+
+
+def test_create_tag_returns_tag_data_on_success():
+    client, mock_http = make_sync_client()
+    tag = {"id": "tag-1", "name": "nature"}
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": tag})
+    assert client.create_tag("nature") == tag
+
+
+def test_create_tag_returns_existing_tag_on_409():
+    client, mock_http = make_sync_client()
+    existing = {"id": "tag-1", "name": "Nature"}
+    mock_http.post.return_value = mock_response(
+        409, {"success": False, "error": {"code": "conflict", "message": "exists"}}
+    )
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [existing]}
+    )
+    assert client.create_tag("nature") == existing
+
+
+def test_create_tag_409_match_is_case_insensitive():
+    client, mock_http = make_sync_client()
+    existing = {"id": "tag-1", "name": "NATURE"}
+    mock_http.post.return_value = mock_response(
+        409, {"success": False, "error": {"code": "conflict", "message": "exists"}}
+    )
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [existing]}
+    )
+    assert client.create_tag("nature") == existing
+
+
+def test_create_tag_returns_none_when_409_search_finds_no_match():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        409, {"success": False, "error": {"code": "conflict", "message": "exists"}}
+    )
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [{"id": "tag-2", "name": "different"}]}
+    )
+    assert client.create_tag("nature") is None
+
+
+def test_create_tag_returns_none_on_other_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        400, {"success": False, "error": {"code": "invalid", "message": "bad"}}
+    )
+    assert client.create_tag("nature") is None
+
+
+def test_create_tag_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.create_tag("nature") is None
+
+
+# ---------------------------------------------------------------------------
+# search_tags
+# ---------------------------------------------------------------------------
+
+
+def test_search_tags_returns_list():
+    client, mock_http = make_sync_client()
+    tags = [{"id": "tag-1", "name": "nature"}, {"id": "tag-2", "name": "natural"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": tags})
+    assert client.search_tags("natur") == tags
+
+
+def test_search_tags_returns_empty_list_when_no_results():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": []})
+    assert client.search_tags("xyz") == []
+
+
+def test_search_tags_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.search_tags("natur") is None
+
+
+def test_search_tags_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.search_tags("natur") is None
+
+
+# ---------------------------------------------------------------------------
+# fetch_image_tags
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_image_tags_returns_list():
+    client, mock_http = make_sync_client()
+    tags = [{"id": "tag-1", "name": "nature"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": tags})
+    assert client.fetch_image_tags("img-1") == tags
+
+
+def test_fetch_image_tags_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.fetch_image_tags("img-1") is None
+
+
+def test_fetch_image_tags_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.fetch_image_tags("img-1") is None
+
+
+# ---------------------------------------------------------------------------
+# bulk_modify_tags
+# ---------------------------------------------------------------------------
+
+
+def test_bulk_modify_tags_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    assert client.bulk_modify_tags(["img-1"], ["tag-1"], []) is True
+
+
+def test_bulk_modify_tags_posts_correct_body():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.bulk_modify_tags(["img-1", "img-2"], ["tag-a"], ["tag-b"])
+    body = mock_http.post.call_args.kwargs["json"]
+    assert body == {
+        "image_ids": ["img-1", "img-2"],
+        "add_tag_ids": ["tag-a"],
+        "remove_tag_ids": ["tag-b"],
+    }
+
+
+def test_bulk_modify_tags_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.bulk_modify_tags(["img-1"], ["tag-1"], []) is False
+
+
+def test_bulk_modify_tags_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.bulk_modify_tags(["img-1"], ["tag-1"], []) is False

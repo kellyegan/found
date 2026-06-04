@@ -121,74 +121,6 @@ def _make_category_images_adder(base_url: str):
     return add
 
 
-def _make_tag_creator(base_url: str):
-    def create(name: str):
-        try:
-            response = httpx.post(
-                f"{base_url}/api/v1/tags",
-                json={"name": name},
-                timeout=10.0,
-            )
-            data = response.json()
-            if data.get("success"):
-                return data.get("data")
-            # Tag already exists (409) — find it by exact name
-            if response.status_code == 409:
-                search = httpx.get(
-                    f"{base_url}/api/v1/tags/search",
-                    params={"q": name},
-                    timeout=10.0,
-                )
-                search_data = search.json()
-                tags = search_data.get("data", []) if search_data.get("success") else []
-                for tag in tags:
-                    if tag.get("name", "").lower() == name.lower():
-                        return tag
-            return None
-        except Exception:
-            return None
-    return create
-
-
-def _make_tags_fetcher(base_url: str):
-    def fetch(term: str):
-        try:
-            response = httpx.get(f"{base_url}/api/v1/tags/search", params={"q": term}, timeout=10.0)
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-def _make_image_tags_fetcher(base_url: str):
-    def fetch(image_id: str):
-        try:
-            response = httpx.get(f"{base_url}/api/v1/images/{image_id}/tags", timeout=10.0)
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-def _make_bulk_tag_modifier(base_url: str):
-    def modify(image_ids: list, add_tag_ids: list, remove_tag_ids: list) -> bool:
-        try:
-            response = httpx.post(
-                f"{base_url}/api/v1/images/bulk/tags",
-                json={
-                    "image_ids": image_ids,
-                    "add_tag_ids": add_tag_ids,
-                    "remove_tag_ids": remove_tag_ids,
-                },
-                timeout=10.0,
-            )
-            return response.json().get("success", False)
-        except Exception:
-            return False
-    return modify
-
 
 def _make_image_categories_fetcher(base_url: str):
     def fetch(image_id: str):
@@ -330,16 +262,16 @@ def main():
         selection_manager=selection_manager,
     )
     tag_search_state = TagSearchViewModel(
-        tags_fetcher=_make_tags_fetcher(base_url),
+        tags_fetcher=api_client.search_tags,
         filter_state=filter_state,
     )
     tag_editor_search_state = TagSearchViewModel(
-        tags_fetcher=_make_tags_fetcher(base_url),
+        tags_fetcher=api_client.search_tags,
     )
     tag_editor_state = TagEditorViewModel(
-        image_tags_fetcher=_make_image_tags_fetcher(base_url),
-        tag_modifier=_make_bulk_tag_modifier(base_url),
-        tag_creator=_make_tag_creator(base_url),
+        image_tags_fetcher=api_client.fetch_image_tags,
+        tag_modifier=api_client.bulk_modify_tags,
+        tag_creator=api_client.create_tag,
         selection_manager=selection_manager,
     )
     category_editor_search_state = TagSearchViewModel(
