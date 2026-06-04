@@ -1,7 +1,7 @@
 from PySide6.QtCore import QObject
 
 from found_app.core.process_manager import BackendProcessManager
-from found_app.state.app_state import AppState, AppStateManager
+from found_app.core.app_state import AppState, AppStateManager
 
 
 class AppController(QObject):

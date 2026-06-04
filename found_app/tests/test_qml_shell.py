@@ -22,7 +22,7 @@ from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
 
 import found_app
 from found_app.theme.theme import ThemeManager
-from found_app.state.app_state import AppStateManager
+from found_app.core.app_state import AppStateManager
 from found_app.filters.filter_state_manager import FilterStateManager
 from found_app.library.view_model import LibraryViewModel
 from found_app.categories.categories_view_model import CategoriesViewModel

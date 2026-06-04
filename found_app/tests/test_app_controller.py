@@ -18,7 +18,7 @@ from PySide6.QtCore import QEventLoop, QTimer
 
 from found_app.core.app_controller import AppController
 from found_app.core.process_manager import BackendProcessManager
-from found_app.state.app_state import AppState, AppStateManager
+from found_app.core.app_state import AppState, AppStateManager
 
 
 # ---------------------------------------------------------------------------
