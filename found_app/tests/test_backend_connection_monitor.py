@@ -14,7 +14,7 @@ Covers:
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.backend.connection_monitor import (
+from found_app.core.connection_monitor import (
     BackendConnectionManager,
     BackendConnectionState,
 )

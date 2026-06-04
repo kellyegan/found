@@ -7,7 +7,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 from found_app.api.client import ApiClient
 from found_app.app.controller import AppController
-from found_app.backend.connection_monitor import BackendConnectionManager
+from found_app.core.connection_monitor import BackendConnectionManager
 from found_app.core.process_manager import BackendProcessManager
 from found_app.category_editor.category_editor_view_model import CategoryEditorViewModel
 from found_app.collection_editor.collection_editor_view_model import CollectionEditorViewModel
