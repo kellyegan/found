@@ -13,7 +13,7 @@ Covers:
 import pytest
 from PySide6.QtGui import QImage
 
-from found_app.library.thumbnail_provider import ThumbnailProvider, _ThumbnailLRU
+from found_app.providers.thumbnail_provider import ThumbnailProvider, _ThumbnailLRU
 
 
 def _make_image(w=10, h=10) -> QImage:
