@@ -20,7 +20,7 @@ from found_app.metadata.metadata_view_model import MetadataViewModel
 from found_app.services.navigation import NavigationManager
 from found_app.tag_editor.tag_editor_view_model import TagEditorViewModel
 from found_app.tag_search.tag_search_view_model import TagSearchViewModel
-from found_app.selection.selection_manager import SelectionManager
+from found_app.services.selection import SelectionManager
 from found_app.core.app_state import AppStateManager
 from found_app.categories.categories_view_model import CategoriesViewModel
 from found_app.theme.theme import ThemeManager
