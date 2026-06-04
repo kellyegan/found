@@ -80,87 +80,6 @@ def _make_collection_images_fetcher(base_url: str):
 
 
 
-def _make_categories_fetcher(base_url: str):
-    def fetch():
-        try:
-            response = httpx.get(f"{base_url}/api/v1/categories", timeout=10.0)
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-def _make_category_creator(base_url: str):
-    def create(name: str):
-        try:
-            response = httpx.post(
-                f"{base_url}/api/v1/categories",
-                json={"name": name, "description": ""},
-                timeout=10.0,
-            )
-            data = response.json()
-            return data.get("data") if data.get("success") else None
-        except Exception:
-            return None
-    return create
-
-
-
-def _make_category_images_adder(base_url: str):
-    def add(category_id: str, image_ids: list):
-        try:
-            response = httpx.post(
-                f"{base_url}/api/v1/images/bulk/categories",
-                json={"image_ids": image_ids, "add_category_ids": [category_id]},
-                timeout=10.0,
-            )
-            return response.json().get("success", False)
-        except Exception:
-            return False
-    return add
-
-
-
-def _make_image_categories_fetcher(base_url: str):
-    def fetch(image_id: str):
-        try:
-            response = httpx.get(f"{base_url}/api/v1/images/{image_id}/categories", timeout=10.0)
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-def _make_bulk_category_modifier(base_url: str):
-    def modify(image_ids: list, add_category_ids: list, remove_category_ids: list) -> bool:
-        try:
-            response = httpx.post(
-                f"{base_url}/api/v1/images/bulk/categories",
-                json={
-                    "image_ids": image_ids,
-                    "add_category_ids": add_category_ids,
-                    "remove_category_ids": remove_category_ids,
-                },
-                timeout=10.0,
-            )
-            return response.json().get("success", False)
-        except Exception:
-            return False
-    return modify
-
-
-def _make_category_searcher(base_url: str):
-    def search(term: str):
-        try:
-            response = httpx.get(f"{base_url}/api/v1/categories/search", params={"q": term}, timeout=10.0)
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return search
-
 
 def _make_image_collections_fetcher(base_url: str):
     def fetch(image_id: str):
@@ -221,9 +140,9 @@ def main():
         image_verifier=api_client.verify_image,
     )
     categories_state = CategoriesViewModel(
-        categories_fetcher=_make_categories_fetcher(base_url),
-        category_creator=_make_category_creator(base_url),
-        images_adder=_make_category_images_adder(base_url),
+        categories_fetcher=api_client.list_categories,
+        category_creator=api_client.create_category,
+        images_adder=api_client.add_images_to_category,
         filter_state=filter_state,
     )
     thumbnail_provider = ThumbnailProvider(base_url=base_url)
@@ -275,11 +194,11 @@ def main():
         selection_manager=selection_manager,
     )
     category_editor_search_state = TagSearchViewModel(
-        tags_fetcher=_make_category_searcher(base_url),
+        tags_fetcher=api_client.search_categories,
     )
     category_editor_state = CategoryEditorViewModel(
-        image_categories_fetcher=_make_image_categories_fetcher(base_url),
-        category_modifier=_make_bulk_category_modifier(base_url),
+        image_categories_fetcher=api_client.fetch_image_categories,
+        category_modifier=api_client.bulk_modify_categories,
         selection_manager=selection_manager,
     )
     collection_editor_state = CollectionEditorViewModel(

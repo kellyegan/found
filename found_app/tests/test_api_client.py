@@ -664,3 +664,186 @@ def test_bulk_modify_tags_returns_false_on_exception():
     client, mock_http = make_sync_client()
     mock_http.post.side_effect = Exception("timeout")
     assert client.bulk_modify_tags(["img-1"], ["tag-1"], []) is False
+
+
+# ---------------------------------------------------------------------------
+# list_categories
+# ---------------------------------------------------------------------------
+
+
+def test_list_categories_returns_list():
+    client, mock_http = make_sync_client()
+    cats = [{"id": "cat-1", "name": "Architecture"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": cats})
+    assert client.list_categories() == cats
+
+
+def test_list_categories_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.list_categories() is None
+
+
+def test_list_categories_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.list_categories() is None
+
+
+# ---------------------------------------------------------------------------
+# create_category
+# ---------------------------------------------------------------------------
+
+
+def test_create_category_returns_category_data():
+    client, mock_http = make_sync_client()
+    cat = {"id": "cat-1", "name": "Architecture"}
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": cat})
+    assert client.create_category("Architecture") == cat
+
+
+def test_create_category_posts_name_and_empty_description():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.create_category("Architecture")
+    body = mock_http.post.call_args.kwargs["json"]
+    assert body == {"name": "Architecture", "description": ""}
+
+
+def test_create_category_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.create_category("Architecture") is None
+
+
+def test_create_category_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.create_category("Architecture") is None
+
+
+# ---------------------------------------------------------------------------
+# search_categories
+# ---------------------------------------------------------------------------
+
+
+def test_search_categories_returns_list():
+    client, mock_http = make_sync_client()
+    cats = [{"id": "cat-1", "name": "Architecture"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": cats})
+    assert client.search_categories("arch") == cats
+
+
+def test_search_categories_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.search_categories("arch") is None
+
+
+def test_search_categories_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.search_categories("arch") is None
+
+
+# ---------------------------------------------------------------------------
+# add_images_to_category
+# ---------------------------------------------------------------------------
+
+
+def test_add_images_to_category_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    assert client.add_images_to_category("cat-1", ["img-1", "img-2"]) is True
+
+
+def test_add_images_to_category_wraps_category_id_in_list():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.add_images_to_category("cat-1", ["img-1"])
+    body = mock_http.post.call_args.kwargs["json"]
+    assert body["add_category_ids"] == ["cat-1"]
+    assert body["image_ids"] == ["img-1"]
+
+
+def test_add_images_to_category_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.add_images_to_category("cat-1", ["img-1"]) is False
+
+
+def test_add_images_to_category_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.add_images_to_category("cat-1", ["img-1"]) is False
+
+
+# ---------------------------------------------------------------------------
+# fetch_image_categories
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_image_categories_returns_list():
+    client, mock_http = make_sync_client()
+    cats = [{"id": "cat-1", "name": "Architecture"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": cats})
+    assert client.fetch_image_categories("img-1") == cats
+
+
+def test_fetch_image_categories_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.fetch_image_categories("img-1") is None
+
+
+def test_fetch_image_categories_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.fetch_image_categories("img-1") is None
+
+
+# ---------------------------------------------------------------------------
+# bulk_modify_categories
+# ---------------------------------------------------------------------------
+
+
+def test_bulk_modify_categories_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    assert client.bulk_modify_categories(["img-1"], ["cat-1"], []) is True
+
+
+def test_bulk_modify_categories_posts_correct_body():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.bulk_modify_categories(["img-1"], ["cat-a"], ["cat-b"])
+    body = mock_http.post.call_args.kwargs["json"]
+    assert body == {
+        "image_ids": ["img-1"],
+        "add_category_ids": ["cat-a"],
+        "remove_category_ids": ["cat-b"],
+    }
+
+
+def test_bulk_modify_categories_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.bulk_modify_categories(["img-1"], ["cat-1"], []) is False
+
+
+def test_bulk_modify_categories_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.bulk_modify_categories(["img-1"], ["cat-1"], []) is False

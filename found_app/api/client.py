@@ -243,6 +243,74 @@ class ApiClient:
         except Exception:
             return False
 
+    def list_categories(self) -> list | None:
+        try:
+            response = self._sync_client.get("/api/v1/categories", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def create_category(self, name: str) -> dict | None:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/categories",
+                json={"name": name, "description": ""},
+                timeout=10.0,
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
+    def search_categories(self, term: str) -> list | None:
+        try:
+            response = self._sync_client.get(
+                "/api/v1/categories/search", params={"q": term}, timeout=10.0
+            )
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def add_images_to_category(self, category_id: str, image_ids: list) -> bool:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/bulk/categories",
+                json={"image_ids": image_ids, "add_category_ids": [category_id]},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
+    def fetch_image_categories(self, image_id: str) -> list | None:
+        try:
+            response = self._sync_client.get(
+                f"/api/v1/images/{image_id}/categories", timeout=10.0
+            )
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def bulk_modify_categories(
+        self, image_ids: list, add_category_ids: list, remove_category_ids: list
+    ) -> bool:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/bulk/categories",
+                json={
+                    "image_ids": image_ids,
+                    "add_category_ids": add_category_ids,
+                    "remove_category_ids": remove_category_ids,
+                },
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
     async def close(self) -> None:
         await self._client.aclose()
 
