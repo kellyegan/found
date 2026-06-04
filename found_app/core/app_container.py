@@ -7,7 +7,7 @@ from found_app.core.connection_monitor import BackendConnectionManager
 from found_app.core.process_manager import BackendProcessManager
 from found_app.viewmodels.categories_view_model import CategoriesViewModel
 from found_app.viewmodels.category_editor_view_model import CategoryEditorViewModel
-from found_app.collection_editor.collection_editor_view_model import CollectionEditorViewModel
+from found_app.viewmodels.collection_editor_view_model import CollectionEditorViewModel
 from found_app.viewmodels.collections_view_model import CollectionsViewModel
 from found_app.viewmodels.import_view_model import ImportViewModel
 from found_app.providers.thumbnail_provider import ThumbnailProvider
