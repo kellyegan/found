@@ -27,7 +27,7 @@ from found_app.services.filter_state import FilterStateManager
 from found_app.viewmodels.library_view_model import LibraryViewModel
 from found_app.categories.categories_view_model import CategoriesViewModel
 from found_app.collections.collections_view_model import CollectionsViewModel
-from found_app.import_workflow.import_view_model import ImportViewModel
+from found_app.viewmodels.import_view_model import ImportViewModel
 from found_app.viewmodels.metadata_view_model import MetadataViewModel
 from found_app.viewmodels.tag_editor_view_model import TagEditorViewModel
 from found_app.viewmodels.tag_search_view_model import TagSearchViewModel

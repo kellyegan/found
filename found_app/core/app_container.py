@@ -9,7 +9,7 @@ from found_app.categories.categories_view_model import CategoriesViewModel
 from found_app.category_editor.category_editor_view_model import CategoryEditorViewModel
 from found_app.collection_editor.collection_editor_view_model import CollectionEditorViewModel
 from found_app.collections.collections_view_model import CollectionsViewModel
-from found_app.import_workflow.import_view_model import ImportViewModel
+from found_app.viewmodels.import_view_model import ImportViewModel
 from found_app.providers.thumbnail_provider import ThumbnailProvider
 from found_app.viewmodels.library_view_model import LibraryViewModel
 from found_app.viewmodels.metadata_view_model import MetadataViewModel
