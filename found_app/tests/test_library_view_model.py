@@ -19,8 +19,8 @@ Covers:
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.library.view_model import LibraryViewModel
-from found_app.library.thumbnail_grid_model import ThumbnailGridModel
+from found_app.viewmodels.library_view_model import LibraryViewModel
+from found_app.models.thumbnail_grid_model import ThumbnailGridModel
 from found_app.services.filter_state import FilterStateManager
 
 

@@ -3,7 +3,7 @@
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.tag_search.tag_search_view_model import TagSearchViewModel
+from found_app.viewmodels.tag_search_view_model import TagSearchViewModel
 from found_app.services.filter_state import FilterStateManager
 
 

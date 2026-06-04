@@ -3,7 +3,7 @@
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.categories.categories_view_model import CategoriesViewModel
+from found_app.viewmodels.categories_view_model import CategoriesViewModel
 
 
 SAMPLE_CATEGORIES = [

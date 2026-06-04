@@ -16,7 +16,7 @@ import pytest
 from pathlib import Path
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.import_workflow.import_view_model import ImportViewModel
+from found_app.viewmodels.import_view_model import ImportViewModel
 
 
 SAMPLE_SCAN_RESULT = {

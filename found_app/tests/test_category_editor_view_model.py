@@ -3,7 +3,7 @@
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.category_editor.category_editor_view_model import CategoryEditorViewModel
+from found_app.viewmodels.category_editor_view_model import CategoryEditorViewModel
 from found_app.services.selection import SelectionManager
 
 
