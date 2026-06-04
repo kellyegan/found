@@ -69,7 +69,7 @@ Item {
             id: divider
             anchors { top: header.bottom; left: parent.left; right: parent.right }
             height: 1
-            color: "#0000000"  //Invisible but seems to function to control layout
+            color: "#00000000"  //Invisible but seems to function to control layout
         }
 
         // New collection input area
@@ -89,7 +89,7 @@ Item {
                     id: newCollectionInput
                     anchors { left: parent.left; leftMargin: 8; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
                     color: "#cccccc"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeSm
                     clip: true
                     Keys.onReturnPressed: {
                         if (text.trim().length > 0) {
@@ -102,7 +102,7 @@ Item {
                         anchors.fill: parent
                         text: "New collection…"
                         color: "#555555"
-                        font.pixelSize: 12
+                        font.pixelSize: Theme.fontSizeSm
                         visible: parent.text.length === 0
                     }
                 }
@@ -119,7 +119,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: "+"
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeMd
                     color: "#88cc88"
                 }
 
