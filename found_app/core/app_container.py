@@ -16,7 +16,7 @@ from found_app.metadata.metadata_view_model import MetadataViewModel
 from found_app.services.filter_state import FilterStateManager
 from found_app.services.navigation import NavigationManager
 from found_app.services.selection import SelectionManager
-from found_app.tag_editor.tag_editor_view_model import TagEditorViewModel
+from found_app.viewmodels.tag_editor_view_model import TagEditorViewModel
 from found_app.viewmodels.tag_search_view_model import TagSearchViewModel
 from found_app.theme.theme import ThemeManager
 from found_app.version import get_app_metadata

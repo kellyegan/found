@@ -3,7 +3,7 @@
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.tag_editor.tag_editor_view_model import TagEditorViewModel
+from found_app.viewmodels.tag_editor_view_model import TagEditorViewModel
 from found_app.services.selection import SelectionManager
 
 
