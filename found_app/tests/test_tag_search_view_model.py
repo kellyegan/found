@@ -4,7 +4,7 @@ import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
 from found_app.tag_search.tag_search_view_model import TagSearchViewModel
-from found_app.filters.filter_state_manager import FilterStateManager
+from found_app.services.filter_state import FilterStateManager
 
 
 SAMPLE_TAGS = [

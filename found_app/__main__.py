@@ -12,7 +12,7 @@ from found_app.core.process_manager import BackendProcessManager
 from found_app.category_editor.category_editor_view_model import CategoryEditorViewModel
 from found_app.collection_editor.collection_editor_view_model import CollectionEditorViewModel
 from found_app.collections.collections_view_model import CollectionsViewModel
-from found_app.filters.filter_state_manager import FilterStateManager
+from found_app.services.filter_state import FilterStateManager
 from found_app.import_workflow.import_view_model import ImportViewModel
 from found_app.library.thumbnail_provider import ThumbnailProvider
 from found_app.library.view_model import LibraryViewModel
