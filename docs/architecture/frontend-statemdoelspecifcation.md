@@ -1,4 +1,4 @@
-# FOUND — Phase 2 State Model Specification
+# FOUND — Frontend State Model Specification
 
 ## Purpose
 

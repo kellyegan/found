@@ -1,8 +1,8 @@
-# FOUND — Phase 2 UI Layout
+# FOUND — Frontend UI Layout
 
 This document defines the spatial layout of each view in the Found application: which zones exist, what elements populate each zone, and how zones behave under different states.
 
-This is a design reference document. Functional behavior, interaction models, and component definitions are specified in the Phase 2 Specification and Component Inventory.
+This is a design reference document. Functional behavior, interaction models, and component definitions are specified in the Frontend Specification and Component Inventory.
 
 ---
 

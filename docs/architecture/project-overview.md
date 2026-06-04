@@ -37,21 +37,21 @@ The frontend desktop GUI application is intended to support:
 - Making and viewing collections of image
 - Future interfaces for viewing, annotating and working with images
 
-### Phase 1: Core API engine (COMPLETE)
+### Core API engine (COMPLETE)
 
 - **Model and database:** A lightweight, local database to store image paths, hashes (for duplicate detection), and metadata.
 - **Image not stored centrally:** Original image files remain in their existing locations
 - **API Layer:** A RESTful API (localhost) to facilitate communication between the file system, the UI, and browser extensions and to allow interface with other independent tools.
 - **Thumbnail cache:** Fast browsing through cached thumbnails
 
-### Phase 2: Graphical User Interface for interacting
+### Graphical User Interface for interacting (COMPLETE)
 
 - **Desktop application:** to manage the images, import, browse, tag and organize. Communicates exclusively through the API.
 - **Thumbnail browsing:** The desktop GUI's main interface is a grid of thumbnails for browsing with the ability to filter, and preview individual images.
 - **Image viewer:** Large image viewer to look at individual images.
 - **Importing interface:** It will also provide support for managing imports, making decisions about duplicates and providing bulk actions on imports like tagging and metadata.
 
-### Phase 3: AI, extensions & visualization
+### FUTURE: AI, extensions & visualization
 
 - **Mood board:** An "infinite canvas" (similar to PureRef) where users can drag indexed images to create spatial arrangements.
 - **Slideshow:** For general viewing or timed for drawing reference
