@@ -25,7 +25,7 @@ from found_app.theme.theme import ThemeManager
 from found_app.core.app_state import AppStateManager
 from found_app.services.filter_state import FilterStateManager
 from found_app.viewmodels.library_view_model import LibraryViewModel
-from found_app.categories.categories_view_model import CategoriesViewModel
+from found_app.viewmodels.categories_view_model import CategoriesViewModel
 from found_app.collections.collections_view_model import CollectionsViewModel
 from found_app.viewmodels.import_view_model import ImportViewModel
 from found_app.viewmodels.metadata_view_model import MetadataViewModel

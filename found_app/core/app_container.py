@@ -5,7 +5,7 @@ from found_app.core.app_controller import AppController
 from found_app.core.app_state import AppStateManager
 from found_app.core.connection_monitor import BackendConnectionManager
 from found_app.core.process_manager import BackendProcessManager
-from found_app.categories.categories_view_model import CategoriesViewModel
+from found_app.viewmodels.categories_view_model import CategoriesViewModel
 from found_app.category_editor.category_editor_view_model import CategoryEditorViewModel
 from found_app.collection_editor.collection_editor_view_model import CollectionEditorViewModel
 from found_app.collections.collections_view_model import CollectionsViewModel
