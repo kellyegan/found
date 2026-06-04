@@ -5,7 +5,7 @@ from PySide6.QtCore import QThreadPool
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
-from found_app.api.client import ApiClient
+from found_app.core.api_client import ApiClient
 from found_app.core.app_controller import AppController
 from found_app.core.connection_monitor import BackendConnectionManager
 from found_app.core.process_manager import BackendProcessManager
