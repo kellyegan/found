@@ -29,7 +29,7 @@ Or install individually:
 
 ```
 pip install -r backend/requirements-dev.txt
-pip install -r frontend/requirements-dev.txt
+pip install -r found_app/requirements-dev.txt
 ```
 
 ## Commands
@@ -38,10 +38,10 @@ pip install -r frontend/requirements-dev.txt
 
 ```bash
 # Run the application
-python -m frontend
+python -m found_app
 
 # Run frontend tests (from project root)
-python -m pytest frontend/tests/ -v
+python -m pytest found_app/tests/ -v
 ```
 
 ### Backend
@@ -80,7 +80,7 @@ backend/
 ├── requirements.txt
 └── requirements-dev.txt
 
-frontend/
+found_app/
 ├── __main__.py          # Entry point — wires all components and starts the app
 ├── api/
 │   └── client.py        # Async ApiClient (httpx); list_images(), health_check()
