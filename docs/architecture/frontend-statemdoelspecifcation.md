@@ -122,16 +122,19 @@ Controls browser-style navigation history.
 
 Each navigation entry stores:
 
-| Property        | Purpose                 |
-| --------------- | ----------------------- |
-| route           | Current view            |
-| filters         | Active filters          |
-| selection       | Selected image IDs      |
-| scrollPosition  | Thumbnail grid position |
-| collectionId    | Current collection      |
-| focusedImageId  | Active image            |
-| fullscreenState | Image view fullscreen   |
-| timestamp       | History ordering        |
+| Property        | Purpose                                    |
+| --------------- | ------------------------------------------ |
+| view            | Current route                              |
+| collection_id   | Active collection                          |
+| collection_name | Active collection display name             |
+| image_id        | Active image (ImageView only)              |
+| scroll_x        | Horizontal scroll position                 |
+| selection_ids   | Selected image IDs                         |
+| primary_id      | Focused image ID                           |
+| anchor_id       | Shift-select anchor ID                     |
+| context_ids     | Ordered image IDs for next/prev navigation |
+
+Filters are **not** stored per navigation entry. `FilterStateManager` is global and persists independently across all navigation events.
 
 ---
 
@@ -172,10 +175,12 @@ Occurs when:
 
 Returning to previous route restores:
 
-- filters
-- selection
-- scroll position
-- browsing context
+- selection (selection_ids, primary_id, anchor_id)
+- scroll position (scroll_x)
+- collection context (collection_id, collection_name)
+- image context (context_ids, image_id)
+
+Filters are not restored from the navigation entry — they persist globally throughout the session via `FilterStateManager`.
 
 ---
 
@@ -338,6 +343,8 @@ Selection resets only when:
 
 # 7. Thumbnail Grid State
 
+> **Not yet implemented as a standalone state manager.** Grid layout state currently lives inside the `ThumbnailGrid.qml` component. This section describes the planned design.
+
 ## ThumbnailGridState
 
 Controls rendering behavior of thumbnail browsing.
@@ -391,6 +398,8 @@ Thumbnail tiles may enter:
 ---
 
 # 8. Image View State
+
+> **Not yet implemented as a standalone ViewModel.** Image view state is currently carried by `NavigationManager.currentEntry` (`image_id`, `context_ids`) and managed in `ImageView.qml`. This section describes the planned design for a dedicated `ImageViewState` ViewModel.
 
 ## ImageViewState
 
@@ -471,6 +480,8 @@ On failure, the UI should revert the optimistic update and display an error.
 
 # 10. Sidebar State
 
+> **Not yet implemented as a standalone state manager.** Sidebar open/close state is currently managed in QML. This section describes the planned design.
+
 ## SidebarState
 
 Controls collection sidebar behavior.
@@ -503,7 +514,7 @@ Controls collection sidebar behavior.
 
 # 11. Import System State
 
-## ImportJobManager
+## ImportViewModel (registered as `ImportState`)
 
 Controls import workflow and background job tracking.
 
@@ -526,24 +537,26 @@ Controls import workflow and background job tracking.
 
 | State      | Description                                                         |
 | ---------- | ------------------------------------------------------------------- |
-| Previewing | Paths sent to backend preview endpoint; awaiting categorised result |
-| Reviewing  | Import confirm modal open; user reviewing preview and any conflicts |
-| Importing  | Backend processing                                                  |
-| Completed  | Import succeeded                                                    |
-| Failed     | Import failure                                                      |
-| Cancelled  | User cancelled                                                      |
+| Idle       | No active import                                                    |
+| Scanning   | Paths being expanded and checked against backend preview endpoint   |
+| Previewing | Scan complete; results available for user review before confirming  |
+| Importing  | Backend processing confirmed files                                  |
+| Complete   | Import succeeded                                                    |
+| Error      | Scan or import failure                                              |
+
+Cancelling during any state resets back to `Idle`. The review step between `Previewing` and `Importing` is handled in QML — there is no separate `Reviewing` state.
 
 ---
 
-## Concurrent Imports
+## Single Job Model
 
-Multiple import jobs may exist simultaneously.
-
-Each job maintains independent state.
+Only one import job runs at a time. Starting a new import cancels any in-progress state.
 
 ---
 
 # 12. Notification State
+
+> **Not yet implemented.** This section describes the planned design.
 
 ## NotificationManager
 
@@ -603,6 +616,8 @@ When disconnected at runtime:
 
 # 14. Drag & Drop State
 
+> **Not yet implemented.** This section describes the planned design.
+
 ## DragDropState
 
 Tracks active drag operations.
@@ -636,6 +651,8 @@ Tracks active drag operations.
 
 # 15. Empty State Model
 
+> **Not yet implemented as a standalone manager.** Empty states are currently handled inline in QML views. This section describes the planned design.
+
 ## EmptyStateManager
 
 Controls empty-state UI presentation.
@@ -653,7 +670,45 @@ Controls empty-state UI presentation.
 
 ---
 
-# 16. Future State Expansion
+# 16. Tag & Category & Collection Management State
+
+The following ViewModels are fully implemented and registered as context properties. They handle the create/edit/search workflows for tags, categories, and collections.
+
+## CollectionsState
+
+Owns the list of all collections. Provides load, create, and refresh operations.
+
+## CollectionEditorState
+
+Manages the active add-to-collection workflow: which images are being added and which collection is the target.
+
+## CategoriesState
+
+Owns the list of all categories. Provides load and refresh.
+
+## CategoryEditorState
+
+Manages the active category assignment workflow for selected images.
+
+## CategoryEditorSearchState
+
+Search/filter state for the category picker within the editor.
+
+## TagEditorState
+
+Manages tag assignment for selected images. Tracks current tags and pending edits.
+
+## TagEditorSearchState
+
+Search/filter state for the tag picker within the editor.
+
+## TagSearchState
+
+Drives the global tag search field in `TitleBar`. Produces filter entries consumed by `FilterStateManager`.
+
+---
+
+# 17. Future State Expansion
 
 Future phases may add:
 
