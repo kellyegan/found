@@ -45,7 +45,7 @@ class ThemeManager(QObject):
 
     @Property(str, constant=True)
     def fontFamily(self) -> str:
-        return "Inter, -apple-system, sans-serif"
+        return "Inter"
 
     @Property(int, constant=True)
     def fontSizeSm(self) -> int:
