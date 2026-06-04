@@ -57,9 +57,10 @@ Item {
             Text {
                 anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
                 text: "Collections"
-                font.pixelSize: 14
-                font.weight: Font.Medium
-                color: "#ffffff"
+                font.pixelSize: Theme.fontSizeMd
+                font.weight: Font.Regular
+                font.capitalization: Font.AllUppercase
+                color: "#cccccc"
             }
         }
 
