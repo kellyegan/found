@@ -1,4 +1,6 @@
 import QtQuick
+import "../views"
+import "../components"
 
 Item {
     id: root

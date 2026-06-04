@@ -102,15 +102,15 @@ def load_component(engine, filename: str):
 
 
 def test_splash_screen_qml_exists():
-    assert (QML_DIR / "SplashScreen.qml").exists()
+    assert (QML_DIR / "views/SplashScreen.qml").exists()
 
 
 def test_main_router_qml_exists():
-    assert (QML_DIR / "MainRouter.qml").exists()
+    assert (QML_DIR / "shell/MainRouter.qml").exists()
 
 
 def test_app_window_qml_exists():
-    assert (QML_DIR / "AppWindow.qml").exists()
+    assert (QML_DIR / "shell/AppWindow.qml").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -119,71 +119,71 @@ def test_app_window_qml_exists():
 
 
 def test_splash_screen_loads(engine):
-    load_component(engine, "SplashScreen.qml")
+    load_component(engine, "views/SplashScreen.qml")
 
 
 def test_splash_screen_has_status_text_property(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     assert obj.property("statusText") is not None or obj.property("statusText") == ""
 
 
 def test_splash_screen_status_text_defaults_to_empty(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     assert obj.property("statusText") == ""
 
 
 def test_splash_screen_status_text_is_writable(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     obj.setProperty("statusText", "Connecting…")
     assert obj.property("statusText") == "Connecting…"
 
 
 def test_splash_screen_has_error_defaults_to_false(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     assert obj.property("hasError") is False
 
 
 def test_splash_screen_has_error_is_writable(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     obj.setProperty("hasError", True)
     assert obj.property("hasError") is True
 
 
 def test_splash_screen_app_version_defaults_to_empty(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     assert obj.property("appVersion") == ""
 
 
 def test_splash_screen_app_version_is_writable(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     obj.setProperty("appVersion", "0.1.0")
     assert obj.property("appVersion") == "0.1.0"
 
 
 def test_splash_screen_app_license_defaults_to_empty(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     assert obj.property("appLicense") == ""
 
 
 def test_splash_screen_app_license_is_writable(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     obj.setProperty("appLicense", "GNU GPL v3.0")
     assert obj.property("appLicense") == "GNU GPL v3.0"
 
 
 def test_splash_screen_is_ready_defaults_to_false(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     assert obj.property("isReady") is False
 
 
 def test_splash_screen_is_ready_is_writable(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     obj.setProperty("isReady", True)
     assert obj.property("isReady") is True
 
 
 def test_splash_screen_has_dismissed_signal(engine):
-    obj = load_component(engine, "SplashScreen.qml")
+    obj = load_component(engine, "views/SplashScreen.qml")
     received = []
     obj.dismissed.connect(lambda: received.append(1))
     assert isinstance(received, list)
@@ -195,16 +195,16 @@ def test_splash_screen_has_dismissed_signal(engine):
 
 
 def test_main_router_loads(engine):
-    load_component(engine, "MainRouter.qml")
+    load_component(engine, "shell/MainRouter.qml")
 
 
 def test_main_router_app_state_defaults_to_launching(engine):
-    obj = load_component(engine, "MainRouter.qml")
+    obj = load_component(engine, "shell/MainRouter.qml")
     assert obj.property("appState") == "Launching"
 
 
 def test_main_router_app_state_is_writable(engine):
-    obj = load_component(engine, "MainRouter.qml")
+    obj = load_component(engine, "shell/MainRouter.qml")
     obj.setProperty("appState", "Ready")
     assert obj.property("appState") == "Ready"
 
@@ -220,41 +220,41 @@ def test_main_router_app_state_is_writable(engine):
 
 
 def test_library_view_qml_exists():
-    assert (QML_DIR / "LibraryView.qml").exists()
+    assert (QML_DIR / "views/LibraryView.qml").exists()
 
 
 def test_library_view_loads(engine):
-    load_component(engine, "LibraryView.qml")
+    load_component(engine, "views/LibraryView.qml")
 
 
 def test_library_view_has_loading_state_property(engine):
-    obj = load_component(engine, "LibraryView.qml")
+    obj = load_component(engine, "views/LibraryView.qml")
     assert obj.property("loadingState") is not None or obj.property("loadingState") == ""
 
 
 def test_library_view_loading_state_defaults_to_loading(engine):
-    obj = load_component(engine, "LibraryView.qml")
+    obj = load_component(engine, "views/LibraryView.qml")
     assert obj.property("loadingState") == "Loading"
 
 
 def test_library_view_loading_state_is_writable(engine):
-    obj = load_component(engine, "LibraryView.qml")
+    obj = load_component(engine, "views/LibraryView.qml")
     obj.setProperty("loadingState", "Empty")
     assert obj.property("loadingState") == "Empty"
 
 
 def test_library_view_has_no_is_filtered_property(engine):
-    obj = load_component(engine, "LibraryView.qml")
+    obj = load_component(engine, "views/LibraryView.qml")
     assert obj.property("isFiltered") is None
 
 
 def test_library_view_left_panel_open_defaults_to_false(engine):
-    obj = load_component(engine, "LibraryView.qml")
+    obj = load_component(engine, "views/LibraryView.qml")
     assert obj.property("leftPanelOpen") is False
 
 
 def test_library_view_right_panel_open_defaults_to_false(engine):
-    obj = load_component(engine, "LibraryView.qml")
+    obj = load_component(engine, "views/LibraryView.qml")
     assert obj.property("rightPanelOpen") is False
 
 
@@ -314,41 +314,41 @@ def test_main_qml_loads_with_app_window(qapp):
 
 
 def test_thumbnail_tile_qml_exists():
-    assert (QML_DIR / "ThumbnailTile.qml").exists()
+    assert (QML_DIR / "components/ThumbnailTile.qml").exists()
 
 
 def test_thumbnail_tile_loads(engine):
-    load_component(engine, "ThumbnailTile.qml")
+    load_component(engine, "components/ThumbnailTile.qml")
 
 
 def test_thumbnail_tile_has_thumbnail_url_property(engine):
-    obj = load_component(engine, "ThumbnailTile.qml")
+    obj = load_component(engine, "components/ThumbnailTile.qml")
     assert obj.property("thumbnailUrl") == ""
 
 
 def test_thumbnail_tile_has_file_status_property(engine):
-    obj = load_component(engine, "ThumbnailTile.qml")
+    obj = load_component(engine, "components/ThumbnailTile.qml")
     assert obj.property("fileStatus") == "available"
 
 
 def test_thumbnail_tile_has_selected_property(engine):
-    obj = load_component(engine, "ThumbnailTile.qml")
+    obj = load_component(engine, "components/ThumbnailTile.qml")
     assert obj.property("selected") is False
 
 
 def test_thumbnail_tile_has_image_id_property(engine):
-    obj = load_component(engine, "ThumbnailTile.qml")
+    obj = load_component(engine, "components/ThumbnailTile.qml")
     assert obj.property("imageId") == ""
 
 
 def test_thumbnail_tile_image_id_is_writable(engine):
-    obj = load_component(engine, "ThumbnailTile.qml")
+    obj = load_component(engine, "components/ThumbnailTile.qml")
     obj.setProperty("imageId", "test-uuid-123")
     assert obj.property("imageId") == "test-uuid-123"
 
 
 def test_thumbnail_tile_has_inset_property(engine):
-    obj = load_component(engine, "ThumbnailTile.qml")
+    obj = load_component(engine, "components/ThumbnailTile.qml")
     assert obj.property("inset") == 0
 
 
@@ -358,42 +358,42 @@ def test_thumbnail_tile_has_inset_property(engine):
 
 
 def test_thumbnail_grid_qml_exists():
-    assert (QML_DIR / "ThumbnailGrid.qml").exists()
+    assert (QML_DIR / "components/ThumbnailGrid.qml").exists()
 
 
 def test_thumbnail_grid_loads(engine):
-    load_component(engine, "ThumbnailGrid.qml")
+    load_component(engine, "components/ThumbnailGrid.qml")
 
 
 def test_thumbnail_grid_has_model_property(engine):
-    obj = load_component(engine, "ThumbnailGrid.qml")
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
     # model defaults to null — property should exist and be readable
     assert obj.property("model") is None or obj.property("model") is not None
 
 
 def test_thumbnail_grid_has_scroll_x_property(engine):
-    obj = load_component(engine, "ThumbnailGrid.qml")
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
     edge_margin = obj.property("gridEdgeMargin")
     assert obj.property("scrollX") == -float(edge_margin)
 
 
 def test_thumbnail_grid_has_tile_gap_property(engine):
-    obj = load_component(engine, "ThumbnailGrid.qml")
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
     assert obj.property("tileGap") == 20
 
 
 def test_thumbnail_grid_has_grid_edge_margin_property(engine):
-    obj = load_component(engine, "ThumbnailGrid.qml")
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
     assert obj.property("gridEdgeMargin") == 40
 
 
 def test_thumbnail_grid_left_panel_open_defaults_to_false(engine):
-    obj = load_component(engine, "ThumbnailGrid.qml")
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
     assert obj.property("leftPanelOpen") is False
 
 
 def test_thumbnail_grid_right_panel_open_defaults_to_false(engine):
-    obj = load_component(engine, "ThumbnailGrid.qml")
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
     assert obj.property("rightPanelOpen") is False
 
 
@@ -403,31 +403,31 @@ def test_thumbnail_grid_right_panel_open_defaults_to_false(engine):
 
 
 def test_title_bar_qml_exists():
-    assert (QML_DIR / "TitleBar.qml").exists()
+    assert (QML_DIR / "shell/TitleBar.qml").exists()
 
 
 def test_title_bar_loads(engine):
-    load_component(engine, "TitleBar.qml")
+    load_component(engine, "shell/TitleBar.qml")
 
 
 def test_title_bar_can_go_back_defaults_to_false(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("canGoBack") is False
 
 
 def test_title_bar_can_go_back_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("canGoBack", True)
     assert obj.property("canGoBack") is True
 
 
 def test_title_bar_view_title_defaults_to_empty(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("viewTitle") == ""
 
 
 def test_title_bar_view_title_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("viewTitle", "Library")
     assert obj.property("viewTitle") == "Library"
 
@@ -438,55 +438,55 @@ def test_title_bar_view_title_is_writable(engine):
 
 
 def test_image_view_qml_exists():
-    assert (QML_DIR / "ImageView.qml").exists()
+    assert (QML_DIR / "views/ImageView.qml").exists()
 
 
 def test_image_view_loads(engine):
-    load_component(engine, "ImageView.qml")
+    load_component(engine, "views/ImageView.qml")
 
 
 def test_image_view_image_id_defaults_to_empty(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("imageId") == ""
 
 
 def test_image_view_image_url_defaults_to_empty(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("imageUrl") == ""
 
 
 def test_image_view_filename_defaults_to_empty(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("filename") == ""
 
 
 def test_image_view_file_status_defaults_to_available(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("fileStatus") == "available"
 
 
 def test_image_view_has_next_defaults_to_false(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("hasNext") is False
 
 
 def test_image_view_has_prev_defaults_to_false(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("hasPrev") is False
 
 
 def test_image_view_zoom_level_defaults_to_one(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("zoomLevel") == 1.0
 
 
 def test_image_view_pan_offset_x_defaults_to_zero(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("panOffsetX") == 0.0
 
 
 def test_image_view_pan_offset_y_defaults_to_zero(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     assert obj.property("panOffsetY") == 0.0
 
 
@@ -496,27 +496,27 @@ def test_image_view_pan_offset_y_defaults_to_zero(engine):
 
 
 def test_image_view_has_prev_requested_signal(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     received = []
     obj.prevRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_image_view_has_next_requested_signal(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     received = []
     obj.nextRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_image_view_has_next_is_writable(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     obj.setProperty("hasNext", True)
     assert obj.property("hasNext") is True
 
 
 def test_image_view_has_prev_is_writable(engine):
-    obj = load_component(engine, "ImageView.qml")
+    obj = load_component(engine, "views/ImageView.qml")
     obj.setProperty("hasPrev", True)
     assert obj.property("hasPrev") is True
 
@@ -527,25 +527,25 @@ def test_image_view_has_prev_is_writable(engine):
 
 
 def test_collection_item_qml_exists():
-    assert (QML_DIR / "CollectionItem.qml").exists()
+    assert (QML_DIR / "components/CollectionItem.qml").exists()
 
 
 def test_collection_item_loads(engine):
-    load_component(engine, "CollectionItem.qml")
+    load_component(engine, "components/CollectionItem.qml")
 
 
 def test_collection_item_collection_id_defaults_to_empty(engine):
-    obj = load_component(engine, "CollectionItem.qml")
+    obj = load_component(engine, "components/CollectionItem.qml")
     assert obj.property("collectionId") == ""
 
 
 def test_collection_item_collection_name_defaults_to_empty(engine):
-    obj = load_component(engine, "CollectionItem.qml")
+    obj = load_component(engine, "components/CollectionItem.qml")
     assert obj.property("collectionName") == ""
 
 
 def test_collection_item_is_drop_target_defaults_to_false(engine):
-    obj = load_component(engine, "CollectionItem.qml")
+    obj = load_component(engine, "components/CollectionItem.qml")
     assert obj.property("isDropTarget") is False
 
 
@@ -555,20 +555,20 @@ def test_collection_item_is_drop_target_defaults_to_false(engine):
 
 
 def test_collections_sidebar_qml_exists():
-    assert (QML_DIR / "CollectionsSidebar.qml").exists()
+    assert (QML_DIR / "components/CollectionsSidebar.qml").exists()
 
 
 def test_collections_sidebar_loads(engine):
-    load_component(engine, "CollectionsSidebar.qml")
+    load_component(engine, "components/CollectionsSidebar.qml")
 
 
 def test_collections_sidebar_open_defaults_to_false(engine):
-    obj = load_component(engine, "CollectionsSidebar.qml")
+    obj = load_component(engine, "components/CollectionsSidebar.qml")
     assert obj.property("open") is False
 
 
 def test_collections_sidebar_collections_property_exists(engine):
-    obj = load_component(engine, "CollectionsSidebar.qml")
+    obj = load_component(engine, "components/CollectionsSidebar.qml")
     from PySide6.QtQml import QJSValue
     val = obj.property("collections")
     if isinstance(val, QJSValue):
@@ -582,41 +582,41 @@ def test_collections_sidebar_collections_property_exists(engine):
 
 
 def test_collection_view_qml_exists():
-    assert (QML_DIR / "CollectionView.qml").exists()
+    assert (QML_DIR / "views/CollectionView.qml").exists()
 
 
 def test_collection_view_loads(engine):
-    load_component(engine, "CollectionView.qml")
+    load_component(engine, "views/CollectionView.qml")
 
 
 def test_collection_view_collection_name_defaults_to_empty(engine):
-    obj = load_component(engine, "CollectionView.qml")
+    obj = load_component(engine, "views/CollectionView.qml")
     assert obj.property("collectionName") == ""
 
 
 def test_collection_view_collection_name_is_writable(engine):
-    obj = load_component(engine, "CollectionView.qml")
+    obj = load_component(engine, "views/CollectionView.qml")
     obj.setProperty("collectionName", "Portraits")
     assert obj.property("collectionName") == "Portraits"
 
 
 def test_collection_view_grid_model_defaults_to_none(engine):
-    obj = load_component(engine, "CollectionView.qml")
+    obj = load_component(engine, "views/CollectionView.qml")
     assert obj.property("gridModel") is None
 
 
 def test_collection_view_loading_state_defaults_to_idle(engine):
-    obj = load_component(engine, "CollectionView.qml")
+    obj = load_component(engine, "views/CollectionView.qml")
     assert obj.property("loadingState") == "Idle"
 
 
 def test_collection_view_left_panel_open_defaults_to_false(engine):
-    obj = load_component(engine, "CollectionView.qml")
+    obj = load_component(engine, "views/CollectionView.qml")
     assert obj.property("leftPanelOpen") is False
 
 
 def test_collection_view_right_panel_open_defaults_to_false(engine):
-    obj = load_component(engine, "CollectionView.qml")
+    obj = load_component(engine, "views/CollectionView.qml")
     assert obj.property("rightPanelOpen") is False
 
 
@@ -626,33 +626,33 @@ def test_collection_view_right_panel_open_defaults_to_false(engine):
 
 
 def test_collection_item_has_image_dropped_signal(engine):
-    obj = load_component(engine, "CollectionItem.qml")
+    obj = load_component(engine, "components/CollectionItem.qml")
     received = []
     obj.imageDropped.connect(lambda cid, iid: received.append((cid, iid)))
     assert isinstance(received, list)  # signal attribute exists
 
 
 def test_collections_sidebar_has_image_dropped_signal(engine):
-    obj = load_component(engine, "CollectionsSidebar.qml")
+    obj = load_component(engine, "components/CollectionsSidebar.qml")
     received = []
     obj.imageDropped.connect(lambda cid, iid: received.append((cid, iid)))
     assert isinstance(received, list)  # signal attribute exists
 
 
 def test_collections_sidebar_has_toggle_requested_signal(engine):
-    obj = load_component(engine, "CollectionsSidebar.qml")
+    obj = load_component(engine, "components/CollectionsSidebar.qml")
     received = []
     obj.toggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_title_bar_has_no_sidebar_open_property(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("sidebarOpen") is None
 
 
 def test_thumbnail_tile_still_loads_with_drag_support(engine):
-    load_component(engine, "ThumbnailTile.qml")
+    load_component(engine, "components/ThumbnailTile.qml")
 
 
 # ---------------------------------------------------------------------------
@@ -661,26 +661,26 @@ def test_thumbnail_tile_still_loads_with_drag_support(engine):
 
 
 def test_categories_bar_qml_exists():
-    assert (QML_DIR / "CategoriesBar.qml").exists()
+    assert (QML_DIR / "components/CategoriesBar.qml").exists()
 
 
 def test_categories_bar_loads(engine):
-    load_component(engine, "CategoriesBar.qml")
+    load_component(engine, "components/CategoriesBar.qml")
 
 
 def test_categories_bar_open_defaults_to_true(engine):
-    obj = load_component(engine, "CategoriesBar.qml")
+    obj = load_component(engine, "components/CategoriesBar.qml")
     assert obj.property("open") is True  # component default; MainRouter starts it closed
 
 
 def test_categories_bar_open_is_writable(engine):
-    obj = load_component(engine, "CategoriesBar.qml")
+    obj = load_component(engine, "components/CategoriesBar.qml")
     obj.setProperty("open", False)
     assert obj.property("open") is False
 
 
 def test_categories_bar_categories_defaults_to_empty(engine):
-    obj = load_component(engine, "CategoriesBar.qml")
+    obj = load_component(engine, "components/CategoriesBar.qml")
     from PySide6.QtQml import QJSValue
     val = obj.property("categories")
     if isinstance(val, QJSValue):
@@ -689,14 +689,14 @@ def test_categories_bar_categories_defaults_to_empty(engine):
 
 
 def test_categories_bar_has_toggle_requested_signal(engine):
-    obj = load_component(engine, "CategoriesBar.qml")
+    obj = load_component(engine, "components/CategoriesBar.qml")
     received = []
     obj.toggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_categories_bar_has_filter_toggled_signal(engine):
-    obj = load_component(engine, "CategoriesBar.qml")
+    obj = load_component(engine, "components/CategoriesBar.qml")
     received = []
     obj.filterToggled.connect(lambda cat_id: received.append(cat_id))
     assert isinstance(received, list)
@@ -708,26 +708,26 @@ def test_categories_bar_has_filter_toggled_signal(engine):
 
 
 def test_import_panel_qml_exists():
-    assert (QML_DIR / "ImportPanel.qml").exists()
+    assert (QML_DIR / "components/ImportPanel.qml").exists()
 
 
 def test_import_panel_loads(engine):
-    load_component(engine, "ImportPanel.qml")
+    load_component(engine, "components/ImportPanel.qml")
 
 
 def test_import_panel_loading_state_defaults_to_idle(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     assert obj.property("loadingState") == "Idle"
 
 
 def test_import_panel_loading_state_is_writable(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     obj.setProperty("loadingState", "Previewing")
     assert obj.property("loadingState") == "Previewing"
 
 
 def test_import_panel_pending_files_defaults_to_empty(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     from PySide6.QtQml import QJSValue
     val = obj.property("pendingFiles")
     if isinstance(val, QJSValue):
@@ -736,7 +736,7 @@ def test_import_panel_pending_files_defaults_to_empty(engine):
 
 
 def test_import_panel_already_imported_files_defaults_to_empty(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     from PySide6.QtQml import QJSValue
     val = obj.property("alreadyImportedFiles")
     if isinstance(val, QJSValue):
@@ -745,29 +745,29 @@ def test_import_panel_already_imported_files_defaults_to_empty(engine):
 
 
 def test_import_panel_invalid_count_defaults_to_zero(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     assert obj.property("invalidCount") == 0
 
 
 def test_import_panel_imported_count_defaults_to_zero(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     assert obj.property("importedCount") == 0
 
 
 def test_import_panel_skipped_count_defaults_to_zero(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     assert obj.property("skippedCount") == 0
 
 
 def test_import_panel_has_confirmed_signal(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     received = []
     obj.confirmed.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_import_panel_has_cancelled_signal(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     received = []
     obj.cancelled.connect(lambda: received.append(1))
     assert isinstance(received, list)
@@ -778,12 +778,12 @@ def test_import_panel_has_cancelled_signal(engine):
 
 
 def test_import_panel_progress_defaults_to_zero(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     assert obj.property("progress") == 0.0
 
 
 def test_import_panel_progress_is_writable(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     obj.setProperty("progress", 0.5)
     assert obj.property("progress") == 0.5
 
@@ -794,7 +794,7 @@ def test_import_panel_progress_is_writable(engine):
 
 def test_import_panel_conflict_files_defaults_to_empty(engine):
     from PySide6.QtQml import QJSValue
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     val = obj.property("conflictFiles")
     if isinstance(val, QJSValue):
         val = val.toVariant() or []
@@ -802,7 +802,7 @@ def test_import_panel_conflict_files_defaults_to_empty(engine):
 
 
 def test_import_panel_conflict_files_is_writable(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     sample = [{"path": "/a.jpg", "existing_image_id": "uuid-1",
                "existing_path": "/old/a.jpg", "existing_filename": "a.jpg"}]
     obj.setProperty("conflictFiles", sample)
@@ -814,14 +814,14 @@ def test_import_panel_conflict_files_is_writable(engine):
 
 
 def test_import_panel_has_conflict_choice_changed_signal(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     received = []
     obj.conflictChoiceChanged.connect(lambda path, choice: received.append((path, choice)))
     assert isinstance(received, list)
 
 
 def test_import_panel_updated_count_defaults_to_zero(engine):
-    obj = load_component(engine, "ImportPanel.qml")
+    obj = load_component(engine, "components/ImportPanel.qml")
     assert obj.property("updatedCount") == 0
 
 
@@ -831,37 +831,37 @@ def test_import_panel_updated_count_defaults_to_zero(engine):
 
 
 def test_filter_chip_qml_exists():
-    assert (QML_DIR / "FilterChip.qml").exists()
+    assert (QML_DIR / "components/FilterChip.qml").exists()
 
 
 def test_filter_chip_loads(engine):
-    load_component(engine, "FilterChip.qml")
+    load_component(engine, "components/FilterChip.qml")
 
 
 def test_filter_chip_label_defaults_to_empty(engine):
-    obj = load_component(engine, "FilterChip.qml")
+    obj = load_component(engine, "components/FilterChip.qml")
     assert obj.property("label") == ""
 
 
 def test_filter_chip_label_is_writable(engine):
-    obj = load_component(engine, "FilterChip.qml")
+    obj = load_component(engine, "components/FilterChip.qml")
     obj.setProperty("label", "architecture")
     assert obj.property("label") == "architecture"
 
 
 def test_filter_chip_filter_mode_defaults_to_include(engine):
-    obj = load_component(engine, "FilterChip.qml")
+    obj = load_component(engine, "components/FilterChip.qml")
     assert obj.property("filterMode") == "include"
 
 
 def test_filter_chip_filter_mode_is_writable(engine):
-    obj = load_component(engine, "FilterChip.qml")
+    obj = load_component(engine, "components/FilterChip.qml")
     obj.setProperty("filterMode", "exclude")
     assert obj.property("filterMode") == "exclude"
 
 
 def test_filter_chip_has_remove_requested_signal(engine):
-    obj = load_component(engine, "FilterChip.qml")
+    obj = load_component(engine, "components/FilterChip.qml")
     received = []
     obj.removeRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
@@ -873,33 +873,33 @@ def test_filter_chip_has_remove_requested_signal(engine):
 
 
 def test_filter_dropdown_qml_exists():
-    assert (QML_DIR / "FilterDropdown.qml").exists()
+    assert (QML_DIR / "components/FilterDropdown.qml").exists()
 
 
 def test_filter_dropdown_loads(engine):
-    load_component(engine, "FilterDropdown.qml")
+    load_component(engine, "components/FilterDropdown.qml")
 
 
 def test_filter_dropdown_open_defaults_to_false(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     assert obj.property("open") is False
 
 
 def test_filter_dropdown_open_is_writable(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     obj.setProperty("open", True)
     assert obj.property("open") is True
 
 
 def test_filter_dropdown_has_clear_all_requested_signal(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     received = []
     obj.clearAllRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_filter_dropdown_active_categories_defaults_to_empty(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     from PySide6.QtQml import QJSValue
     val = obj.property("activeCategories")
     if isinstance(val, QJSValue):
@@ -908,19 +908,19 @@ def test_filter_dropdown_active_categories_defaults_to_empty(engine):
 
 
 def test_filter_dropdown_show_missing_only_defaults_to_false(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     assert obj.property("showMissingOnly") is False
 
 
 def test_filter_dropdown_has_remove_category_filter_signal(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     received = []
     obj.removeCategoryFilter.connect(lambda cat_id: received.append(cat_id))
     assert isinstance(received, list)
 
 
 def test_filter_dropdown_has_toggle_missing_only_requested_signal(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     received = []
     obj.toggleMissingOnlyRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
@@ -932,37 +932,37 @@ def test_filter_dropdown_has_toggle_missing_only_requested_signal(engine):
 
 
 def test_filter_dropdown_any_filter_active_defaults_to_false(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     val = obj.property("_anyFilterActive")
     assert val is False
 
 
 def test_filter_dropdown_any_filter_active_when_missing_only(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     obj.setProperty("showMissingOnly", True)
     assert obj.property("_anyFilterActive") is True
 
 
 def test_filter_dropdown_any_filter_active_when_tags_active(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     obj.setProperty("activeTags", [{"id": "t1", "name": "nature", "mode": "include"}])
     assert obj.property("_anyFilterActive") is True
 
 
 def test_filter_dropdown_any_filter_active_when_categories_active(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     obj.setProperty("activeCategories", [{"id": "c1", "name": "Architecture", "mode": "include"}])
     assert obj.property("_anyFilterActive") is True
 
 
 def test_filter_dropdown_any_filter_active_when_import_job_active(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     obj.setProperty("importJobActive", True)
     assert obj.property("_anyFilterActive") is True
 
 
 def test_filter_dropdown_implicit_height_is_positive(engine):
-    obj = load_component(engine, "FilterDropdown.qml")
+    obj = load_component(engine, "components/FilterDropdown.qml")
     assert obj.property("implicitHeight") > 0
 
 
@@ -972,18 +972,18 @@ def test_filter_dropdown_implicit_height_is_positive(engine):
 
 
 def test_title_bar_filter_active_defaults_to_false(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("filterActive") is False
 
 
 def test_title_bar_filter_active_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("filterActive", True)
     assert obj.property("filterActive") is True
 
 
 def test_title_bar_has_filter_toggle_requested_signal(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     received = []
     obj.filterToggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
@@ -995,19 +995,19 @@ def test_title_bar_has_filter_toggle_requested_signal(engine):
 
 
 def test_title_bar_search_read_only_defaults_to_false(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("searchReadOnly") is False
 
 
 def test_title_bar_search_read_only_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("searchReadOnly", True)
     assert obj.property("searchReadOnly") is True
 
 
 def test_title_bar_active_filters_defaults_to_empty(engine):
     from PySide6.QtQml import QJSValue
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     val = obj.property("activeFilters")
     if isinstance(val, QJSValue):
         val = val.toVariant() or []
@@ -1015,7 +1015,7 @@ def test_title_bar_active_filters_defaults_to_empty(engine):
 
 
 def test_title_bar_active_filters_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("activeFilters", [{"name": "nature", "mode": "include"}])
     from PySide6.QtQml import QJSValue
     val = obj.property("activeFilters")
@@ -1030,74 +1030,74 @@ def test_title_bar_active_filters_is_writable(engine):
 
 
 def test_metadata_overlay_qml_exists():
-    assert (QML_DIR / "MetadataOverlay.qml").exists()
+    assert (QML_DIR / "components/MetadataOverlay.qml").exists()
 
 
 def test_metadata_overlay_loads(engine):
-    load_component(engine, "MetadataOverlay.qml")
+    load_component(engine, "components/MetadataOverlay.qml")
 
 
 def test_metadata_overlay_open_defaults_to_false(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("open") is False
 
 
 def test_metadata_overlay_open_is_writable(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     obj.setProperty("open", True)
     assert obj.property("open") is True
 
 
 def test_metadata_overlay_has_toggle_requested_signal(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     received = []
     obj.toggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_metadata_overlay_meta_filename_defaults_to_empty(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("metaFilename") == ""
 
 
 def test_metadata_overlay_meta_filename_is_writable(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     obj.setProperty("metaFilename", "photo.jpg")
     assert obj.property("metaFilename") == "photo.jpg"
 
 
 def test_metadata_overlay_meta_path_defaults_to_empty(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("metaPath") == ""
 
 
 def test_metadata_overlay_meta_dimensions_defaults_to_empty(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("metaDimensions") == ""
 
 
 def test_metadata_overlay_meta_file_size_defaults_to_zero(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("metaFileSize") == 0
 
 
 def test_metadata_overlay_meta_date_added_defaults_to_empty(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("metaDateAdded") == ""
 
 
 def test_metadata_overlay_meta_is_missing_defaults_to_false(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("metaIsMissing") is False
 
 
 def test_metadata_overlay_meta_loading_state_defaults_to_idle(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("metaLoadingState") == "Idle"
 
 
 def test_metadata_overlay_meta_loading_state_is_writable(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     obj.setProperty("metaLoadingState", "Ready")
     assert obj.property("metaLoadingState") == "Ready"
 
@@ -1108,11 +1108,11 @@ def test_metadata_overlay_meta_loading_state_is_writable(engine):
 
 
 def test_tag_search_field_qml_exists():
-    assert (QML_DIR / "TagSearchField.qml").exists()
+    assert (QML_DIR / "components/TagSearchField.qml").exists()
 
 
 def test_tag_search_field_loads(engine):
-    load_component(engine, "TagSearchField.qml")
+    load_component(engine, "components/TagSearchField.qml")
 
 
 # ---------------------------------------------------------------------------
@@ -1122,7 +1122,7 @@ def test_tag_search_field_loads(engine):
 
 def test_metadata_overlay_tag_editor_tags_defaults_to_empty(engine):
     from PySide6.QtQml import QJSValue
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     val = obj.property("tagEditorTags")
     if isinstance(val, QJSValue):
         val = val.toVariant() or []
@@ -1130,7 +1130,7 @@ def test_metadata_overlay_tag_editor_tags_defaults_to_empty(engine):
 
 
 def test_metadata_overlay_tag_editor_tags_is_writable(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     obj.setProperty("tagEditorTags", [{"id": "tag-1", "name": "nature"}])
     from PySide6.QtQml import QJSValue
     val = obj.property("tagEditorTags")
@@ -1140,43 +1140,43 @@ def test_metadata_overlay_tag_editor_tags_is_writable(engine):
 
 
 def test_metadata_overlay_tag_editor_loading_state_defaults_to_idle(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("tagEditorLoadingState") == "Idle"
 
 
 def test_metadata_overlay_tag_editor_loading_state_is_writable(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     obj.setProperty("tagEditorLoadingState", "Ready")
     assert obj.property("tagEditorLoadingState") == "Ready"
 
 
 def test_metadata_overlay_tag_editor_selection_mode_defaults_to_none(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     assert obj.property("tagEditorSelectionMode") == "none"
 
 
 def test_metadata_overlay_tag_editor_selection_mode_is_writable(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     obj.setProperty("tagEditorSelectionMode", "single")
     assert obj.property("tagEditorSelectionMode") == "single"
 
 
 def test_metadata_overlay_has_add_tag_requested_signal(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     received = []
     obj.addTagRequested.connect(lambda tag_id, tag_name: received.append((tag_id, tag_name)))
     assert isinstance(received, list)
 
 
 def test_metadata_overlay_has_remove_tag_requested_signal(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     received = []
     obj.removeTagRequested.connect(lambda tag_id: received.append(tag_id))
     assert isinstance(received, list)
 
 
 def test_metadata_overlay_has_add_tag_by_name_requested_signal(engine):
-    obj = load_component(engine, "MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataOverlay.qml")
     received = []
     obj.addTagByNameRequested.connect(lambda name: received.append(name))
     assert isinstance(received, list)
@@ -1188,44 +1188,44 @@ def test_metadata_overlay_has_add_tag_by_name_requested_signal(engine):
 
 
 def test_title_bar_import_state_defaults_to_idle(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("importState") == "Idle"
 
 
 def test_title_bar_import_state_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("importState", "Importing")
     assert obj.property("importState") == "Importing"
 
 
 def test_title_bar_import_progress_defaults_to_zero(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("importProgress") == 0.0
 
 
 def test_title_bar_import_progress_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("importProgress", 0.75)
     assert obj.property("importProgress") == pytest.approx(0.75)
 
 
 def test_title_bar_missing_count_defaults_to_zero(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("missingCount") == 0
 
 
 def test_title_bar_missing_count_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("missingCount", 5)
     assert obj.property("missingCount") == 5
 
 
 def test_title_bar_backend_connected_defaults_to_true(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     assert obj.property("backendConnected") is True
 
 
 def test_title_bar_backend_connected_is_writable(engine):
-    obj = load_component(engine, "TitleBar.qml")
+    obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("backendConnected", False)
     assert obj.property("backendConnected") is False
