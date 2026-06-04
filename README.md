@@ -29,7 +29,7 @@ make setup
 
 ```bash
 pyenv activate found_env
-python -m frontend
+python -m found_app
 ```
 
 ### Backend only
