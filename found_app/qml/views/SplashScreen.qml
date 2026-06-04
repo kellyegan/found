@@ -66,7 +66,7 @@ Item {
             text: root.appVersion.length > 0 ? "Version " + root.appVersion : ""
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
-            font.weight: Font.DemiBold
+            font.weight: Font.Medium
             color: Theme.textMuted
             visible: root.appVersion.length > 0
         }
@@ -77,7 +77,7 @@ Item {
             text: root.isReady ? "Click to continue" : root.statusText
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
-            color: root.hasError ? "#ff4444" : Theme.textMuted
+            color: root.hasError ? Theme.warningColor : Theme.textMuted
             visible: root.isReady || root.statusText.length > 0
         }
 

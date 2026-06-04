@@ -26,6 +26,10 @@ class ThemeManager(QObject):
     @Property(str, constant=True)
     def textMuted(self) -> str:
         return "#777777"
+    
+    @Property(str, constant=True)
+    def warningColor(self) -> str:
+        return "#ff4444" 
 
     @Property(str, constant=True)
     def accent(self) -> str:
