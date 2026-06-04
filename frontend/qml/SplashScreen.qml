@@ -22,13 +22,13 @@ Item {
         width: parent.width * 0.8
         height: titleText.height
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: parent.height * 0.08
+        anchors.verticalCenterOffset: parent.height * 0.04
 
         Text {
             id: titleText
             width: parent.width
             anchors.centerIn: parent
-            text: "FOUND"
+            text: "found"
             font.pixelSize: 400
             minimumPixelSize: 48
             fontSizeMode: Text.HorizontalFit
@@ -36,6 +36,8 @@ Item {
             font.family: Theme.fontFamily
             color: Theme.text
             font.letterSpacing: 12
+            font.capitalization: Font.AllUppercase
+            renderType: Text.NativeRendering
         }
     }
 
