@@ -847,3 +847,197 @@ def test_bulk_modify_categories_returns_false_on_exception():
     client, mock_http = make_sync_client()
     mock_http.post.side_effect = Exception("timeout")
     assert client.bulk_modify_categories(["img-1"], ["cat-1"], []) is False
+
+
+# ---------------------------------------------------------------------------
+# list_collections
+# ---------------------------------------------------------------------------
+
+
+def test_list_collections_returns_list():
+    client, mock_http = make_sync_client()
+    cols = [{"id": "col-1", "name": "Mood Board"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": cols})
+    assert client.list_collections() == cols
+
+
+def test_list_collections_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.list_collections() is None
+
+
+def test_list_collections_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.list_collections() is None
+
+
+# ---------------------------------------------------------------------------
+# create_collection
+# ---------------------------------------------------------------------------
+
+
+def test_create_collection_returns_collection_data():
+    client, mock_http = make_sync_client()
+    col = {"id": "col-1", "name": "Mood Board"}
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": col})
+    assert client.create_collection("Mood Board") == col
+
+
+def test_create_collection_posts_name():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.create_collection("Mood Board")
+    body = mock_http.post.call_args.kwargs["json"]
+    assert body == {"name": "Mood Board"}
+
+
+def test_create_collection_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.create_collection("Mood Board") is None
+
+
+def test_create_collection_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.create_collection("Mood Board") is None
+
+
+# ---------------------------------------------------------------------------
+# add_images_to_collection
+# ---------------------------------------------------------------------------
+
+
+def test_add_images_to_collection_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    assert client.add_images_to_collection("col-1", ["img-1", "img-2"]) is True
+
+
+def test_add_images_to_collection_posts_correct_body():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.add_images_to_collection("col-1", ["img-1", "img-2"])
+    body = mock_http.post.call_args.kwargs["json"]
+    assert body == {"image_ids": ["img-1", "img-2"]}
+
+
+def test_add_images_to_collection_uses_correct_url():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.add_images_to_collection("col-1", ["img-1"])
+    url = mock_http.post.call_args.args[0]
+    assert url == "/api/v1/collections/col-1/images"
+
+
+def test_add_images_to_collection_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.add_images_to_collection("col-1", ["img-1"]) is False
+
+
+def test_add_images_to_collection_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.add_images_to_collection("col-1", ["img-1"]) is False
+
+
+# ---------------------------------------------------------------------------
+# fetch_collection_images
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_collection_images_returns_list():
+    client, mock_http = make_sync_client()
+    images = [{"id": "img-1", "filename": "photo.jpg"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": images})
+    assert client.fetch_collection_images("col-1") == images
+
+
+def test_fetch_collection_images_passes_grid_view_param():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": []})
+    client.fetch_collection_images("col-1")
+    params = mock_http.get.call_args.kwargs["params"]
+    assert params.get("view") == "grid"
+
+
+def test_fetch_collection_images_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.fetch_collection_images("col-1") is None
+
+
+def test_fetch_collection_images_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.fetch_collection_images("col-1") is None
+
+
+# ---------------------------------------------------------------------------
+# fetch_image_collections
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_image_collections_returns_list():
+    client, mock_http = make_sync_client()
+    cols = [{"id": "col-1", "name": "Mood Board"}]
+    mock_http.get.return_value = mock_response(200, {"success": True, "data": cols})
+    assert client.fetch_image_collections("img-1") == cols
+
+
+def test_fetch_image_collections_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.fetch_image_collections("img-1") is None
+
+
+def test_fetch_image_collections_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.fetch_image_collections("img-1") is None
+
+
+# ---------------------------------------------------------------------------
+# remove_image_from_collection
+# ---------------------------------------------------------------------------
+
+
+def test_remove_image_from_collection_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(200, {"success": True, "data": {}})
+    assert client.remove_image_from_collection("col-1", "img-1") is True
+
+
+def test_remove_image_from_collection_uses_correct_url():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(200, {"success": True, "data": {}})
+    client.remove_image_from_collection("col-1", "img-1")
+    url = mock_http.delete.call_args.args[0]
+    assert url == "/api/v1/collections/col-1/images/img-1"
+
+
+def test_remove_image_from_collection_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.remove_image_from_collection("col-1", "img-1") is False
+
+
+def test_remove_image_from_collection_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.delete.side_effect = Exception("timeout")
+    assert client.remove_image_from_collection("col-1", "img-1") is False

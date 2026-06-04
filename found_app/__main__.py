@@ -5,8 +5,6 @@ from PySide6.QtCore import QThreadPool
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
-import httpx
-
 from found_app.api.client import ApiClient
 from found_app.app.controller import AppController
 from found_app.backend.connection_monitor import BackendConnectionManager
@@ -27,97 +25,6 @@ from found_app.state.app_state import AppStateManager
 from found_app.categories.categories_view_model import CategoriesViewModel
 from found_app.theme.theme import ThemeManager
 from found_app.version import get_app_metadata
-
-
-def _make_collections_fetcher(base_url: str):
-    def fetch():
-        try:
-            response = httpx.get(f"{base_url}/api/v1/collections", timeout=10.0)
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-def _make_collection_creator(base_url: str):
-    def create(name: str):
-        try:
-            response = httpx.post(f"{base_url}/api/v1/collections", json={"name": name}, timeout=10.0)
-            data = response.json()
-            return data.get("data") if data.get("success") else None
-        except Exception:
-            return None
-    return create
-
-
-def _make_images_adder(base_url: str):
-    def add(collection_id: str, image_ids: list):
-        try:
-            response = httpx.post(
-                f"{base_url}/api/v1/collections/{collection_id}/images",
-                json={"image_ids": image_ids},
-                timeout=10.0,
-            )
-            return response.json().get("success", False)
-        except Exception:
-            return False
-    return add
-
-
-def _make_collection_images_fetcher(base_url: str):
-    def fetch(collection_id: str):
-        try:
-            response = httpx.get(
-                f"{base_url}/api/v1/collections/{collection_id}/images?view=grid",
-                timeout=10.0,
-            )
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-
-
-def _make_image_collections_fetcher(base_url: str):
-    def fetch(image_id: str):
-        try:
-            response = httpx.get(f"{base_url}/api/v1/images/{image_id}/collections", timeout=10.0)
-            data = response.json()
-            return data.get("data", []) if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-def _make_collection_adder(base_url: str):
-    def add(collection_id: str, image_ids: list) -> bool:
-        try:
-            response = httpx.post(
-                f"{base_url}/api/v1/collections/{collection_id}/images",
-                json={"image_ids": image_ids},
-                timeout=10.0,
-            )
-            return response.json().get("success", False)
-        except Exception:
-            return False
-    return add
-
-
-def _make_collection_remover(base_url: str):
-    def remove(collection_id: str, image_id: str) -> bool:
-        try:
-            response = httpx.delete(
-                f"{base_url}/api/v1/collections/{collection_id}/images/{image_id}",
-                timeout=10.0,
-            )
-            return response.json().get("success", False)
-        except Exception:
-            return False
-    return remove
-
 
 
 def main():
@@ -149,10 +56,10 @@ def main():
     selection_manager = SelectionManager()
     navigation_manager = NavigationManager()
     collections_state = CollectionsViewModel(
-        collections_fetcher=_make_collections_fetcher(base_url),
-        collection_creator=_make_collection_creator(base_url),
-        images_adder=_make_images_adder(base_url),
-        collection_images_fetcher=_make_collection_images_fetcher(base_url),
+        collections_fetcher=api_client.list_collections,
+        collection_creator=api_client.create_collection,
+        images_adder=api_client.add_images_to_collection,
+        collection_images_fetcher=api_client.fetch_collection_images,
     )
     import_state = ImportViewModel(
         scanner=api_client.scan_paths,
@@ -202,9 +109,9 @@ def main():
         selection_manager=selection_manager,
     )
     collection_editor_state = CollectionEditorViewModel(
-        image_collections_fetcher=_make_image_collections_fetcher(base_url),
-        collection_adder=_make_collection_adder(base_url),
-        collection_remover=_make_collection_remover(base_url),
+        image_collections_fetcher=api_client.fetch_image_collections,
+        collection_adder=api_client.add_images_to_collection,
+        collection_remover=api_client.remove_image_from_collection,
         selection_manager=selection_manager,
     )
 

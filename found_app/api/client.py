@@ -311,6 +311,67 @@ class ApiClient:
         except Exception:
             return False
 
+    def list_collections(self) -> list | None:
+        try:
+            response = self._sync_client.get("/api/v1/collections", timeout=10.0)
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def create_collection(self, name: str) -> dict | None:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/collections", json={"name": name}, timeout=10.0
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
+    def add_images_to_collection(self, collection_id: str, image_ids: list) -> bool:
+        try:
+            response = self._sync_client.post(
+                f"/api/v1/collections/{collection_id}/images",
+                json={"image_ids": image_ids},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
+    def fetch_collection_images(self, collection_id: str) -> list | None:
+        try:
+            response = self._sync_client.get(
+                f"/api/v1/collections/{collection_id}/images",
+                params={"view": "grid"},
+                timeout=10.0,
+            )
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def fetch_image_collections(self, image_id: str) -> list | None:
+        try:
+            response = self._sync_client.get(
+                f"/api/v1/images/{image_id}/collections", timeout=10.0
+            )
+            data = response.json()
+            return data.get("data", []) if data.get("success") else None
+        except Exception:
+            return None
+
+    def remove_image_from_collection(self, collection_id: str, image_id: str) -> bool:
+        try:
+            response = self._sync_client.delete(
+                f"/api/v1/collections/{collection_id}/images/{image_id}",
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
     async def close(self) -> None:
         await self._client.aclose()
 
