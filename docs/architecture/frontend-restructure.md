@@ -143,7 +143,7 @@ def main():
 
 ## Phased execution
 
-**Phase 0 — Package rename + ApiClient consolidation** _(Lowest blast radius — no logic changes)_
+- [*] **Phase 0 — Package rename + ApiClient consolidation** _(Lowest blast radius — no logic changes)_ **COMPLETE**
 
 1. `git mv frontend found_app`
 2. Find/replace `from frontend.` → `from found_app.` across all source and test files
@@ -153,7 +153,7 @@ def main():
 
 ---
 
-**Phase 1 — QML restructure** _(Impacts `test_qml_shell.py` only — no Python logic changes)_
+- [ ] **Phase 1 — QML restructure** _(Impacts `test_qml_shell.py` only — no Python logic changes)_
 
 1. Create `qml/shell/`, `qml/views/`, `qml/components/`
 2. Move QML files into subdirectories
@@ -163,7 +163,7 @@ def main():
 
 ---
 
-**Phase 2 — Core & Services** _(Move one file at a time, run tests after each)_
+- [ ] **Phase 2 — Core & Services** _(Move one file at a time, run tests after each)_
 
 1. `backend/process_manager.py` → `core/process_manager.py`
 2. `backend/connection_monitor.py` → `core/connection_monitor.py`
@@ -177,7 +177,7 @@ def main():
 
 ---
 
-**Phase 3 — ViewModels, Models, Providers** _(One feature slice at a time; update test imports as you go)_
+- [ ] **Phase 3 — ViewModels, Models, Providers** _(One feature slice at a time; update test imports as you go)_
 
 1. `library/thumbnail_grid_model.py` → `models/thumbnail_grid_model.py`
 2. `library/thumbnail_provider.py` → `providers/thumbnail_provider.py`
