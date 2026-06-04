@@ -163,7 +163,7 @@ def main():
 
 ---
 
-- [ ] **Phase 2 — Core & Services** _(Move one file at a time, run tests after each)_
+- [x] **Phase 2 — Core & Services** _(Move one file at a time, run tests after each)_ **COMPLETE**
 
 1. `backend/process_manager.py` → `core/process_manager.py`
 2. `backend/connection_monitor.py` → `core/connection_monitor.py`

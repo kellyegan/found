@@ -1,4 +1,4 @@
-# FOUND — Phase 2 Specification
+# FOUND — Frontend Specification
 
 ## 1. Product Overview
 
@@ -8,7 +8,7 @@ Found is a desktop application for managing large personal image reference libra
 
 The application indexes images in their existing filesystem locations while storing metadata, organizational data, and generated thumbnails locally.
 
-The Phase 2 frontend provides the primary graphical interface for:
+The frontend provides the primary graphical interface for:
 
 - Browsing image collections
 - Searching and filtering images
@@ -279,6 +279,7 @@ Full-width bar spanning the top of the window. Divided into three zones:
 **Status zone (center)** — status indicators, only visible when there is something to report: import progress, missing image count, backend connection state
 
 **Search zone (right)** — contains two elements:
+
 - Keyword search field: tag autocomplete; autocomplete dropdown appears below the title bar
 - Filter dropdown icon: grey when no filters active, blue when filters are active; opens a dropdown listing active keyword chips, category chips, and missing image toggle grouped by type; includes a Clear all filters button (does not affect active collection)
 
@@ -824,9 +825,9 @@ Future versions may support user-adjustable thumbnail sizing.
 
 ---
 
-## 10. Non-Goals (Phase 2)
+## 10. Non-Goals (Frontend)
 
-The following features are explicitly outside Phase 2 scope:
+The following features are explicitly outside Frontend scope:
 
 - image editing
 - recursive imports
