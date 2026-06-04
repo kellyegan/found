@@ -61,11 +61,12 @@ Item {
 
         Text {
             anchors.left: parent.left
-            anchors.leftMargin: (parent.width - titleBlock.width) / 2
+            anchors.leftMargin: 20 + (parent.width - titleBlock.width) / 2
             anchors.verticalCenter: parent.verticalCenter
             text: root.appVersion.length > 0 ? "Version " + root.appVersion : ""
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
+            font.weight: Font.DemiBold
             color: Theme.textMuted
             visible: root.appVersion.length > 0
         }
@@ -82,9 +83,9 @@ Item {
 
         Text {
             anchors.right: parent.right
-            anchors.rightMargin: (parent.width - titleBlock.width) / 2
+            anchors.rightMargin: 30 + (parent.width - titleBlock.width) / 2
             anchors.verticalCenter: parent.verticalCenter
-            text: root.appLicense.length > 0 ? "©2026 Kelly Egan." + root.appLicense : ""
+            text: root.appLicense.length > 0 ? "©2026 Kelly Egan. " + root.appLicense : ""
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
             color: Theme.textMuted

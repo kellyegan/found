@@ -25,7 +25,7 @@ class ThemeManager(QObject):
 
     @Property(str, constant=True)
     def textMuted(self) -> str:
-        return "#666666"
+        return "#777777"
 
     @Property(str, constant=True)
     def accent(self) -> str:
@@ -45,19 +45,19 @@ class ThemeManager(QObject):
 
     @Property(int, constant=True)
     def fontSizeSm(self) -> int:
-        return 11
+        return 12
 
     @Property(int, constant=True)
     def fontSizeMd(self) -> int:
-        return 13
-
-    @Property(int, constant=True)
-    def fontSizeLg(self) -> int:
         return 16
 
     @Property(int, constant=True)
-    def fontSizeXl(self) -> int:
+    def fontSizeLg(self) -> int:
         return 24
+
+    @Property(int, constant=True)
+    def fontSizeXl(self) -> int:
+        return 48
 
     # ------------------------------------------------------------------
     # Layout
