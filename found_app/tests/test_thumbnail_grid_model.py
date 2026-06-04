@@ -16,7 +16,7 @@ Covers:
 import pytest
 from PySide6.QtCore import QModelIndex, Qt
 
-from found_app.library.thumbnail_grid_model import ThumbnailGridModel
+from found_app.models.thumbnail_grid_model import ThumbnailGridModel
 
 
 SAMPLE_ITEMS = [

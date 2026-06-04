@@ -3,7 +3,7 @@ from typing import Callable
 
 from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
 
-from found_app.library.thumbnail_grid_model import ThumbnailGridModel
+from found_app.models.thumbnail_grid_model import ThumbnailGridModel
 
 
 class LibraryLoadingState(Enum):

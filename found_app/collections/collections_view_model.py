@@ -3,7 +3,7 @@ from typing import Callable, Optional
 from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
 from PySide6.QtQml import QJSValue
 
-from found_app.library.thumbnail_grid_model import ThumbnailGridModel
+from found_app.models.thumbnail_grid_model import ThumbnailGridModel
 
 
 class CollectionsViewModel(QObject):
