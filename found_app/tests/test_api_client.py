@@ -218,3 +218,151 @@ async def test_list_images_returns_empty_list_when_no_images():
     assert items == []
     assert next_cursor is None
     assert has_more is False
+
+
+# ---------------------------------------------------------------------------
+# Sync client helpers
+# ---------------------------------------------------------------------------
+
+
+def make_sync_client() -> tuple[ApiClient, MagicMock]:
+    mock_http = MagicMock(spec=httpx.Client)
+    return ApiClient(sync_client=mock_http), mock_http
+
+
+# ---------------------------------------------------------------------------
+# fetch_images_page
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_images_page_returns_items_cursor_and_has_more():
+    client, mock_http = make_sync_client()
+    items = [{"id": "abc", "thumbnail_url": "image://thumbnails/abc"}]
+    mock_http.get.return_value = mock_response(
+        200,
+        {"success": True, "data": items, "next_cursor": "tok1", "has_more": True},
+    )
+    result = client.fetch_images_page()
+    assert result["items"] == items
+    assert result["next_cursor"] == "tok1"
+    assert result["has_more"] is True
+
+
+def test_fetch_images_page_passes_cursor():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    client.fetch_images_page(cursor="tok2")
+    params = mock_http.get.call_args.kwargs["params"]
+    assert params["cursor"] == "tok2"
+
+
+def test_fetch_images_page_omits_cursor_when_none():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    client.fetch_images_page(cursor=None)
+    params = mock_http.get.call_args.kwargs["params"]
+    assert "cursor" not in params
+
+
+def test_fetch_images_page_passes_category_filter():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    client.fetch_images_page(category="cat-1")
+    params = mock_http.get.call_args.kwargs["params"]
+    assert params["categories"] == "cat-1"
+
+
+def test_fetch_images_page_passes_tag_filter():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    client.fetch_images_page(tag="nature")
+    params = mock_http.get.call_args.kwargs["params"]
+    assert params["tags"] == "nature"
+
+
+def test_fetch_images_page_maps_missing_file_status_to_bool_param():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": [], "next_cursor": None, "has_more": False}
+    )
+    client.fetch_images_page(file_status="missing")
+    params = mock_http.get.call_args.kwargs["params"]
+    assert params["missing"] is True
+    assert "file_status" not in params
+
+
+def test_fetch_images_page_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("network failure")
+    assert client.fetch_images_page() is None
+
+
+def test_fetch_images_page_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.fetch_images_page() is None
+
+
+# ---------------------------------------------------------------------------
+# fetch_image
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_image_returns_image_data():
+    client, mock_http = make_sync_client()
+    image = {"id": "abc", "filename": "photo.jpg"}
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": image}
+    )
+    assert client.fetch_image("abc") == image
+
+
+def test_fetch_image_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.fetch_image("abc") is None
+
+
+def test_fetch_image_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.fetch_image("abc") is None
+
+
+# ---------------------------------------------------------------------------
+# verify_image
+# ---------------------------------------------------------------------------
+
+
+def test_verify_image_returns_file_status_string():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": True, "data": {"file_status": "available"}}
+    )
+    assert client.verify_image("abc") == "available"
+
+
+def test_verify_image_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.verify_image("abc") is None
+
+
+def test_verify_image_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.verify_image("abc") is None

@@ -22,9 +22,11 @@ class ApiClient:
         self,
         base_url: str = "http://127.0.0.1:8000",
         client: httpx.AsyncClient | None = None,
+        sync_client: httpx.Client | None = None,
     ):
         self._base_url = base_url
         self._client = client or httpx.AsyncClient(base_url=base_url)
+        self._sync_client = sync_client or httpx.Client(base_url=base_url)
 
     async def health_check(self) -> bool:
         try:
@@ -92,6 +94,63 @@ class ApiClient:
                 error.get("message", "Unknown error"),
             )
         return body.get("data", []), body.get("next_cursor"), body.get("has_more", False)
+
+    def fetch_images_page(
+        self,
+        cursor=None,
+        limit=100,
+        import_job=None,
+        category=None,
+        tag=None,
+        file_status=None,
+        exclude_category=None,
+        exclude_tag=None,
+    ) -> dict | None:
+        try:
+            params: dict = {"view": "grid", "limit": limit}
+            if cursor:
+                params["cursor"] = cursor
+            if import_job:
+                params["import_job"] = import_job
+            if category:
+                params["categories"] = category
+            if exclude_category:
+                params["exclude_categories"] = exclude_category
+            if tag:
+                params["tags"] = tag
+            if exclude_tag:
+                params["exclude_tags"] = exclude_tag
+            if file_status == "missing":
+                params["missing"] = True
+            response = self._sync_client.get("/api/v1/images", params=params, timeout=10.0)
+            data = response.json()
+            if data.get("success"):
+                return {
+                    "items": data.get("data", []),
+                    "next_cursor": data.get("next_cursor"),
+                    "has_more": data.get("has_more", False),
+                }
+            return None
+        except Exception:
+            return None
+
+    def fetch_image(self, image_id: str) -> dict | None:
+        try:
+            response = self._sync_client.get(f"/api/v1/images/{image_id}", timeout=10.0)
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
+    def verify_image(self, image_id: str) -> str | None:
+        try:
+            response = self._sync_client.post(f"/api/v1/images/{image_id}/verify", timeout=10.0)
+            data = response.json()
+            if data.get("success"):
+                return data.get("data", {}).get("file_status")
+            return None
+        except Exception:
+            return None
 
     async def close(self) -> None:
         await self._client.aclose()

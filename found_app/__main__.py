@@ -7,6 +7,7 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 import httpx
 
+from found_app.api.client import ApiClient
 from found_app.app.controller import AppController
 from found_app.backend.connection_monitor import BackendConnectionManager
 from found_app.backend.process_manager import BackendProcessManager
@@ -150,16 +151,6 @@ def _make_category_creator(base_url: str):
             return None
     return create
 
-
-def _make_image_fetcher(base_url: str):
-    def fetch(image_id: str):
-        try:
-            response = httpx.get(f"{base_url}/api/v1/images/{image_id}", timeout=10.0)
-            data = response.json()
-            return data.get("data") if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
 
 
 def _make_category_images_adder(base_url: str):
@@ -323,51 +314,6 @@ def _make_collection_remover(base_url: str):
     return remove
 
 
-def _make_image_verifier(base_url: str):
-    def verify(image_id: str) -> str | None:
-        try:
-            response = httpx.post(f"{base_url}/api/v1/images/{image_id}/verify", timeout=10.0)
-            data = response.json()
-            if data.get("success"):
-                return data.get("data", {}).get("file_status")
-            return None
-        except Exception:
-            return None
-    return verify
-
-
-def _make_page_fetcher(base_url: str):
-    def fetch(cursor=None, limit=100, import_job=None, category=None, tag=None,
-              file_status=None, exclude_category=None, exclude_tag=None):
-        try:
-            params: dict = {"view": "grid", "limit": limit}
-            if cursor:
-                params["cursor"] = cursor
-            if import_job:
-                params["import_job"] = import_job
-            if category:
-                params["categories"] = category        # API uses plural
-            if exclude_category:
-                params["exclude_categories"] = exclude_category
-            if tag:
-                params["tags"] = tag                   # API uses plural
-            if exclude_tag:
-                params["exclude_tags"] = exclude_tag
-            if file_status == "missing":
-                params["missing"] = True               # API uses boolean flag
-            response = httpx.get(f"{base_url}/api/v1/images", params=params, timeout=10.0)
-            data = response.json()
-            if data.get("success"):
-                return {
-                    "items": data.get("data", []),
-                    "next_cursor": data.get("next_cursor"),
-                    "has_more": data.get("has_more", False),
-                }
-            return None
-        except Exception:
-            return None
-    return fetch
-
 
 def main():
     app = QGuiApplication(sys.argv)
@@ -380,12 +326,13 @@ def main():
         health_url=process_manager.health_url,
     )
     base_url = f"http://{process_manager._host}:{process_manager._port}"
+    api_client = ApiClient(base_url=base_url)
 
     filter_state = FilterStateManager()
     library_state = LibraryViewModel(
-        page_fetcher=_make_page_fetcher(base_url),
+        page_fetcher=api_client.fetch_images_page,
         filter_state=filter_state,
-        image_verifier=_make_image_verifier(base_url),
+        image_verifier=api_client.verify_image,
     )
     categories_state = CategoriesViewModel(
         categories_fetcher=_make_categories_fetcher(base_url),
@@ -425,7 +372,7 @@ def main():
             library_state.reload()
 
     metadata_state = MetadataViewModel(
-        image_fetcher=_make_image_fetcher(base_url),
+        image_fetcher=api_client.fetch_image,
         selection_manager=selection_manager,
     )
     tag_search_state = TagSearchViewModel(
