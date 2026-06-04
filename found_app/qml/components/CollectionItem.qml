@@ -24,7 +24,9 @@ Rectangle {
             anchors.verticalCenter: parent.verticalCenter
             text: root.collectionName
             color: root.isDropTarget ? "#88cc88" : "#cccccc"
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSizeMd
+            font.weight: Font.DemiBold
+            font.capitalization: Font.AllUppercase
             elide: Text.ElideRight
             width: parent.width
         }
