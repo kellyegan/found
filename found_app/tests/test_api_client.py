@@ -366,3 +366,145 @@ def test_verify_image_returns_none_on_exception():
     client, mock_http = make_sync_client()
     mock_http.post.side_effect = Exception("timeout")
     assert client.verify_image("abc") is None
+
+
+# ---------------------------------------------------------------------------
+# scan_paths
+# ---------------------------------------------------------------------------
+
+
+def test_scan_paths_returns_preview_data():
+    client, mock_http = make_sync_client()
+    preview = {"paths": ["/img/a.jpg"], "duplicates": []}
+    mock_http.post.return_value = mock_response(
+        200, {"success": True, "data": preview}
+    )
+    assert client.scan_paths(["/img/a.jpg"]) == preview
+
+
+def test_scan_paths_posts_to_import_preview_endpoint():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": True, "data": {}}
+    )
+    client.scan_paths(["/img/a.jpg"])
+    url = mock_http.post.call_args.args[0]
+    assert url == "/api/v1/images/import/preview"
+
+
+def test_scan_paths_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.scan_paths(["/img/a.jpg"]) is None
+
+
+def test_scan_paths_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.scan_paths(["/img/a.jpg"]) is None
+
+
+# ---------------------------------------------------------------------------
+# import_paths
+# ---------------------------------------------------------------------------
+
+
+def test_import_paths_returns_job_id():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": True, "data": {"job_id": "job-123"}}
+    )
+    assert client.import_paths(["/img/a.jpg"]) == "job-123"
+
+
+def test_import_paths_posts_to_import_endpoint():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": True, "data": {"job_id": "job-123"}}
+    )
+    client.import_paths(["/img/a.jpg"])
+    url = mock_http.post.call_args.args[0]
+    assert url == "/api/v1/images/import"
+
+
+def test_import_paths_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.import_paths(["/img/a.jpg"]) is None
+
+
+def test_import_paths_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.import_paths(["/img/a.jpg"]) is None
+
+
+# ---------------------------------------------------------------------------
+# fetch_job
+# ---------------------------------------------------------------------------
+
+
+def test_fetch_job_returns_job_data():
+    client, mock_http = make_sync_client()
+    job = {"job_id": "job-123", "status": "complete"}
+    mock_http.get.return_value = mock_response(
+        200, {"success": True, "data": job}
+    )
+    assert client.fetch_job("job-123") == job
+
+
+def test_fetch_job_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.get.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.fetch_job("job-123") is None
+
+
+def test_fetch_job_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.get.side_effect = Exception("timeout")
+    assert client.fetch_job("job-123") is None
+
+
+# ---------------------------------------------------------------------------
+# resolve_conflict
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_conflict_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.patch.return_value = mock_response(
+        200, {"success": True, "data": {}}
+    )
+    assert client.resolve_conflict("img-1", "/new/path.jpg") is True
+
+
+def test_resolve_conflict_patches_image_path():
+    client, mock_http = make_sync_client()
+    mock_http.patch.return_value = mock_response(
+        200, {"success": True, "data": {}}
+    )
+    client.resolve_conflict("img-1", "/new/path.jpg")
+    url = mock_http.patch.call_args.args[0]
+    body = mock_http.patch.call_args.kwargs["json"]
+    assert url == "/api/v1/images/img-1"
+    assert body == {"path": "/new/path.jpg"}
+
+
+def test_resolve_conflict_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.patch.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.resolve_conflict("img-1", "/new/path.jpg") is False
+
+
+def test_resolve_conflict_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.patch.side_effect = Exception("timeout")
+    assert client.resolve_conflict("img-1", "/new/path.jpg") is False

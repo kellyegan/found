@@ -79,52 +79,6 @@ def _make_collection_images_fetcher(base_url: str):
     return fetch
 
 
-def _make_scanner(base_url: str):
-    def scan(paths: list[str]):
-        try:
-            response = httpx.post(f"{base_url}/api/v1/images/import/preview", json={"paths": paths}, timeout=30.0)
-            data = response.json()
-            return data.get("data") if data.get("success") else None
-        except Exception:
-            return None
-    return scan
-
-
-def _make_importer(base_url: str):
-    def do_import(paths: list[str]):
-        try:
-            response = httpx.post(f"{base_url}/api/v1/images/import", json={"paths": paths}, timeout=30.0)
-            data = response.json()
-            return data["data"]["job_id"] if data.get("success") else None
-        except Exception:
-            return None
-    return do_import
-
-
-def _make_job_fetcher(base_url: str):
-    def fetch(job_id: str):
-        try:
-            response = httpx.get(f"{base_url}/api/v1/jobs/{job_id}", timeout=10.0)
-            data = response.json()
-            return data.get("data") if data.get("success") else None
-        except Exception:
-            return None
-    return fetch
-
-
-def _make_conflict_resolver(base_url: str):
-    def resolve(image_id: str, new_path: str) -> bool:
-        try:
-            response = httpx.patch(
-                f"{base_url}/api/v1/images/{image_id}",
-                json={"path": new_path},
-                timeout=10.0,
-            )
-            return response.json().get("success", False)
-        except Exception:
-            return False
-    return resolve
-
 
 def _make_categories_fetcher(base_url: str):
     def fetch():
@@ -350,10 +304,10 @@ def main():
         collection_images_fetcher=_make_collection_images_fetcher(base_url),
     )
     import_state = ImportViewModel(
-        scanner=_make_scanner(base_url),
-        importer=_make_importer(base_url),
-        job_fetcher=_make_job_fetcher(base_url),
-        conflict_resolver=_make_conflict_resolver(base_url),
+        scanner=api_client.scan_paths,
+        importer=api_client.import_paths,
+        job_fetcher=api_client.fetch_job,
+        conflict_resolver=api_client.resolve_conflict,
     )
 
     def _on_import_loading_state_changed(state: str) -> None:

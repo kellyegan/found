@@ -152,6 +152,43 @@ class ApiClient:
         except Exception:
             return None
 
+    def scan_paths(self, paths: list[str]) -> dict | None:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/import/preview", json={"paths": paths}, timeout=30.0
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
+    def import_paths(self, paths: list[str]) -> str | None:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/import", json={"paths": paths}, timeout=30.0
+            )
+            data = response.json()
+            return data["data"]["job_id"] if data.get("success") else None
+        except Exception:
+            return None
+
+    def fetch_job(self, job_id: str) -> dict | None:
+        try:
+            response = self._sync_client.get(f"/api/v1/jobs/{job_id}", timeout=10.0)
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
+    def resolve_conflict(self, image_id: str, new_path: str) -> bool:
+        try:
+            response = self._sync_client.patch(
+                f"/api/v1/images/{image_id}", json={"path": new_path}, timeout=10.0
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
     async def close(self) -> None:
         await self._client.aclose()
 
