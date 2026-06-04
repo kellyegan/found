@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 from PySide6.QtCore import QEventLoop, QTimer
 
 from found_app.app.controller import AppController
-from found_app.backend.process_manager import BackendProcessManager
+from found_app.core.process_manager import BackendProcessManager
 from found_app.state.app_state import AppState, AppStateManager
 
 
