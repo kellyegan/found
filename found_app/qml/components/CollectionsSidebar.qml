@@ -44,7 +44,7 @@ Item {
         width: root.implicitWidth
         height: parent.height
         x: root.open ? 0 : -width
-        color: "#1a1a1a"
+        color: "#000000"
 
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
@@ -69,7 +69,7 @@ Item {
             id: divider
             anchors { top: header.bottom; left: parent.left; right: parent.right }
             height: 1
-            color: "#2a2a2a"
+            color: "#0000000"  //Invisible but seems to function to control layout
         }
 
         // New collection input area
