@@ -3,7 +3,7 @@
 import pytest
 from PySide6.QtCore import QEventLoop, QTimer
 
-from found_app.metadata.metadata_view_model import MetadataViewModel
+from found_app.viewmodels.metadata_view_model import MetadataViewModel
 from found_app.services.selection import SelectionManager
 
 

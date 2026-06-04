@@ -12,7 +12,7 @@ from found_app.collections.collections_view_model import CollectionsViewModel
 from found_app.import_workflow.import_view_model import ImportViewModel
 from found_app.providers.thumbnail_provider import ThumbnailProvider
 from found_app.viewmodels.library_view_model import LibraryViewModel
-from found_app.metadata.metadata_view_model import MetadataViewModel
+from found_app.viewmodels.metadata_view_model import MetadataViewModel
 from found_app.services.filter_state import FilterStateManager
 from found_app.services.navigation import NavigationManager
 from found_app.services.selection import SelectionManager
