@@ -1,4 +1,4 @@
-# FOUND — Phase 2 Component Inventory
+# FOUND — Frontend Component Inventory
 
 [[IMGORG]]
 
@@ -929,7 +929,7 @@ Displayed when active filters return no results.
 
 # 11. Future/Backlog Components
 
-Not Phase 2 scope — retained for planning reference.
+Not current frontend scope — retained for planning reference.
 
 ---
 

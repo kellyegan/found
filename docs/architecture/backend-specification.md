@@ -1,14 +1,14 @@
-# Found - Phase 1 Specification
+# Found - Backend Specification
 
 ---
 
-[[Found - Phase 1 TDD Build Plan]]
+[[Found - Backend TDD Build Plan]]
 
 ## Core API engine (backend)
 
 ### Version
 
-Phase 1
+Backend
 
 ### Purpose
 
@@ -97,7 +97,7 @@ Purpose:
 
 ### Background Tasks
 
-Phase 1 Recommendation:
+Backend Recommendation:
 
 - FastAPI BackgroundTasks for simple jobs
 
@@ -146,7 +146,7 @@ Purpose:
 
 # Supported File Types
 
-Phase 1
+Backend
 
 | Type | Extension  |
 | ---- | ---------- |
@@ -998,7 +998,7 @@ found/                          ← project root
 ### Security
 
 - API bound to localhost only
-- No authentication required in Phase 1
+- No authentication required currently (future development)
 - No filesystem access outside explicitly requested import paths
 
 ### Extensibility
