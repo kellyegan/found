@@ -5,6 +5,7 @@ Item {
     id: root
 
     property string loadingState: "Idle"
+    property int scanTotal: 0
     property var pendingFiles: []
     property var alreadyImportedFiles: []
     property var conflictFiles: []
@@ -47,14 +48,45 @@ Item {
         // ── Scanning ──────────────────────────────────────────────────
         Column {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: 16
             visible: root.loadingState === "Scanning"
+            width: parent.width - 80
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Scanning files…"
+                text: root.scanTotal > 0
+                      ? "Evaluating " + root.scanTotal + " " + (root.scanTotal === 1 ? "item" : "items") + " for import…"
+                      : "Evaluating files for import…"
                 color: "#cccccc"
                 font.pixelSize: 15
+            }
+
+            Rectangle {
+                id: scanTrack
+                width: parent.width
+                height: 4
+                radius: 2
+                color: "#333333"
+                clip: true
+
+                Rectangle {
+                    id: scanBar
+                    width: scanTrack.width * 0.35
+                    height: scanTrack.height
+                    radius: scanTrack.radius
+                    color: "#88cc88"
+
+                    SequentialAnimation on x {
+                        loops: Animation.Infinite
+                        running: root.loadingState === "Scanning"
+                        NumberAnimation {
+                            from: -scanBar.width
+                            to: scanTrack.width
+                            duration: 1200
+                            easing.type: Easing.InOutSine
+                        }
+                    }
+                }
             }
         }
 
