@@ -594,3 +594,58 @@ def test_import_job_done_not_emitted_when_zero_imported(qapp):
     vm.executeImport()
     wait_for_state(vm, "Complete")
     assert received == []
+
+
+# ---------------------------------------------------------------------------
+# prepareImport() — instant modal with count
+# ---------------------------------------------------------------------------
+
+
+def test_scan_total_defaults_to_zero(qapp):
+    assert _vm().scanTotal == 0
+
+
+def test_prepare_import_transitions_to_scanning(qapp):
+    vm = _vm()
+    vm.prepareImport(42)
+    assert vm.loadingState == "Scanning"
+
+
+def test_prepare_import_sets_scan_total(qapp):
+    vm = _vm()
+    vm.prepareImport(42)
+    assert vm.scanTotal == 42
+
+
+def test_prepare_import_emits_loading_state_changed(qapp):
+    received = []
+    vm = _vm()
+    vm.loadingStateChanged.connect(received.append)
+    vm.prepareImport(10)
+    assert "Scanning" in received
+
+
+def test_prepare_import_emits_scan_total_changed(qapp):
+    received = []
+    vm = _vm()
+    vm.scanTotalChanged.connect(received.append)
+    vm.prepareImport(77)
+    assert 77 in received
+
+
+def test_cancel_clears_scan_total(qapp):
+    vm = _vm()
+    vm.prepareImport(42)
+    vm.cancel()
+    assert vm.scanTotal == 0
+
+
+def test_scan_paths_after_prepare_import_completes_normally(qapp, tmp_path):
+    img = tmp_path / "a.jpg"
+    img.touch()
+    vm = _vm(scanner=lambda paths: SAMPLE_SCAN_RESULT)
+    vm.prepareImport(1)
+    vm.scanPaths([str(img)])
+    wait_for_state(vm, "Previewing")
+    assert vm.loadingState == "Previewing"
+    assert vm.pendingFiles == ["/path/a.jpg", "/path/b.png"]
