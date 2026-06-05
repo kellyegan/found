@@ -33,7 +33,7 @@ class ThemeManager(QObject):
 
     @Property(str, constant=True)
     def accent(self) -> str:
-        return "#4a9eff"
+        return "#eeeeff"
 
     @Property(str, constant=True)
     def border(self) -> str:
