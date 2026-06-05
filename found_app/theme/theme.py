@@ -76,6 +76,10 @@ class ThemeManager(QObject):
     # ------------------------------------------------------------------
 
     @Property(int, constant=True)
+    def horizontalMargin(self) -> int:
+        return 18
+
+    @Property(int, constant=True)
     def spacingXs(self) -> int:
         return 4
 

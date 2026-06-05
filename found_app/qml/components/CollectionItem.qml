@@ -18,7 +18,7 @@ Rectangle {
 
     Row {
         anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 12 }
-        spacing: 8
+        spacing: Theme.spacingMd
 
         Text {
             anchors.verticalCenter: parent.verticalCenter
