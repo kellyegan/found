@@ -122,7 +122,10 @@ Item {
             z: 1
         }
 
-        // Missing file overlay — shown when status is known missing, or when image fails to load
+        // Error overlay — shown when the file is missing or the image cannot be decoded.
+        // fileStatus === "missing"  → file no longer exists at its recorded path
+        // img.status === Image.Error with an available file → decode failure (e.g. very
+        //   large image that exhausted memory, unsupported codec, corrupt data)
         Column {
             anchors.centerIn: parent
             visible: root.fileStatus === "missing" || (img.status === Image.Error && root.imageUrl !== "")
@@ -138,7 +141,7 @@ Item {
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "File not found"
+                text: root.fileStatus === "missing" ? "File not found" : "Could not display image"
                 color: "#888888"
                 font.pixelSize: 14
             }
