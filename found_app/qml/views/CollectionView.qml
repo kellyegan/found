@@ -17,8 +17,8 @@ Item {
         anchors.centerIn: parent
         visible: root.loadingState === "Loading"
         text: "Loading…"
-        color: "#888888"
-        font.pixelSize: 14
+        color: Theme.textMuted
+        font.pixelSize: Theme.fontSizeMd
     }
 
     // Empty state
@@ -26,8 +26,8 @@ Item {
         anchors.centerIn: parent
         visible: root.loadingState === "Empty"
         text: "No images in this collection"
-        color: "#555555"
-        font.pixelSize: 14
+        color: Theme.textMuted
+        font.pixelSize: Theme.fontSizeMd
     }
 
     // Error state
@@ -35,8 +35,8 @@ Item {
         anchors.centerIn: parent
         visible: root.loadingState === "Error"
         text: "Failed to load collection"
-        color: "#cc4444"
-        font.pixelSize: 14
+        color: Theme.warningColor
+        font.pixelSize: Theme.fontSizeMd
     }
 
     // Image grid
