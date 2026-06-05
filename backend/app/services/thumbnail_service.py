@@ -2,6 +2,11 @@ from pathlib import Path
 
 from PIL import Image as PILImage
 
+# This is a local desktop app that processes the user's own files.
+# The decompression-bomb guard is designed for servers handling untrusted uploads
+# and is not applicable here.
+PILImage.MAX_IMAGE_PIXELS = None
+
 THUMBNAIL_SIZE = (512, 512)
 
 
@@ -15,6 +20,7 @@ def generate_thumbnail(source_path: str, sha256_hash: str, thumbnail_dir: str) -
     thumb_path = get_thumbnail_path(sha256_hash, thumbnail_dir)
     thumb_path.parent.mkdir(parents=True, exist_ok=True)
 
+    PILImage.MAX_IMAGE_PIXELS = None  # belt-and-suspenders: ensures tests work too
     with PILImage.open(source_path) as img:
         img.thumbnail(THUMBNAIL_SIZE)
         img.convert("RGB").save(thumb_path, "JPEG", quality=85)

@@ -56,3 +56,24 @@ def test_thumbnail_regenerated_when_file_missing(client, imported_image):
 
     assert response.status_code == 200
     assert thumb_path.exists()
+
+
+def test_generate_thumbnail_succeeds_for_oversized_image(tmp_path, monkeypatch):
+    """Must produce a thumbnail even when PIL's pixel limit is breached.
+
+    Setting MAX_IMAGE_PIXELS=1 simulates a gigapixel file without needing one.
+    """
+    import PIL.Image as PILModule
+    from app.services.thumbnail_service import generate_thumbnail
+
+    img_path = tmp_path / "large.jpg"
+    PILImage.new("RGB", (200, 200), color=(64, 128, 192)).save(img_path, "JPEG")
+
+    monkeypatch.setattr(PILModule, "MAX_IMAGE_PIXELS", 1)
+
+    thumb_path = generate_thumbnail(str(img_path), "deadbeef", str(tmp_path))
+
+    assert Path(thumb_path).exists()
+    with PILImage.open(thumb_path) as t:
+        assert t.width <= 512
+        assert t.height <= 512
