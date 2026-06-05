@@ -22,7 +22,19 @@ def generate_thumbnail(source_path: str, sha256_hash: str, thumbnail_dir: str) -
 
     PILImage.MAX_IMAGE_PIXELS = None  # belt-and-suspenders: ensures tests work too
     with PILImage.open(source_path) as img:
-        img.thumbnail(THUMBNAIL_SIZE)
+        # Raw packed modes like I;16 (16-bit grayscale TIFF from scanners/DSLRs)
+        # have two problems:
+        #   1. thumbnail() raises ValueError on large downscales (>~6x ratio)
+        #   2. convert('RGB') clips values > 255 → all-white thumbnail
+        # Fix: convert to I (32-bit int, preserves 16-bit values), thumbnail
+        # that (mode I is fully supported), then scale 0-65535 → 0-255 before
+        # saving. The mode name always contains ";" for packed/raw modes.
+        if ";" in (img.mode or ""):
+            img = img.convert("I")
+            img.thumbnail(THUMBNAIL_SIZE)
+            img = img.point(lambda x: x / 256).convert("L")
+        else:
+            img.thumbnail(THUMBNAIL_SIZE)
         img.convert("RGB").save(thumb_path, "JPEG", quality=85)
 
     return str(thumb_path)
