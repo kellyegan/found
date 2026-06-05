@@ -33,7 +33,7 @@ Item {
             Text {
                 anchors.centerIn: parent
                 text: "‹"
-                font.pixelSize: 24
+                font.pixelSize: Theme.fontSizeLg
                 color: Theme.text
             }
 
@@ -46,14 +46,15 @@ Item {
         Text {
             anchors {
                 left: backBtn.right
-                leftMargin: Theme.spacingMd
+                leftMargin: Theme.horizontalTextMargin
                 verticalCenter: parent.verticalCenter
             }
             text: root.viewTitle
             font.pixelSize: Theme.fontSizeMd
             font.family: Theme.fontFamily
-            font.weight: Font.Medium
-            color: Theme.text
+            font.weight: Font.Bold
+            font.capitalization: Font.AllUppercase
+            color: Theme.textMuted
         }
     }
 

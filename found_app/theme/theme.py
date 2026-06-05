@@ -76,6 +76,13 @@ class ThemeManager(QObject):
     # ------------------------------------------------------------------
 
     @Property(int, constant=True)
+    def horizontalTextMargin(self) -> int:
+        return 30
+    
+    def horizontalTextPadding(self) -> int:
+        return 12
+
+    @Property(int, constant=True)
     def horizontalMargin(self) -> int:
         return 18
 
