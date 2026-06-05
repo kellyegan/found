@@ -59,20 +59,23 @@ class _FetchRunnable(QRunnable):
 
     def run(self) -> None:
         image = self._fetch()
-        self._cache.put(self._image_id, image)
-        self._response._image = image
+        if image is not None:
+            self._cache.put(self._image_id, image)
+            self._response._image = image
+        else:
+            self._response._image = _placeholder()
         self._response.finished.emit()
 
-    def _fetch(self) -> QImage:
+    def _fetch(self) -> QImage | None:
         try:
-            resp = httpx.get(self._url, timeout=10.0)
+            resp = httpx.get(self._url, timeout=120.0)
             if resp.status_code == 200:
                 img = QImage()
                 if img.loadFromData(resp.content) and not img.isNull():
                     return img
         except Exception:
             pass
-        return _placeholder()
+        return None
 
 
 def _placeholder() -> QImage:

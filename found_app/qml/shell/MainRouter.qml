@@ -309,6 +309,25 @@ Item {
         }
 
 
+        // Deferred scan: show the modal immediately on drop, then build paths and scan
+        // on the next event-loop tick so QML has one cycle to paint before blocking work.
+        Timer {
+            id: scanTimer
+            interval: 0
+            repeat: false
+            property var pendingUrls: null
+            onTriggered: {
+                if (!pendingUrls) return
+                var paths = []
+                for (var i = 0; i < pendingUrls.length; i++) {
+                    // Strip file:// prefix; handle file:///path on macOS/Linux
+                    paths.push(pendingUrls[i].toString().replace(/^file:\/\//, ""))
+                }
+                ImportState.scanPaths(paths)
+                pendingUrls = null
+            }
+        }
+
         // File drop area — accepts files/directories dragged from Finder/Explorer
         // Stops at categoriesBar.top so chip DropAreas are not blocked by this higher-z area
         DropArea {
@@ -322,13 +341,12 @@ Item {
 
             onDropped: function(drop) {
                 if (!drop.hasUrls) return
-                var paths = []
-                for (var i = 0; i < drop.urls.length; i++) {
-                    var s = drop.urls[i].toString()
-                    // Strip file:// prefix; handle file:///path on macOS/Linux
-                    paths.push(s.replace(/^file:\/\//, ""))
-                }
-                ImportState.scanPaths(paths)
+                // Show the modal now (before any path extraction) so it renders
+                // before the path-building loop and Python bridge call run.
+                ImportState.prepareImport(drop.urls.length)
+                // Capture URLs while the drop event is still valid, then defer.
+                scanTimer.pendingUrls = drop.urls
+                scanTimer.restart()
             }
 
             // Drag-over highlight
@@ -356,6 +374,7 @@ Item {
             anchors.fill: parent
             z: 30
             loadingState: ImportState.loadingState
+            scanTotal: ImportState.scanTotal
             pendingFiles: ImportState.pendingFiles
             alreadyImportedFiles: ImportState.duplicateFiles
             conflictFiles: ImportState.conflictFiles

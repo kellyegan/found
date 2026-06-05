@@ -31,6 +31,7 @@ class ImportViewModel(QObject):
     importJobDone = Signal(str)
     progressChanged = Signal(float)
     conflictChoicesChanged = Signal()
+    scanTotalChanged = Signal(int)
 
     def __init__(
         self,
@@ -58,6 +59,7 @@ class ImportViewModel(QObject):
         self._progress: float = 0.0
         self._updated_count = 0
         self._conflict_choices: dict[str, str] = {}
+        self._scan_total: int = 0
         self._scan_thread: Optional[_ScanThread] = None
         self._import_thread: Optional[_ImportThread] = None
 
@@ -113,9 +115,19 @@ class ImportViewModel(QObject):
     def updatedCount(self) -> int:
         return self._updated_count
 
+    @Property(int, notify=scanTotalChanged)
+    def scanTotal(self) -> int:
+        return self._scan_total
+
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
+
+    @Slot(int)
+    def prepareImport(self, count: int) -> None:
+        self._scan_total = count
+        self.scanTotalChanged.emit(count)
+        self._set_state("Scanning")
 
     @Slot("QVariant")
     def scanPaths(self, paths) -> None:
@@ -164,9 +176,11 @@ class ImportViewModel(QObject):
         self._progress = 0.0
         self._updated_count = 0
         self._conflict_choices = {}
+        self._scan_total = 0
         self.pendingFilesChanged.emit()
         self.progressChanged.emit(0.0)
         self.conflictChoicesChanged.emit()
+        self.scanTotalChanged.emit(0)
         self._set_state("Idle")
 
     # ------------------------------------------------------------------

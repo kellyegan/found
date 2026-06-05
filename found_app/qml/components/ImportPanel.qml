@@ -5,6 +5,7 @@ Item {
     id: root
 
     property string loadingState: "Idle"
+    property int scanTotal: 0
     property var pendingFiles: []
     property var alreadyImportedFiles: []
     property var conflictFiles: []
@@ -47,14 +48,45 @@ Item {
         // ── Scanning ──────────────────────────────────────────────────
         Column {
             anchors.centerIn: parent
-            spacing: 12
+            spacing: 16
             visible: root.loadingState === "Scanning"
+            width: parent.width - 80
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Scanning files…"
+                text: root.scanTotal > 0
+                      ? "Evaluating " + root.scanTotal + " " + (root.scanTotal === 1 ? "item" : "items") + " for import…"
+                      : "Evaluating files for import…"
                 color: "#cccccc"
                 font.pixelSize: 15
+            }
+
+            Rectangle {
+                id: scanTrack
+                width: parent.width
+                height: 4
+                radius: 2
+                color: "#333333"
+                clip: true
+
+                Rectangle {
+                    id: scanBar
+                    width: scanTrack.width * 0.35
+                    height: scanTrack.height
+                    radius: scanTrack.radius
+                    color: "#88cc88"
+
+                    SequentialAnimation on x {
+                        loops: Animation.Infinite
+                        running: root.loadingState === "Scanning"
+                        NumberAnimation {
+                            from: -scanBar.width
+                            to: scanTrack.width
+                            duration: 1200
+                            easing.type: Easing.InOutSine
+                        }
+                    }
+                }
             }
         }
 
@@ -87,25 +119,25 @@ Item {
                             font.pixelSize: 13
                         }
 
-                        Row {
+                        ListView {
+                            width: parent.width
+                            height: 60
+                            orientation: ListView.Horizontal
                             spacing: 4
-                            Repeater {
-                                model: root.alreadyImportedFiles
-                                delegate: Rectangle {
-                                    id: importedTile
-                                    property var fileData: modelData
-                                    visible: index < 10
-                                    width: 60; height: 60
-                                    color: "#222222"
-                                    radius: 3
-                                    clip: true
-                                    Image {
-                                        anchors.fill: parent
-                                        source: importedTile.fileData && importedTile.fileData.image_id
-                                                ? "image://thumbnails/" + importedTile.fileData.image_id
-                                                : ""
-                                        fillMode: Image.PreserveAspectCrop
-                                    }
+                            clip: true
+                            model: root.alreadyImportedFiles
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: 60; height: 60
+                                color: "#222222"
+                                radius: 3
+                                clip: true
+                                Image {
+                                    anchors.fill: parent
+                                    source: parent.modelData && parent.modelData.image_id
+                                            ? "image://thumbnails/" + parent.modelData.image_id
+                                            : ""
+                                    fillMode: Image.PreserveAspectCrop
                                 }
                             }
                         }
@@ -124,21 +156,41 @@ Item {
                             font.weight: Font.Medium
                         }
 
-                        Row {
+                        ListView {
+                            width: parent.width
+                            height: 60
+                            orientation: ListView.Horizontal
                             spacing: 4
-                            Repeater {
-                                model: root.pendingFiles
-                                delegate: Rectangle {
-                                    visible: index < 10
-                                    width: 60; height: 60
-                                    color: "#222222"
-                                    radius: 3
-                                    clip: true
-                                    Image {
-                                        anchors.fill: parent
-                                        source: modelData ? "file://" + modelData : ""
-                                        fillMode: Image.PreserveAspectCrop
-                                    }
+                            clip: true
+                            model: root.pendingFiles
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: 60; height: 60
+                                color: "#222222"
+                                radius: 3
+                                clip: true
+
+                                Image {
+                                    id: pendingPreview
+                                    anchors.fill: parent
+                                    source: parent.modelData ? "file://" + parent.modelData : ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    // Load in a Qt background thread so large files never
+                                    // stall the render loop. sourceSize hints Qt to scale
+                                    // while reading (effective for JPEG; no-op for TIFF).
+                                    asynchronous: true
+                                    sourceSize.width: 60
+                                    sourceSize.height: 60
+                                }
+
+                                // Shown when Qt rejects the file (e.g. very large TIFF).
+                                // The image will still import; this tile just can't preview it.
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: pendingPreview.status === Image.Error
+                                    text: "…"
+                                    color: "#555555"
+                                    font.pixelSize: 16
                                 }
                             }
                         }
