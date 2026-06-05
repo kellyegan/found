@@ -16,9 +16,9 @@ Item {
     // Edge tab — follows the panel's right edge, always visible
     Rectangle {
         id: edgeTab
-        width: 16
+        width: 18
         height: 72
-        x: panel.x + panel.width
+        x: 0
         y: (parent.height - height) / 2
         color: "#000000"
         radius: 2
