@@ -169,10 +169,28 @@ Item {
                                 color: "#222222"
                                 radius: 3
                                 clip: true
+
                                 Image {
+                                    id: pendingPreview
                                     anchors.fill: parent
                                     source: parent.modelData ? "file://" + parent.modelData : ""
                                     fillMode: Image.PreserveAspectCrop
+                                    // Load in a Qt background thread so large files never
+                                    // stall the render loop. sourceSize hints Qt to scale
+                                    // while reading (effective for JPEG; no-op for TIFF).
+                                    asynchronous: true
+                                    sourceSize.width: 60
+                                    sourceSize.height: 60
+                                }
+
+                                // Shown when Qt rejects the file (e.g. very large TIFF).
+                                // The image will still import; this tile just can't preview it.
+                                Text {
+                                    anchors.centerIn: parent
+                                    visible: pendingPreview.status === Image.Error
+                                    text: "…"
+                                    color: "#555555"
+                                    font.pixelSize: 16
                                 }
                             }
                         }

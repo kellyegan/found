@@ -85,3 +85,54 @@ def test_thumbnail_provider_request_returns_image_response(qapp):
     provider = ThumbnailProvider(base_url="http://127.0.0.1:9999")
     response = provider.requestImageResponse("some-uuid", QSize(60, 60))
     assert isinstance(response, QQuickImageResponse)
+
+
+# ---------------------------------------------------------------------------
+# Fetch caching behaviour
+# ---------------------------------------------------------------------------
+
+
+def _make_jpeg_bytes() -> bytes:
+    """Return bytes of a minimal valid JPEG so QImage.loadFromData succeeds."""
+    import io
+    from PIL import Image as PILImage
+    buf = io.BytesIO()
+    PILImage.new("RGB", (10, 10), (17, 34, 51)).save(buf, "JPEG")
+    return buf.getvalue()
+
+
+def test_failed_fetch_is_not_cached(qapp, monkeypatch):
+    """A timeout or non-200 response must not populate the LRU so the next
+    request can retry rather than serving a stale placeholder forever."""
+    import httpx
+    from found_app.providers.thumbnail_provider import _FetchRunnable, _ThumbnailResponse
+
+    monkeypatch.setattr(httpx, "get", lambda *a, **kw: (_ for _ in ()).throw(httpx.TimeoutException("timed out")))
+
+    provider = ThumbnailProvider(base_url="http://127.0.0.1:9999")
+    response = _ThumbnailResponse()
+    runnable = _FetchRunnable(response, "http://x/thumbnail", provider._cache, "img-1")
+    runnable.run()
+
+    assert provider._cache.get("img-1") is None
+
+
+def test_successful_fetch_is_cached(qapp, monkeypatch):
+    """A 200 response with a valid image should be stored in the LRU."""
+    import httpx
+    from found_app.providers.thumbnail_provider import _FetchRunnable, _ThumbnailResponse
+
+    jpeg_bytes = _make_jpeg_bytes()
+
+    class _FakeResp:
+        status_code = 200
+        content = jpeg_bytes
+
+    monkeypatch.setattr(httpx, "get", lambda *a, **kw: _FakeResp())
+
+    provider = ThumbnailProvider(base_url="http://127.0.0.1:9999")
+    response = _ThumbnailResponse()
+    runnable = _FetchRunnable(response, "http://x/thumbnail", provider._cache, "img-2")
+    runnable.run()
+
+    assert provider._cache.get("img-2") is not None

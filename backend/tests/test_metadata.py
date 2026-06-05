@@ -67,6 +67,27 @@ def test_unsupported_file_type_rejected(tmp_path):
         extract_metadata(str(bad_path))
 
 
+def test_extract_metadata_succeeds_for_oversized_image(tmp_path, monkeypatch):
+    """Must succeed even when PIL's pixel limit is breached.
+
+    Setting MAX_IMAGE_PIXELS=1 simulates a gigapixel file without needing one:
+    any real image triggers DecompressionBombError under that limit.
+    """
+    import PIL.Image as PILModule
+
+    img_path = tmp_path / "large.jpg"
+    PILImage.new("RGB", (200, 200)).save(img_path, "JPEG")
+
+    monkeypatch.setattr(PILModule, "MAX_IMAGE_PIXELS", 1)
+
+    from app.services.metadata_service import extract_metadata
+
+    meta = extract_metadata(str(img_path))
+
+    assert meta.width == 200
+    assert meta.height == 200
+
+
 def test_missing_file_detection(client, make_image):
     image = make_image("/nonexistent/ghost.jpg")
 

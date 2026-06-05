@@ -4,6 +4,11 @@ from pathlib import Path
 
 from PIL import Image as PILImage, UnidentifiedImageError
 
+# This is a local desktop app that processes the user's own files.
+# The decompression-bomb guard is designed for servers handling untrusted uploads
+# and is not applicable here.
+PILImage.MAX_IMAGE_PIXELS = None
+
 _SUPPORTED_MIME_TYPES = {
     "image/jpeg",
     "image/png",
@@ -35,6 +40,7 @@ def extract_metadata(path: str) -> ImageMetadata:
     file_path = Path(path)
 
     try:
+        PILImage.MAX_IMAGE_PIXELS = None  # belt-and-suspenders: ensures tests work too
         with PILImage.open(file_path) as img:
             pillow_mime = _PILLOW_FORMAT_TO_MIME.get((img.format or "").lower())
             width, height = img.size

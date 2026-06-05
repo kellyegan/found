@@ -56,3 +56,60 @@ def test_thumbnail_regenerated_when_file_missing(client, imported_image):
 
     assert response.status_code == 200
     assert thumb_path.exists()
+
+
+def test_generate_thumbnail_succeeds_for_16bit_tiff(tmp_path):
+    """16-bit grayscale TIFFs (mode I;16) must produce a valid, non-white thumbnail.
+
+    Two bugs affect I;16 images from scanners/DSLRs:
+    1. thumbnail() raises ValueError for large downscales (>~6x) — 3000×3000
+       → 512 reliably triggers this.
+    2. convert('RGB') clips values > 255, turning real-data images all white.
+
+    The fix converts I;16 → I (preserves values) → thumbnail → scale
+    0-65535 to 0-255 → L → RGB → JPEG.
+    """
+    from app.services.thumbnail_service import generate_thumbnail
+
+    img_path = tmp_path / "scan.tif"
+    # Vertical gradient: top row all-black (value 0), bottom row all-white (65535).
+    # This verifies both that the image generates and that values aren't clipped.
+    size = 3000
+    img = PILImage.new("I;16", (size, size))
+    img.putdata([int(y / size * 65535) for y in range(size) for _ in range(size)])
+    img.save(img_path)
+
+    thumb_path = generate_thumbnail(str(img_path), "aabbccdd", str(tmp_path))
+
+    assert Path(thumb_path).exists()
+    with PILImage.open(thumb_path) as t:
+        assert t.width <= 512
+        assert t.height <= 512
+        # The gradient must be preserved: top pixels dark, bottom pixels bright.
+        # If values were clipped to 255 the whole image would be white.
+        pixels = list(t.convert("L").tobytes())
+        top_avg = sum(pixels[:t.width]) / t.width
+        bot_avg = sum(pixels[-t.width:]) / t.width
+        assert top_avg < 50, f"Top row should be dark (avg {top_avg:.1f})"
+        assert bot_avg > 200, f"Bottom row should be bright (avg {bot_avg:.1f})"
+
+
+def test_generate_thumbnail_succeeds_for_oversized_image(tmp_path, monkeypatch):
+    """Must produce a thumbnail even when PIL's pixel limit is breached.
+
+    Setting MAX_IMAGE_PIXELS=1 simulates a gigapixel file without needing one.
+    """
+    import PIL.Image as PILModule
+    from app.services.thumbnail_service import generate_thumbnail
+
+    img_path = tmp_path / "large.jpg"
+    PILImage.new("RGB", (200, 200), color=(64, 128, 192)).save(img_path, "JPEG")
+
+    monkeypatch.setattr(PILModule, "MAX_IMAGE_PIXELS", 1)
+
+    thumb_path = generate_thumbnail(str(img_path), "deadbeef", str(tmp_path))
+
+    assert Path(thumb_path).exists()
+    with PILImage.open(thumb_path) as t:
+        assert t.width <= 512
+        assert t.height <= 512
