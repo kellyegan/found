@@ -62,8 +62,8 @@ Item {
         id: panel
         width: root.implicitWidth
         height: parent.height
-        x: root.open ? 0 : root.implicitWidth
-        color: "#1a1a1a"
+        x: 0
+        color: Theme.background
         clip: true
 
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
@@ -220,7 +220,7 @@ Item {
         height: 72
         x: panel.x - width
         y: (parent.height - height) / 2
-        color: "#1a1a1a"
+        color: Theme.background
         radius: 2
         z: 1
 

@@ -13,7 +13,7 @@ class ThemeManager(QObject):
 
     @Property(str, constant=True)
     def background(self) -> str:
-        return "#0d0d0d"
+        return "#000000"
 
     @Property(str, constant=True)
     def surface(self) -> str:
