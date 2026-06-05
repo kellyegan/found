@@ -87,24 +87,25 @@ Item {
                             font.pixelSize: 13
                         }
 
-                        Row {
+                        ListView {
+                            width: parent.width
+                            height: 60
+                            orientation: ListView.Horizontal
                             spacing: 4
-                            Repeater {
-                                model: root.alreadyImportedFiles.slice(0, 10)
-                                delegate: Rectangle {
-                                    id: importedTile
-                                    property var fileData: modelData
-                                    width: 60; height: 60
-                                    color: "#222222"
-                                    radius: 3
-                                    clip: true
-                                    Image {
-                                        anchors.fill: parent
-                                        source: importedTile.fileData && importedTile.fileData.image_id
-                                                ? "image://thumbnails/" + importedTile.fileData.image_id
-                                                : ""
-                                        fillMode: Image.PreserveAspectCrop
-                                    }
+                            clip: true
+                            model: root.alreadyImportedFiles
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: 60; height: 60
+                                color: "#222222"
+                                radius: 3
+                                clip: true
+                                Image {
+                                    anchors.fill: parent
+                                    source: parent.modelData && parent.modelData.image_id
+                                            ? "image://thumbnails/" + parent.modelData.image_id
+                                            : ""
+                                    fillMode: Image.PreserveAspectCrop
                                 }
                             }
                         }
@@ -123,20 +124,23 @@ Item {
                             font.weight: Font.Medium
                         }
 
-                        Row {
+                        ListView {
+                            width: parent.width
+                            height: 60
+                            orientation: ListView.Horizontal
                             spacing: 4
-                            Repeater {
-                                model: root.pendingFiles.slice(0, 10)
-                                delegate: Rectangle {
-                                    width: 60; height: 60
-                                    color: "#222222"
-                                    radius: 3
-                                    clip: true
-                                    Image {
-                                        anchors.fill: parent
-                                        source: modelData ? "file://" + modelData : ""
-                                        fillMode: Image.PreserveAspectCrop
-                                    }
+                            clip: true
+                            model: root.pendingFiles
+                            delegate: Rectangle {
+                                required property var modelData
+                                width: 60; height: 60
+                                color: "#222222"
+                                radius: 3
+                                clip: true
+                                Image {
+                                    anchors.fill: parent
+                                    source: parent.modelData ? "file://" + parent.modelData : ""
+                                    fillMode: Image.PreserveAspectCrop
                                 }
                             }
                         }
