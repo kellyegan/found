@@ -90,11 +90,10 @@ Item {
                         Row {
                             spacing: 4
                             Repeater {
-                                model: root.alreadyImportedFiles
+                                model: root.alreadyImportedFiles.slice(0, 10)
                                 delegate: Rectangle {
                                     id: importedTile
                                     property var fileData: modelData
-                                    visible: index < 10
                                     width: 60; height: 60
                                     color: "#222222"
                                     radius: 3
@@ -127,9 +126,8 @@ Item {
                         Row {
                             spacing: 4
                             Repeater {
-                                model: root.pendingFiles
+                                model: root.pendingFiles.slice(0, 10)
                                 delegate: Rectangle {
-                                    visible: index < 10
                                     width: 60; height: 60
                                     color: "#222222"
                                     radius: 3
