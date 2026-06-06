@@ -238,7 +238,7 @@ Item {
         }
 
         // Sidebar overlay — rendered above content, below nav bar
-        CollectionsSidebar {
+        CollectionsSidePanel {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
             anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             width: implicitWidth
@@ -270,7 +270,7 @@ Item {
 
 
         // Metadata sidebar — right-edge collapsible panel; open by default, collapses in image view
-        MetadataSidebar {
+        MetadataSidePanel {
             id: metadataSidebar
             anchors {
                 top: titleBar.bottom
