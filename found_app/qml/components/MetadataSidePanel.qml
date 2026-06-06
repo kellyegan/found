@@ -57,6 +57,12 @@ SidePanel {
         return isoDate.substring(0, 10)
     }
 
+    function _formatLocation(path) {
+        if (!path) return "—"
+        const idx = path.lastIndexOf('/')
+        return idx > 0 ? path.substring(0, idx) : path
+    }
+
     // ── Scrollable content ───────────────────────────────────────────────────
     Flickable {
         id: contentFlickable
@@ -111,7 +117,7 @@ SidePanel {
                 }
 
                 MetaRow { label: "Filename";   value: root.metaFilename || "—" }
-                MetaRow { label: "Path";       value: root.metaPath || "—"; wrap: true }
+                MetaRow { label: "Location";    value: root._formatLocation(root.metaPath); wrap: true }
                 MetaRow { label: "Dimensions"; value: root.metaDimensions || "—" }
                 MetaRow { label: "Size";       value: root._formatSize(root.metaFileSize) }
                 MetaRow { label: "Added";      value: root._formatDate(root.metaDateAdded) }
