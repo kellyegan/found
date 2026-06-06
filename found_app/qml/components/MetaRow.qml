@@ -6,6 +6,10 @@ Item {
     property string label: ""
     property string value: ""
     property bool wrap: false
+    property string linkUrl: ""
+    property bool clickable: linkUrl !== ""
+
+    signal clicked()
 
     width: parent ? parent.width : 0
     height: labelText.implicitHeight + valueText.implicitHeight + 12
@@ -27,9 +31,21 @@ Item {
         text: row.value
         font.pixelSize: 12
         font.family: Theme.fontFamily
-        color: "#cccccc"
+        color: row.clickable ? (linkArea.containsMouse ? "#ffffff" : "#7eb8f7") : "#cccccc"
         wrapMode: row.wrap ? Text.WrapAnywhere : Text.NoWrap
         maximumLineCount: row.wrap ? 0 : 1
         clip: !row.wrap
+    }
+
+    MouseArea {
+        id: linkArea
+        anchors.fill: valueText
+        visible: row.clickable
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            if (row.linkUrl) Qt.openUrlExternally(row.linkUrl)
+            row.clicked()
+        }
     }
 }

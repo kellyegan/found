@@ -37,6 +37,7 @@ SidePanel {
     property string collectionEditorLoadingState: "Idle"
     property string collectionEditorSelectionMode: "none"
 
+    signal revealFileRequested(string path)
     signal addTagRequested(string tagId, string tagName)
     signal removeTagRequested(string tagId)
     signal addTagByNameRequested(string name)
@@ -117,7 +118,13 @@ SidePanel {
                 }
 
                 MetaRow { label: "Filename";   value: root.metaFilename || "—" }
-                MetaRow { label: "Location";    value: root._formatLocation(root.metaPath); wrap: true }
+                MetaRow {
+                    label: "Location"
+                    value: root._formatLocation(root.metaPath)
+                    wrap: true
+                    clickable: !root.metaIsMissing
+                    onClicked: root.revealFileRequested(root.metaPath)
+                }
                 MetaRow { label: "Dimensions"; value: root.metaDimensions || "—" }
                 MetaRow { label: "Size";       value: root._formatSize(root.metaFileSize) }
                 MetaRow { label: "Added";      value: root._formatDate(root.metaDateAdded) }
