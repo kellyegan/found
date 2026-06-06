@@ -7,7 +7,7 @@ Covers:
 - SidePanel.qml exists and loads cleanly
 - SidePanel exposes edge, open, title, panelIcon, tabIndex properties
 - SidePanel exposes toggleRequested signal
-- CollectionsSidebar and MetadataSidebar public APIs are unchanged after refactor
+- CollectionsSidePanel and MetadataSidePanel public APIs are unchanged after refactor
 """
 
 import pytest
@@ -229,101 +229,101 @@ def test_side_panel_has_toggle_requested_signal(engine):
 
 
 # ---------------------------------------------------------------------------
-# CollectionsSidebar — public API preserved after refactor
+# CollectionsSidePanel — public API preserved after refactor
 # ---------------------------------------------------------------------------
 
 
 def test_collections_sidebar_still_loads(full_engine):
-    load_component(full_engine, "components/CollectionsSidebar.qml")
+    load_component(full_engine, "components/CollectionsSidePanel.qml")
 
 
 def test_collections_sidebar_open_still_defaults_to_false(full_engine):
-    obj = load_component(full_engine, "components/CollectionsSidebar.qml")
+    obj = load_component(full_engine, "components/CollectionsSidePanel.qml")
     assert obj.property("open") is False
 
 
 def test_collections_sidebar_open_still_writable(full_engine):
-    obj = load_component(full_engine, "components/CollectionsSidebar.qml")
+    obj = load_component(full_engine, "components/CollectionsSidePanel.qml")
     obj.setProperty("open", True)
     assert obj.property("open") is True
 
 
 def test_collections_sidebar_toggle_requested_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/CollectionsSidebar.qml")
+    obj = load_component(full_engine, "components/CollectionsSidePanel.qml")
     received = []
     obj.toggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_collections_sidebar_image_dropped_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/CollectionsSidebar.qml")
+    obj = load_component(full_engine, "components/CollectionsSidePanel.qml")
     received = []
     obj.imageDropped.connect(lambda cid, iid: received.append((cid, iid)))
     assert isinstance(received, list)
 
 
 def test_collections_sidebar_collection_clicked_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/CollectionsSidebar.qml")
+    obj = load_component(full_engine, "components/CollectionsSidePanel.qml")
     received = []
     obj.collectionClicked.connect(lambda cid, cname: received.append((cid, cname)))
     assert isinstance(received, list)
 
 
 def test_collections_sidebar_create_collection_requested_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/CollectionsSidebar.qml")
+    obj = load_component(full_engine, "components/CollectionsSidePanel.qml")
     received = []
     obj.createCollectionRequested.connect(lambda name: received.append(name))
     assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------
-# MetadataSidebar — public API preserved after refactor
+# MetadataSidePanel — public API preserved after refactor
 # ---------------------------------------------------------------------------
 
 
 def test_metadata_sidebar_still_loads(full_engine):
-    load_component(full_engine, "components/MetadataSidebar.qml")
+    load_component(full_engine, "components/MetadataSidePanel.qml")
 
 
 def test_metadata_sidebar_open_still_defaults_to_false(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidebar.qml")
+    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     assert obj.property("open") is False
 
 
 def test_metadata_sidebar_open_still_writable(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidebar.qml")
+    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     obj.setProperty("open", True)
     assert obj.property("open") is True
 
 
 def test_metadata_sidebar_toggle_requested_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidebar.qml")
+    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     received = []
     obj.toggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 def test_metadata_sidebar_meta_loading_state_preserved(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidebar.qml")
+    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     assert obj.property("metaLoadingState") == "Idle"
 
 
 def test_metadata_sidebar_add_tag_requested_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidebar.qml")
+    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     received = []
     obj.addTagRequested.connect(lambda tid, tname: received.append((tid, tname)))
     assert isinstance(received, list)
 
 
 def test_metadata_sidebar_add_category_requested_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidebar.qml")
+    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     received = []
     obj.addCategoryRequested.connect(lambda cid, cname: received.append((cid, cname)))
     assert isinstance(received, list)
 
 
 def test_metadata_sidebar_add_to_collection_requested_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidebar.qml")
+    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     received = []
     obj.addToCollectionRequested.connect(lambda cid, cname: received.append((cid, cname)))
     assert isinstance(received, list)
