@@ -5,9 +5,10 @@ SidePanel {
 
     edge: "right"
     title: {
-        if (metaLoadingState === "Ready" && metaFilename) return metaFilename
+        if (metaLoadingState === "Ready") return "Info"
         if (metaLoadingState === "Loading") return "Loading…"
         if (metaLoadingState === "Idle") return "Select image…"
+        if (metaLoadingState === "Error") return "ERROR"
         return "Info"
     }
     panelIcon: "ⓘ"
