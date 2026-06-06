@@ -476,3 +476,61 @@ def test_chip_search_section_has_add_by_name_requested_signal(engine):
     received = []
     obj.addByNameRequested.connect(lambda name: received.append(name))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# CollectionEditorSection
+# ---------------------------------------------------------------------------
+
+
+def test_collection_editor_section_qml_exists():
+    assert (QML_DIR / "components/CollectionEditorSection.qml").exists()
+
+
+def test_collection_editor_section_loads(engine):
+    load_component(engine, "components/CollectionEditorSection.qml")
+
+
+def test_collection_editor_section_selection_mode_defaults_to_none(engine):
+    obj = load_component(engine, "components/CollectionEditorSection.qml")
+    assert obj.property("selectionMode") == "none"
+
+
+def test_collection_editor_section_selection_mode_is_writable(engine):
+    obj = load_component(engine, "components/CollectionEditorSection.qml")
+    obj.setProperty("selectionMode", "single")
+    assert obj.property("selectionMode") == "single"
+
+
+def test_collection_editor_section_collections_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "components/CollectionEditorSection.qml")
+    val = obj.property("collections")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_collection_editor_section_multi_select_label_defaults_to_empty(engine):
+    obj = load_component(engine, "components/CollectionEditorSection.qml")
+    assert obj.property("multiSelectLabel") == ""
+
+
+def test_collection_editor_section_multi_select_label_is_writable(engine):
+    obj = load_component(engine, "components/CollectionEditorSection.qml")
+    obj.setProperty("multiSelectLabel", "Adding to all selected images")
+    assert obj.property("multiSelectLabel") == "Adding to all selected images"
+
+
+def test_collection_editor_section_has_add_to_collection_requested_signal(engine):
+    obj = load_component(engine, "components/CollectionEditorSection.qml")
+    received = []
+    obj.addToCollectionRequested.connect(lambda cid, cname: received.append((cid, cname)))
+    assert isinstance(received, list)
+
+
+def test_collection_editor_section_has_remove_from_collection_requested_signal(engine):
+    obj = load_component(engine, "components/CollectionEditorSection.qml")
+    received = []
+    obj.removeFromCollectionRequested.connect(lambda cid: received.append(cid))
+    assert isinstance(received, list)
