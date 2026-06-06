@@ -44,10 +44,11 @@ Item {
 
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
-        // Blocks clicks from reaching content behind the panel and clears TextInput focus
+        // Blocks clicks and scroll events from reaching content behind the panel
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.AllButtons
+            onWheel: (wheel) => wheel.accepted = true
             onPressed: {
                 if (Window.activeFocusItem instanceof TextInput)
                     root.forceActiveFocus()
