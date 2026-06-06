@@ -1025,79 +1025,79 @@ def test_title_bar_active_filters_is_writable(engine):
 
 
 # ---------------------------------------------------------------------------
-# MetadataOverlay — Commit 9
+# MetadataSidebar — Commit 9
 # ---------------------------------------------------------------------------
 
 
-def test_metadata_overlay_qml_exists():
-    assert (QML_DIR / "components/MetadataOverlay.qml").exists()
+def test_metadata_sidebar_qml_exists():
+    assert (QML_DIR / "components/MetadataSidebar.qml").exists()
 
 
-def test_metadata_overlay_loads(engine):
-    load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_loads(engine):
+    load_component(engine, "components/MetadataSidebar.qml")
 
 
-def test_metadata_overlay_open_defaults_to_false(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_open_defaults_to_false(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("open") is False
 
 
-def test_metadata_overlay_open_is_writable(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_open_is_writable(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     obj.setProperty("open", True)
     assert obj.property("open") is True
 
 
-def test_metadata_overlay_has_toggle_requested_signal(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     received = []
     obj.toggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
-def test_metadata_overlay_meta_filename_defaults_to_empty(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_filename_defaults_to_empty(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("metaFilename") == ""
 
 
-def test_metadata_overlay_meta_filename_is_writable(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_filename_is_writable(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     obj.setProperty("metaFilename", "photo.jpg")
     assert obj.property("metaFilename") == "photo.jpg"
 
 
-def test_metadata_overlay_meta_path_defaults_to_empty(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_path_defaults_to_empty(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("metaPath") == ""
 
 
-def test_metadata_overlay_meta_dimensions_defaults_to_empty(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_dimensions_defaults_to_empty(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("metaDimensions") == ""
 
 
-def test_metadata_overlay_meta_file_size_defaults_to_zero(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_file_size_defaults_to_zero(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("metaFileSize") == 0
 
 
-def test_metadata_overlay_meta_date_added_defaults_to_empty(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_date_added_defaults_to_empty(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("metaDateAdded") == ""
 
 
-def test_metadata_overlay_meta_is_missing_defaults_to_false(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_is_missing_defaults_to_false(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("metaIsMissing") is False
 
 
-def test_metadata_overlay_meta_loading_state_defaults_to_idle(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_loading_state_defaults_to_idle(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("metaLoadingState") == "Idle"
 
 
-def test_metadata_overlay_meta_loading_state_is_writable(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_meta_loading_state_is_writable(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     obj.setProperty("metaLoadingState", "Ready")
     assert obj.property("metaLoadingState") == "Ready"
 
@@ -1116,21 +1116,21 @@ def test_tag_search_field_loads(engine):
 
 
 # ---------------------------------------------------------------------------
-# MetadataOverlay tag editor additions — Commit 11
+# MetadataSidebar tag editor additions — Commit 11
 # ---------------------------------------------------------------------------
 
 
-def test_metadata_overlay_tag_editor_tags_defaults_to_empty(engine):
+def test_metadata_sidebar_tag_editor_tags_defaults_to_empty(engine):
     from PySide6.QtQml import QJSValue
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     val = obj.property("tagEditorTags")
     if isinstance(val, QJSValue):
         val = val.toVariant() or []
     assert val == [] or val is None
 
 
-def test_metadata_overlay_tag_editor_tags_is_writable(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_tag_editor_tags_is_writable(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     obj.setProperty("tagEditorTags", [{"id": "tag-1", "name": "nature"}])
     from PySide6.QtQml import QJSValue
     val = obj.property("tagEditorTags")
@@ -1139,44 +1139,44 @@ def test_metadata_overlay_tag_editor_tags_is_writable(engine):
     assert len(val) == 1
 
 
-def test_metadata_overlay_tag_editor_loading_state_defaults_to_idle(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_tag_editor_loading_state_defaults_to_idle(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("tagEditorLoadingState") == "Idle"
 
 
-def test_metadata_overlay_tag_editor_loading_state_is_writable(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_tag_editor_loading_state_is_writable(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     obj.setProperty("tagEditorLoadingState", "Ready")
     assert obj.property("tagEditorLoadingState") == "Ready"
 
 
-def test_metadata_overlay_tag_editor_selection_mode_defaults_to_none(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_tag_editor_selection_mode_defaults_to_none(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     assert obj.property("tagEditorSelectionMode") == "none"
 
 
-def test_metadata_overlay_tag_editor_selection_mode_is_writable(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_tag_editor_selection_mode_is_writable(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     obj.setProperty("tagEditorSelectionMode", "single")
     assert obj.property("tagEditorSelectionMode") == "single"
 
 
-def test_metadata_overlay_has_add_tag_requested_signal(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_has_add_tag_requested_signal(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     received = []
     obj.addTagRequested.connect(lambda tag_id, tag_name: received.append((tag_id, tag_name)))
     assert isinstance(received, list)
 
 
-def test_metadata_overlay_has_remove_tag_requested_signal(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_has_remove_tag_requested_signal(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     received = []
     obj.removeTagRequested.connect(lambda tag_id: received.append(tag_id))
     assert isinstance(received, list)
 
 
-def test_metadata_overlay_has_add_tag_by_name_requested_signal(engine):
-    obj = load_component(engine, "components/MetadataOverlay.qml")
+def test_metadata_sidebar_has_add_tag_by_name_requested_signal(engine):
+    obj = load_component(engine, "components/MetadataSidebar.qml")
     received = []
     obj.addTagByNameRequested.connect(lambda name: received.append(name))
     assert isinstance(received, list)

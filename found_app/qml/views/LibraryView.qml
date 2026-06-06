@@ -51,15 +51,15 @@ Item {
     Column {
         anchors.centerIn: parent
         visible: root.loadingState === "Empty"
-        spacing: Theme.spacingMd
+        spacing: Theme.spacingSm
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "NO IMAGES YET"
             font.pixelSize: Theme.fontSizeLg
-            font.weight: Font.Bold
+            font.weight: Font.DemiBold
             font.family: Theme.fontFamily
-            color: Theme.text
+            color: Theme.textMuted
         }
 
         Text {
@@ -94,6 +94,6 @@ Item {
         text: "Failed to load library."
         font.pixelSize: Theme.fontSizeMd
         font.family: Theme.fontFamily
-        color: "#ff4444"
+        color: Theme.warningColor
     }
 }

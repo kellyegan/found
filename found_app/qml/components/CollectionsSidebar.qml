@@ -16,18 +16,18 @@ Item {
     // Edge tab — follows the panel's right edge, always visible
     Rectangle {
         id: edgeTab
-        width: 16
+        width: 18
         height: 72
-        x: panel.x + panel.width
+        x: 0
         y: (parent.height - height) / 2
-        color: "#1a1a1a"
+        color: "#000000"
         radius: 2
         z: 1
 
         Text {
             anchors.centerIn: parent
             text: root.open ? "◀" : "▶"
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeSm
             color: "#888888"
         }
 
@@ -44,7 +44,7 @@ Item {
         width: root.implicitWidth
         height: parent.height
         x: root.open ? 0 : -width
-        color: "#1a1a1a"
+        color: "#000000"
 
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
@@ -55,11 +55,12 @@ Item {
             height: 48
 
             Text {
-                anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
+                anchors { left: parent.left; leftMargin: Theme.horizontalMargin + 12; verticalCenter: parent.verticalCenter }
                 text: "Collections"
-                font.pixelSize: 14
-                font.weight: Font.Medium
-                color: "#ffffff"
+                font.pixelSize: Theme.fontSizeMd
+                font.weight: Font.Regular
+                font.capitalization: Font.AllUppercase
+                color: "#aaaaaa"
             }
         }
 
@@ -68,27 +69,27 @@ Item {
             id: divider
             anchors { top: header.bottom; left: parent.left; right: parent.right }
             height: 1
-            color: "#2a2a2a"
+            color: "#00000000"  //Invisible but seems to function to control layout
         }
 
         // New collection input area
         Item {
             id: newCollectionArea
             anchors { top: divider.bottom; left: parent.left; right: parent.right }
-            height: 44
+            height: 48
 
             Rectangle {
                 id: inputBg
-                anchors { left: parent.left; leftMargin: 12; right: addBtn.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
-                height: 28
+                anchors { left: parent.left; leftMargin: Theme.horizontalMargin; right: addBtn.left; rightMargin: 6; verticalCenter: parent.verticalCenter }
+                height: 36
                 color: "#252525"
                 radius: 4
 
                 TextInput {
                     id: newCollectionInput
-                    anchors { left: parent.left; leftMargin: 8; right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+                    anchors { left: parent.left; leftMargin: 12; right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
                     color: "#cccccc"
-                    font.pixelSize: 12
+                    font.pixelSize: Theme.fontSizeMd
                     clip: true
                     Keys.onReturnPressed: {
                         if (text.trim().length > 0) {
@@ -100,8 +101,8 @@ Item {
                     Text {
                         anchors.fill: parent
                         text: "New collection…"
-                        color: "#555555"
-                        font.pixelSize: 12
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeMd
                         visible: parent.text.length === 0
                     }
                 }
@@ -110,15 +111,15 @@ Item {
             Rectangle {
                 id: addBtn
                 anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
-                width: 28
-                height: 28
+                width: 36
+                height: 36
                 color: addBtnHover.containsMouse ? "#3a4a3a" : "#2a3a2a"
                 radius: 4
 
                 Text {
                     anchors.centerIn: parent
                     text: "+"
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeMd
                     color: "#88cc88"
                 }
 
@@ -145,9 +146,9 @@ Item {
                 left: parent.left
                 right: parent.right
                 bottom: parent.bottom
-                leftMargin: 8
-                rightMargin: 8
-                bottomMargin: 8
+                leftMargin: Theme.horizontalMargin
+                rightMargin: Theme.horizontalMargin
+                bottomMargin: Theme.horizontalMargin
             }
             clip: true
             model: root.collections

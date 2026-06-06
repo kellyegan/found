@@ -61,11 +61,12 @@ Item {
 
         Text {
             anchors.left: parent.left
-            anchors.leftMargin: (parent.width - titleBlock.width) / 2
+            anchors.leftMargin: 20 + (parent.width - titleBlock.width) / 2
             anchors.verticalCenter: parent.verticalCenter
             text: root.appVersion.length > 0 ? "Version " + root.appVersion : ""
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
+            font.weight: Font.Medium
             color: Theme.textMuted
             visible: root.appVersion.length > 0
         }
@@ -76,15 +77,15 @@ Item {
             text: root.isReady ? "Click to continue" : root.statusText
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
-            color: root.hasError ? "#ff4444" : Theme.textMuted
+            color: root.hasError ? Theme.warningColor : Theme.textMuted
             visible: root.isReady || root.statusText.length > 0
         }
 
         Text {
             anchors.right: parent.right
-            anchors.rightMargin: (parent.width - titleBlock.width) / 2
+            anchors.rightMargin: 30 + (parent.width - titleBlock.width) / 2
             anchors.verticalCenter: parent.verticalCenter
-            text: root.appLicense.length > 0 ? "© 2026 Found — " + root.appLicense : ""
+            text: root.appLicense.length > 0 ? "©2026 Kelly Egan. " + root.appLicense : ""
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
             color: Theme.textMuted

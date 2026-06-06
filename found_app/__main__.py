@@ -1,14 +1,22 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtGui import QGuiApplication, QImageReader
+from PySide6.QtGui import QGuiApplication, QImageReader, QFontDatabase
 from PySide6.QtQml import QQmlApplicationEngine
 
 from found_app.core.app_container import AppContainer
 
 
+def _load_bundled_fonts() -> None:
+    fonts_dir = Path(__file__).parent / "resources" / "fonts"
+    for ext in ("*.ttf", "*.otf"):
+        for font_file in sorted(fonts_dir.glob(ext)):
+            QFontDatabase.addApplicationFont(str(font_file))
+
+
 def main():
     app = QGuiApplication(sys.argv)
+    _load_bundled_fonts()
 
     # Local desktop app — users import and view their own files, which can be
     # multi-hundred-megapixel images. The default 256 MB cap is appropriate for

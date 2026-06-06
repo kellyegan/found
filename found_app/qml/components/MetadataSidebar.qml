@@ -63,7 +63,7 @@ Item {
         width: root.implicitWidth
         height: parent.height
         x: root.open ? 0 : root.implicitWidth
-        color: "#1a1a1a"
+        color: Theme.background
         clip: true
 
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
@@ -213,14 +213,14 @@ Item {
         }
     }
 
-    // ── Edge tab — always visible, anchored to the panel's left edge ─────────
+    // ── Edge tab — pinned to the right edge of the window ───────────────────
     Rectangle {
         id: edgeTab
         width: 16
         height: 72
-        x: panel.x - width
+        anchors.right: parent.right
         y: (parent.height - height) / 2
-        color: "#1a1a1a"
+        color: Theme.background
         radius: 2
         z: 1
 

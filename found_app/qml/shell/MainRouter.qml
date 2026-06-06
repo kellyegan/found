@@ -35,7 +35,7 @@ Item {
         property bool sidebarOpen: false
         property bool categoriesBarOpen: false
         property bool filterDropdownOpen: false
-        property bool metadataOverlayOpen: false
+        property bool metadataSidebarOpen: false
         property string _lastView: ""
 
         TitleBar {
@@ -148,7 +148,7 @@ Item {
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
             leftPanelOpen: readyContainer.sidebarOpen
-            rightPanelOpen: readyContainer.metadataOverlayOpen
+            rightPanelOpen: readyContainer.metadataSidebarOpen
             onLoadMoreRequested: LibraryState.load_more()
         }
 
@@ -170,7 +170,7 @@ Item {
                 }
 
                 if (view === "image" && readyContainer._lastView !== "image") {
-                    readyContainer.metadataOverlayOpen = false
+                    readyContainer.metadataSidebarOpen = false
                     readyContainer.sidebarOpen = false
                 }
 
@@ -215,7 +215,7 @@ Item {
             gridModel: CollectionsState.collectionGridModel
             loadingState: CollectionsState.loadingState
             leftPanelOpen: readyContainer.sidebarOpen
-            rightPanelOpen: readyContainer.metadataOverlayOpen
+            rightPanelOpen: readyContainer.metadataSidebarOpen
         }
 
         // Image view (Slice 5)
@@ -231,7 +231,7 @@ Item {
             hasPrev: NavigationManager.hasPrev
             leftInset: 40
             rightInset: 40
-            rightPanelWidth: readyContainer.metadataOverlayOpen ? Theme.overlayWidth : 0
+            rightPanelWidth: readyContainer.metadataSidebarOpen ? Theme.overlayWidth : 0
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
             onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
@@ -269,9 +269,9 @@ Item {
 
 
 
-        // Metadata overlay — right-edge collapsible panel; open by default, collapses in image view
-        MetadataOverlay {
-            id: metadataOverlay
+        // Metadata sidebar — right-edge collapsible panel; open by default, collapses in image view
+        MetadataSidebar {
+            id: metadataSidebar
             anchors {
                 top: titleBar.bottom
                 right: parent.right
@@ -280,7 +280,7 @@ Item {
             anchors.bottomMargin: (NavigationManager.currentView === "library" || NavigationManager.currentView === "collection")
                                   ? (categoriesBar._tabHeight + categoriesBar._stripHeight) : 0
             width: implicitWidth
-            open: readyContainer.metadataOverlayOpen
+            open: readyContainer.metadataSidebarOpen
             metaLoadingState: MetadataState.loadingState
             metaFilename: MetadataState.filename
             metaPath: MetadataState.path
@@ -297,7 +297,7 @@ Item {
             collectionEditorCollections: CollectionEditorState.collections
             collectionEditorLoadingState: CollectionEditorState.loadingState
             collectionEditorSelectionMode: CollectionEditorState.selectionMode
-            onToggleRequested: readyContainer.metadataOverlayOpen = !readyContainer.metadataOverlayOpen
+            onToggleRequested: readyContainer.metadataSidebarOpen = !readyContainer.metadataSidebarOpen
             onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
             onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
             onAddTagByNameRequested: function(name) { TagEditorState.addTagByName(name) }

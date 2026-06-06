@@ -60,6 +60,14 @@ Item {
         color: "transparent"
         opacity: dragHandler.active ? 0.4 : 1.0
 
+        // Selection highlight
+        Rectangle {
+            anchors.fill: parent
+            color: Theme.accent
+            opacity: 0.20
+            visible: root.selected
+        }
+
         Image {
             id: img
             anchors.fill: parent
@@ -126,20 +134,14 @@ Item {
             }
         }
 
-        // Selection highlight
-        Rectangle {
-            anchors.fill: parent
-            color: Theme.accent
-            opacity: 0.30
-            visible: root.selected
-        }
-
+        // Selection highlight border
         Rectangle {
             anchors.fill: parent
             color: "transparent"
             border.color: Theme.accent
-            border.width: root.selected ? 2 : 0
+            border.width: root.selected ? 1 : 0
         }
+
     }
 
     // MouseArea covers the full cell so the gap between tiles is also clickable

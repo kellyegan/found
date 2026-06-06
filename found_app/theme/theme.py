@@ -13,7 +13,7 @@ class ThemeManager(QObject):
 
     @Property(str, constant=True)
     def background(self) -> str:
-        return "#0d0d0d"
+        return "#000000"
 
     @Property(str, constant=True)
     def surface(self) -> str:
@@ -25,11 +25,15 @@ class ThemeManager(QObject):
 
     @Property(str, constant=True)
     def textMuted(self) -> str:
-        return "#666666"
+        return "#777777"
+    
+    @Property(str, constant=True)
+    def warningColor(self) -> str:
+        return "#ff4444" 
 
     @Property(str, constant=True)
     def accent(self) -> str:
-        return "#4a9eff"
+        return "#eeeeff"
 
     @Property(str, constant=True)
     def border(self) -> str:
@@ -41,23 +45,23 @@ class ThemeManager(QObject):
 
     @Property(str, constant=True)
     def fontFamily(self) -> str:
-        return "Inter, -apple-system, sans-serif"
+        return "Inter"
 
     @Property(int, constant=True)
     def fontSizeSm(self) -> int:
-        return 11
+        return 12
 
     @Property(int, constant=True)
     def fontSizeMd(self) -> int:
-        return 13
-
-    @Property(int, constant=True)
-    def fontSizeLg(self) -> int:
         return 16
 
     @Property(int, constant=True)
-    def fontSizeXl(self) -> int:
+    def fontSizeLg(self) -> int:
         return 24
+
+    @Property(int, constant=True)
+    def fontSizeXl(self) -> int:
+        return 48
 
     # ------------------------------------------------------------------
     # Layout
@@ -70,6 +74,17 @@ class ThemeManager(QObject):
     # ------------------------------------------------------------------
     # Spacing
     # ------------------------------------------------------------------
+
+    @Property(int, constant=True)
+    def horizontalTextMargin(self) -> int:
+        return 30
+    
+    def horizontalTextPadding(self) -> int:
+        return 12
+
+    @Property(int, constant=True)
+    def horizontalMargin(self) -> int:
+        return 18
 
     @Property(int, constant=True)
     def spacingXs(self) -> int:

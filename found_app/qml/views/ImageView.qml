@@ -117,8 +117,8 @@ Item {
             anchors.centerIn: parent
             visible: img.status === Image.Loading && root.imageUrl !== ""
             text: "Loading…"
-            color: "#888888"
-            font.pixelSize: 14
+            color: Theme.textMuted
+            font.pixelSize: Theme.fontSizeMd
             z: 1
         }
 
@@ -135,21 +135,21 @@ Item {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "!"
-                color: "#ff8800"
+                color: Theme.warningColor
                 font.pixelSize: 48
                 font.weight: Font.Bold
             }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.fileStatus === "missing" ? "File not found" : "Could not display image"
-                color: "#888888"
-                font.pixelSize: 14
-            }
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeMd
+           }
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.filename
-                color: "#666666"
-                font.pixelSize: 12
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeSm
             }
         }
 
