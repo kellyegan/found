@@ -4,7 +4,13 @@ SidePanel {
     id: root
 
     edge: "right"
-    title: "Info"
+    title: {
+        if (metaLoadingState === "Ready") return "Info"
+        if (metaLoadingState === "Loading") return "Loading…"
+        if (metaLoadingState === "Idle") return "Select image…"
+        if (metaLoadingState === "Error") return "ERROR"
+        return "Info"
+    }
     panelIcon: "ⓘ"
 
     // Metadata properties — bound from MetadataState in MainRouter
@@ -31,6 +37,7 @@ SidePanel {
     property string collectionEditorLoadingState: "Idle"
     property string collectionEditorSelectionMode: "none"
 
+    signal revealFileRequested(string path)
     signal addTagRequested(string tagId, string tagName)
     signal removeTagRequested(string tagId)
     signal addTagByNameRequested(string name)
@@ -51,6 +58,12 @@ SidePanel {
         return isoDate.substring(0, 10)
     }
 
+    function _formatLocation(path) {
+        if (!path) return "—"
+        const idx = path.lastIndexOf('/')
+        return idx > 0 ? path.substring(0, idx) : path
+    }
+
     // ── Scrollable content ───────────────────────────────────────────────────
     Flickable {
         id: contentFlickable
@@ -65,27 +78,6 @@ SidePanel {
             topPadding: 8
             bottomPadding: 16
             spacing: 0
-
-            Text {
-                visible: root.metaLoadingState === "Idle"
-                topPadding: 8
-                width: parent.width
-                text: "Select an image to view its details."
-                color: "#555555"
-                font.pixelSize: 12
-                font.family: Theme.fontFamily
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-                visible: root.metaLoadingState === "Loading"
-                topPadding: 8
-                width: parent.width
-                text: "Loading…"
-                color: "#555555"
-                font.pixelSize: 12
-                font.family: Theme.fontFamily
-            }
 
             Text {
                 visible: root.metaLoadingState === "Error"
@@ -126,7 +118,13 @@ SidePanel {
                 }
 
                 MetaRow { label: "Filename";   value: root.metaFilename || "—" }
-                MetaRow { label: "Path";       value: root.metaPath || "—"; wrap: true }
+                MetaRow {
+                    label: "Location"
+                    value: root._formatLocation(root.metaPath)
+                    wrap: true
+                    clickable: !root.metaIsMissing
+                    onClicked: root.revealFileRequested(root.metaPath)
+                }
                 MetaRow { label: "Dimensions"; value: root.metaDimensions || "—" }
                 MetaRow { label: "Size";       value: root._formatSize(root.metaFileSize) }
                 MetaRow { label: "Added";      value: root._formatDate(root.metaDateAdded) }

@@ -298,6 +298,7 @@ Item {
             collectionEditorLoadingState: CollectionEditorState.loadingState
             collectionEditorSelectionMode: CollectionEditorState.selectionMode
             onToggleRequested: readyContainer.metadataSidebarOpen = !readyContainer.metadataSidebarOpen
+            onRevealFileRequested: function(path) { PlatformService.revealFile(path) }
             onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
             onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
             onAddTagByNameRequested: function(name) { TagEditorState.addTagByName(name) }

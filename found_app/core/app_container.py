@@ -15,6 +15,7 @@ from found_app.viewmodels.library_view_model import LibraryViewModel
 from found_app.viewmodels.metadata_view_model import MetadataViewModel
 from found_app.services.filter_state import FilterStateManager
 from found_app.services.navigation import NavigationManager
+from found_app.services.platform_service import PlatformService
 from found_app.services.selection import SelectionManager
 from found_app.viewmodels.tag_editor_view_model import TagEditorViewModel
 from found_app.viewmodels.tag_search_view_model import TagSearchViewModel
@@ -37,6 +38,7 @@ class AppContainer:
         self._base_url = base_url
         self._api_client = ApiClient(base_url=base_url)
 
+        self._platform_service = PlatformService()
         self._filter_state = FilterStateManager()
         self._library_state = LibraryViewModel(
             page_fetcher=self._api_client.fetch_images_page,
@@ -144,6 +146,7 @@ class AppContainer:
         ctx.setContextProperty("ImportState", self._import_state)
         ctx.setContextProperty("FilterState", self._filter_state)
         ctx.setContextProperty("MetadataState", self._metadata_state)
+        ctx.setContextProperty("PlatformService", self._platform_service)
         ctx.setContextProperty("TagSearchState", self._tag_search_state)
         ctx.setContextProperty("TagEditorSearchState", self._tag_editor_search_state)
         ctx.setContextProperty("TagEditorState", self._tag_editor_state)
