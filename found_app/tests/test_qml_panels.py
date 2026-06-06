@@ -327,3 +327,49 @@ def test_metadata_sidebar_add_to_collection_requested_signal_preserved(full_engi
     received = []
     obj.addToCollectionRequested.connect(lambda cid, cname: received.append((cid, cname)))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# MetaRow
+# ---------------------------------------------------------------------------
+
+
+def test_meta_row_qml_exists():
+    assert (QML_DIR / "components/MetaRow.qml").exists()
+
+
+def test_meta_row_loads(engine):
+    load_component(engine, "components/MetaRow.qml")
+
+
+def test_meta_row_label_defaults_to_empty(engine):
+    obj = load_component(engine, "components/MetaRow.qml")
+    assert obj.property("label") == ""
+
+
+def test_meta_row_label_is_writable(engine):
+    obj = load_component(engine, "components/MetaRow.qml")
+    obj.setProperty("label", "Filename")
+    assert obj.property("label") == "Filename"
+
+
+def test_meta_row_value_defaults_to_empty(engine):
+    obj = load_component(engine, "components/MetaRow.qml")
+    assert obj.property("value") == ""
+
+
+def test_meta_row_value_is_writable(engine):
+    obj = load_component(engine, "components/MetaRow.qml")
+    obj.setProperty("value", "photo.jpg")
+    assert obj.property("value") == "photo.jpg"
+
+
+def test_meta_row_wrap_defaults_to_false(engine):
+    obj = load_component(engine, "components/MetaRow.qml")
+    assert obj.property("wrap") is False
+
+
+def test_meta_row_wrap_is_writable(engine):
+    obj = load_component(engine, "components/MetaRow.qml")
+    obj.setProperty("wrap", True)
+    assert obj.property("wrap") is True
