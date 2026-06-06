@@ -1,9 +1,11 @@
 import QtQuick
 
-Item {
+SidePanel {
     id: root
 
-    property bool open: false
+    edge: "right"
+    title: "Info"
+    panelIcon: "ⓘ"
 
     // Metadata properties — bound from MetadataState in MainRouter
     property string metaLoadingState: "Idle"
@@ -29,7 +31,6 @@ Item {
     property string collectionEditorLoadingState: "Idle"
     property string collectionEditorSelectionMode: "none"
 
-    signal toggleRequested()
     signal addTagRequested(string tagId, string tagName)
     signal removeTagRequested(string tagId)
     signal addTagByNameRequested(string name)
@@ -37,13 +38,6 @@ Item {
     signal removeCategoryRequested(string categoryId)
     signal addToCollectionRequested(string collectionId, string collectionName)
     signal removeFromCollectionRequested(string collectionId)
-
-    implicitWidth: Theme.overlayWidth
-
-    onOpenChanged: {
-        if (!open && Window.activeFocusItem instanceof TextInput)
-            root.forceActiveFocus()
-    }
 
     function _formatSize(bytes) {
         if (bytes <= 0) return "—"
@@ -57,188 +51,139 @@ Item {
         return isoDate.substring(0, 10)
     }
 
-    // ── Slide-in panel ───────────────────────────────────────────────────────
-    Rectangle {
-        id: panel
-        width: root.implicitWidth
-        height: parent.height
-        x: root.open ? 0 : root.implicitWidth
-        color: Theme.background
+    // ── Scrollable content ───────────────────────────────────────────────────
+    Flickable {
+        id: contentFlickable
+        anchors.fill: parent
+        contentHeight: contentCol.implicitHeight
         clip: true
 
-        Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
-
-        // Prevents mouse events from reaching library content behind the panel;
-        // also clears TextInput focus when clicking on non-interactive panel areas
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.AllButtons
-            onPressed: {
-                if (Window.activeFocusItem instanceof TextInput)
-                    root.forceActiveFocus()
-            }
-        }
-
-        // Header
-        Item {
-            id: header
-            anchors { top: parent.top; left: parent.left; right: parent.right }
-            height: 48
+        Column {
+            id: contentCol
+            width: contentFlickable.width - 32
+            x: 16
+            topPadding: 8
+            bottomPadding: 16
+            spacing: 0
 
             Text {
-                anchors { left: parent.left; leftMargin: 16; verticalCenter: parent.verticalCenter }
-                text: "Info"
-                font.pixelSize: 14
-                font.weight: Font.Medium
-                color: "#ffffff"
+                visible: root.metaLoadingState === "Idle"
+                topPadding: 8
+                width: parent.width
+                text: "Select an image to view its details."
+                color: "#555555"
+                font.pixelSize: 12
+                font.family: Theme.fontFamily
+                wrapMode: Text.WordWrap
             }
-        }
 
-        // Divider
-        Rectangle {
-            id: divider
-            anchors { top: header.bottom; left: parent.left; right: parent.right }
-            height: 1
-            color: "#2a2a2a"
-        }
-
-        // ── Scrollable content area ──────────────────────────────────────────
-        Flickable {
-            id: contentFlickable
-            anchors {
-                top: divider.bottom
-                left: parent.left; right: parent.right; bottom: parent.bottom
+            Text {
+                visible: root.metaLoadingState === "Loading"
+                topPadding: 8
+                width: parent.width
+                text: "Loading…"
+                color: "#555555"
+                font.pixelSize: 12
+                font.family: Theme.fontFamily
             }
-            contentHeight: contentCol.implicitHeight
-            clip: true
+
+            Text {
+                visible: root.metaLoadingState === "Error"
+                topPadding: 8
+                width: parent.width
+                text: "Failed to load metadata."
+                color: "#ff4444"
+                font.pixelSize: 12
+                font.family: Theme.fontFamily
+            }
 
             Column {
-                id: contentCol
-                width: contentFlickable.width - 32
-                x: 16
-                topPadding: 8
-                bottomPadding: 16
+                visible: root.metaLoadingState === "Ready"
+                width: parent.width
                 spacing: 0
 
-                // Idle / empty selection
-                Text {
-                    visible: root.metaLoadingState === "Idle"
-                    topPadding: 8
+                Rectangle {
+                    visible: root.metaIsMissing
                     width: parent.width
-                    text: "Select an image to view its details."
-                    color: "#555555"
-                    font.pixelSize: 12
-                    font.family: Theme.fontFamily
-                    wrapMode: Text.WordWrap
-                }
+                    height: 28
+                    radius: 4
+                    color: "#2a1515"
+                    border.color: "#884444"
+                    border.width: 1
 
-                // Loading
-                Text {
-                    visible: root.metaLoadingState === "Loading"
-                    topPadding: 8
-                    width: parent.width
-                    text: "Loading…"
-                    color: "#555555"
-                    font.pixelSize: 12
-                    font.family: Theme.fontFamily
-                }
-
-                // Error
-                Text {
-                    visible: root.metaLoadingState === "Error"
-                    topPadding: 8
-                    width: parent.width
-                    text: "Failed to load metadata."
-                    color: "#ff4444"
-                    font.pixelSize: 12
-                    font.family: Theme.fontFamily
-                }
-
-                // Fields — only shown when Ready
-                Column {
-                    visible: root.metaLoadingState === "Ready"
-                    width: parent.width
-                    spacing: 0
-
-                    // Missing badge
-                    Rectangle {
-                        visible: root.metaIsMissing
-                        width: parent.width
-                        height: 28
-                        radius: 4
-                        color: "#2a1515"
-                        border.color: "#884444"
-                        border.width: 1
-
-                        Text {
-                            anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                            text: "⚠  File missing"
-                            font.pixelSize: 11
-                            color: "#cc6666"
-                        }
+                    Text {
+                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
+                        text: "⚠  File missing"
+                        font.pixelSize: 11
+                        color: "#cc6666"
                     }
-
-                    // Spacer after missing badge
-                    Item {
-                        visible: root.metaIsMissing
-                        height: 10
-                        width: parent.width
-                    }
-
-                    MetaRow { label: "Filename"; value: root.metaFilename || "—" }
-                    MetaRow { label: "Path";     value: root.metaPath || "—"; wrap: true }
-                    MetaRow { label: "Dimensions"; value: root.metaDimensions || "—" }
-                    MetaRow { label: "Size";     value: root._formatSize(root.metaFileSize) }
-                    MetaRow { label: "Added";    value: root._formatDate(root.metaDateAdded) }
                 }
 
-                // ── Tag editor section ────────────────────────────────────────
-                TagEditorSection {
-                    visible: root.tagEditorSelectionMode !== "none"
+                Item {
+                    visible: root.metaIsMissing
+                    height: 10
                     width: parent.width
                 }
 
-                // ── Category editor section ───────────────────────────────────
-                CategoryEditorSection {
-                    visible: root.categoryEditorSelectionMode !== "none"
-                    width: parent.width
-                }
+                MetaRow { label: "Filename";   value: root.metaFilename || "—" }
+                MetaRow { label: "Path";       value: root.metaPath || "—"; wrap: true }
+                MetaRow { label: "Dimensions"; value: root.metaDimensions || "—" }
+                MetaRow { label: "Size";       value: root._formatSize(root.metaFileSize) }
+                MetaRow { label: "Added";      value: root._formatDate(root.metaDateAdded) }
+            }
 
-                // ── Collection editor section ─────────────────────────────────
-                CollectionEditorSection {
-                    visible: root.collectionEditorSelectionMode !== "none"
-                    width: parent.width
-                }
+            TagEditorSection {
+                visible: root.tagEditorSelectionMode !== "none"
+                width: parent.width
+            }
+
+            CategoryEditorSection {
+                visible: root.categoryEditorSelectionMode !== "none"
+                width: parent.width
+            }
+
+            CollectionEditorSection {
+                visible: root.collectionEditorSelectionMode !== "none"
+                width: parent.width
             }
         }
     }
 
-    // ── Edge tab — pinned to the right edge of the window ───────────────────
-    Rectangle {
-        id: edgeTab
-        width: 16
-        height: 72
-        anchors.right: parent.right
-        y: (parent.height - height) / 2
-        color: Theme.background
-        radius: 2
-        z: 1
+    // ── Inline sub-component: a label/value row ───────────────────────────────
+    component MetaRow: Item {
+        id: row
+        property string label: ""
+        property string value: ""
+        property bool wrap: false
+
+        width: parent ? parent.width : 0
+        height: labelText.implicitHeight + valueText.implicitHeight + 12
 
         Text {
-            anchors.centerIn: parent
-            text: root.open ? "▶" : "◀"
+            id: labelText
+            anchors { left: parent.left; top: parent.top; topMargin: 4 }
+            text: row.label
             font.pixelSize: 10
-            color: "#888888"
+            font.family: Theme.fontFamily
+            color: "#666666"
+            font.capitalization: Font.AllUppercase
+            font.letterSpacing: 0.8
         }
 
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: root.toggleRequested()
+        Text {
+            id: valueText
+            anchors { left: parent.left; right: parent.right; top: labelText.bottom; topMargin: 2 }
+            text: row.value
+            font.pixelSize: 12
+            font.family: Theme.fontFamily
+            color: "#cccccc"
+            wrapMode: row.wrap ? Text.WrapAnywhere : Text.NoWrap
+            maximumLineCount: row.wrap ? 0 : 1
+            clip: !row.wrap
         }
     }
 
-    // ── Inline sub-component: a tag/value row in the tag editor ─────────────
+    // ── Inline sub-component: tag editor section ──────────────────────────────
     component TagEditorSection: Item {
         id: tagSection
         implicitHeight: tagSecCol.implicitHeight
@@ -283,14 +228,8 @@ Item {
             width: parent.width
             spacing: 0
 
-            // Section separator
-            Rectangle {
-                width: parent.width
-                height: 1
-                color: "#2a2a2a"
-            }
+            Rectangle { width: parent.width; height: 1; color: "#2a2a2a" }
 
-            // "TAGS" label row
             Item {
                 width: parent.width
                 height: 32
@@ -306,7 +245,6 @@ Item {
                 }
             }
 
-            // "Add tag" search row
             Item {
                 width: tagSecCol.width
                 height: 32
@@ -327,7 +265,6 @@ Item {
                         color: "#555555"
                     }
 
-                    // Submit button — visible when suggestions are ready
                     Rectangle {
                         id: tagSubmitBtn
                         visible: tagAddInput.text.trim().length > 0
@@ -357,8 +294,7 @@ Item {
                         id: tagAddInput
                         anchors {
                             left: tagAddIcon.right; leftMargin: 4
-                            right: tagSubmitBtn.left
-                            rightMargin: 2
+                            right: tagSubmitBtn.left; rightMargin: 2
                             verticalCenter: parent.verticalCenter
                         }
                         activeFocusOnTab: false
@@ -384,25 +320,13 @@ Item {
                         }
 
                         onActiveFocusChanged: {
-                            if (activeFocus) {
-                                tagHideTimer.stop()
-                            } else {
-                                tagHideTimer.start()
-                            }
+                            if (activeFocus) tagHideTimer.stop()
+                            else tagHideTimer.start()
                         }
 
                         Keys.priority: Keys.BeforeItem
-
-                        Keys.onReturnPressed: function(event) {
-                            event.accepted = true
-                            tagSection._commit()
-                        }
-
-                        Keys.onEnterPressed: function(event) {
-                            event.accepted = true
-                            tagSection._commit()
-                        }
-
+                        Keys.onReturnPressed: function(event) { event.accepted = true; tagSection._commit() }
+                        Keys.onEnterPressed:  function(event) { event.accepted = true; tagSection._commit() }
                         Keys.onEscapePressed: function(event) {
                             event.accepted = true
                             text = ""
@@ -414,7 +338,6 @@ Item {
                 }
             }
 
-            // Suggestions dropdown (positioned inside panel, clip handles overflow)
             Rectangle {
                 visible: tagSection._tagSearchOpen && TagEditorSearchState.loadingState === "Ready"
                 width: tagSecCol.width
@@ -436,11 +359,7 @@ Item {
                         width: tagSuggList.width
                         height: 26
 
-                        Rectangle {
-                            anchors.fill: parent
-                            color: suggArea.containsMouse ? "#2a2a2a" : "transparent"
-                            radius: 3
-                        }
+                        Rectangle { anchors.fill: parent; color: suggArea.containsMouse ? "#2a2a2a" : "transparent"; radius: 3 }
 
                         Text {
                             anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
@@ -467,7 +386,6 @@ Item {
                 }
             }
 
-            // Multi-select note
             Text {
                 visible: root.tagEditorSelectionMode === "multi"
                 width: parent.width
@@ -480,7 +398,6 @@ Item {
                 wrapMode: Text.WordWrap
             }
 
-            // Current tag chips — inline flow (single mode only)
             Flow {
                 visible: root.tagEditorSelectionMode === "single"
                 width: parent.width
@@ -526,7 +443,6 @@ Item {
                 }
             }
 
-            // Bottom spacer
             Item { width: parent.width; height: 8 }
         }
     }
@@ -790,7 +706,6 @@ Item {
                 }
             }
 
-            // "Add to collection" button row
             Item {
                 width: colSecCol.width
                 height: 32
@@ -824,7 +739,6 @@ Item {
                 }
             }
 
-            // Dropdown — all collections not already assigned
             Rectangle {
                 visible: colSection._colDropdownOpen
                 width: colSecCol.width
@@ -909,40 +823,6 @@ Item {
             }
 
             Item { width: parent.width; height: 8 }
-        }
-    }
-
-    // ── Inline sub-component: a label/value row ───────────────────────────────
-    component MetaRow: Item {
-        id: row
-        property string label: ""
-        property string value: ""
-        property bool wrap: false
-
-        width: parent ? parent.width : 0
-        height: labelText.implicitHeight + valueText.implicitHeight + 12
-
-        Text {
-            id: labelText
-            anchors { left: parent.left; top: parent.top; topMargin: 4 }
-            text: row.label
-            font.pixelSize: 10
-            font.family: Theme.fontFamily
-            color: "#666666"
-            font.capitalization: Font.AllUppercase
-            font.letterSpacing: 0.8
-        }
-
-        Text {
-            id: valueText
-            anchors { left: parent.left; right: parent.right; top: labelText.bottom; topMargin: 2 }
-            text: row.value
-            font.pixelSize: 12
-            font.family: Theme.fontFamily
-            color: "#cccccc"
-            wrapMode: row.wrap ? Text.WrapAnywhere : Text.NoWrap
-            maximumLineCount: row.wrap ? 0 : 1
-            clip: !row.wrap
         }
     }
 }
