@@ -373,3 +373,106 @@ def test_meta_row_wrap_is_writable(engine):
     obj = load_component(engine, "components/MetaRow.qml")
     obj.setProperty("wrap", True)
     assert obj.property("wrap") is True
+
+
+# ---------------------------------------------------------------------------
+# ChipSearchSection
+# ---------------------------------------------------------------------------
+
+
+def test_chip_search_section_qml_exists():
+    assert (QML_DIR / "components/ChipSearchSection.qml").exists()
+
+
+def test_chip_search_section_loads(engine):
+    load_component(engine, "components/ChipSearchSection.qml")
+
+
+def test_chip_search_section_section_label_defaults_to_empty(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    assert obj.property("sectionLabel") == ""
+
+
+def test_chip_search_section_section_label_is_writable(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    obj.setProperty("sectionLabel", "Tags")
+    assert obj.property("sectionLabel") == "Tags"
+
+
+def test_chip_search_section_selection_mode_defaults_to_none(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    assert obj.property("selectionMode") == "none"
+
+
+def test_chip_search_section_selection_mode_is_writable(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    obj.setProperty("selectionMode", "single")
+    assert obj.property("selectionMode") == "single"
+
+
+def test_chip_search_section_items_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    val = obj.property("items")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_chip_search_section_search_state_defaults_to_none(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    assert obj.property("searchState") is None
+
+
+def test_chip_search_section_allow_create_new_defaults_to_false(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    assert obj.property("allowCreateNew") is False
+
+
+def test_chip_search_section_allow_create_new_is_writable(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    obj.setProperty("allowCreateNew", True)
+    assert obj.property("allowCreateNew") is True
+
+
+def test_chip_search_section_placeholder_defaults_to_empty(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    assert obj.property("placeholder") == ""
+
+
+def test_chip_search_section_placeholder_is_writable(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    obj.setProperty("placeholder", "Add tag…")
+    assert obj.property("placeholder") == "Add tag…"
+
+
+def test_chip_search_section_multi_select_label_defaults_to_empty(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    assert obj.property("multiSelectLabel") == ""
+
+
+def test_chip_search_section_multi_select_label_is_writable(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    obj.setProperty("multiSelectLabel", "Adding tags to all selected images")
+    assert obj.property("multiSelectLabel") == "Adding tags to all selected images"
+
+
+def test_chip_search_section_has_add_requested_signal(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    received = []
+    obj.addRequested.connect(lambda id, name: received.append((id, name)))
+    assert isinstance(received, list)
+
+
+def test_chip_search_section_has_remove_requested_signal(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    received = []
+    obj.removeRequested.connect(lambda id: received.append(id))
+    assert isinstance(received, list)
+
+
+def test_chip_search_section_has_add_by_name_requested_signal(engine):
+    obj = load_component(engine, "components/ChipSearchSection.qml")
+    received = []
+    obj.addByNameRequested.connect(lambda name: received.append(name))
+    assert isinstance(received, list)
