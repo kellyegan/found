@@ -4,7 +4,12 @@ SidePanel {
     id: root
 
     edge: "right"
-    title: "Info"
+    title: {
+        if (metaLoadingState === "Ready" && metaFilename) return metaFilename
+        if (metaLoadingState === "Loading") return "Loading…"
+        if (metaLoadingState === "Idle") return "Select image…"
+        return "Info"
+    }
     panelIcon: "ⓘ"
 
     // Metadata properties — bound from MetadataState in MainRouter
@@ -65,27 +70,6 @@ SidePanel {
             topPadding: 8
             bottomPadding: 16
             spacing: 0
-
-            Text {
-                visible: root.metaLoadingState === "Idle"
-                topPadding: 8
-                width: parent.width
-                text: "Select an image to view its details."
-                color: "#555555"
-                font.pixelSize: 12
-                font.family: Theme.fontFamily
-                wrapMode: Text.WordWrap
-            }
-
-            Text {
-                visible: root.metaLoadingState === "Loading"
-                topPadding: 8
-                width: parent.width
-                text: "Loading…"
-                color: "#555555"
-                font.pixelSize: 12
-                font.family: Theme.fontFamily
-            }
 
             Text {
                 visible: root.metaLoadingState === "Error"
