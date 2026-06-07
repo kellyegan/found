@@ -258,6 +258,13 @@ def test_library_view_right_panel_open_defaults_to_false(engine):
     assert obj.property("rightPanelOpen") is False
 
 
+def test_library_view_has_remove_images_requested_signal(engine):
+    obj = load_component(engine, "views/LibraryView.qml")
+    received = []
+    obj.removeImagesRequested.connect(lambda ids: received.append(ids))
+    assert isinstance(received, list)
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
@@ -402,6 +409,13 @@ def test_thumbnail_grid_left_panel_open_defaults_to_false(engine):
 def test_thumbnail_grid_right_panel_open_defaults_to_false(engine):
     obj = load_component(engine, "components/ThumbnailGrid.qml")
     assert obj.property("rightPanelOpen") is False
+
+
+def test_thumbnail_grid_has_remove_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
+    received = []
+    obj.removeRequested.connect(lambda image_id, filename: received.append((image_id, filename)))
+    assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------

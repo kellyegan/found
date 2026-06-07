@@ -12,6 +12,7 @@ Item {
     readonly property real scrollX: grid.contentX
 
     signal loadMoreRequested()
+    signal removeRequested(string imageId, string filename)
 
     function scrollToX(x) {
         grid.contentX = x
@@ -79,6 +80,9 @@ Item {
             }
             onTileDoubleClicked: function(id) {
                 SelectionManager.requestOpen(id)
+            }
+            onRemoveRequested: function(id) {
+                root.removeRequested(id, model.filename ?? "")
             }
         }
 

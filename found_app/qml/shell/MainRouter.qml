@@ -150,6 +150,7 @@ Item {
             leftPanelOpen: readyContainer.sidebarOpen
             rightPanelOpen: readyContainer.metadataSidebarOpen
             onLoadMoreRequested: LibraryState.load_more()
+            onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
         }
 
         // Central navigation handler — restores library state and collapses
