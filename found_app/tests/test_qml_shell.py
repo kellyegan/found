@@ -641,6 +641,13 @@ def test_collection_view_right_panel_open_defaults_to_false(engine):
     assert obj.property("rightPanelOpen") is False
 
 
+def test_collection_view_has_remove_images_requested_signal(engine):
+    obj = load_component(engine, "views/CollectionView.qml")
+    received = []
+    obj.removeImagesRequested.connect(lambda ids, also_from_library: received.append((ids, also_from_library)))
+    assert isinstance(received, list)
+
+
 # ---------------------------------------------------------------------------
 # Drag-to-collection — Commit 4
 # ---------------------------------------------------------------------------

@@ -217,6 +217,13 @@ Item {
             loadingState: CollectionsState.loadingState
             leftPanelOpen: readyContainer.sidebarOpen
             rightPanelOpen: readyContainer.metadataSidebarOpen
+            onRemoveImagesRequested: function(imageIds, alsoFromLibrary) {
+                CollectionsState.removeImagesFromCollection(
+                    NavigationManager.currentEntry.collection_id ?? "",
+                    imageIds,
+                    alsoFromLibrary
+                )
+            }
         }
 
         // Image view (Slice 5)
