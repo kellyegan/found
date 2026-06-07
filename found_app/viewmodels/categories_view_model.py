@@ -27,7 +27,7 @@ class CategoriesViewModel(QObject):
         self._categories: list = []
         self._filter_states: dict[str, str] = {}  # used only when filter_state is None
         self._loading_state = "Idle"
-        self._fetch_thread: Optional[_FetchThread] = None
+        self._fetch_threads: list = []
 
         if filter_state is not None:
             filter_state.filtersChanged.connect(self.categoriesChanged.emit)
@@ -73,8 +73,9 @@ class CategoriesViewModel(QObject):
         self._set_state("Loading")
         thread = _FetchThread(self._categories_fetcher)
         thread.result.connect(self._on_result)
+        self._fetch_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._fetch_threads.remove(t) if t in self._fetch_threads else None)
         thread.finished.connect(thread.deleteLater)
-        self._fetch_thread = thread
         thread.start()
 
     @Slot(str)

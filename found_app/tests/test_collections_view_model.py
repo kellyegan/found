@@ -65,18 +65,33 @@ def wait_for_state(vm, target: str, timeout_ms: int = 2000) -> None:
     loop.exec()
 
 
-def wait_for_images(vm, timeout_ms: int = 2000) -> None:
-    """Wait for collectionGridModel to be populated by the images thread."""
-    thread = vm._images_thread
+def wait_for_collections_fetch(vm, timeout_ms: int = 2000) -> None:
+    """Wait for the collections-list fetch thread to finish."""
+    from PySide6.QtCore import QCoreApplication
+
+    thread = vm._fetch_threads[-1] if vm._fetch_threads else None
     if thread is None or not thread.isRunning():
-        from PySide6.QtCore import QCoreApplication
         QCoreApplication.processEvents()
         return
     loop = QEventLoop()
     thread.finished.connect(loop.quit)
     QTimer.singleShot(timeout_ms, loop.quit)
     loop.exec()
+    QCoreApplication.processEvents()
+
+
+def wait_for_images(vm, timeout_ms: int = 2000) -> None:
+    """Wait for collectionGridModel to be populated by the images thread."""
     from PySide6.QtCore import QCoreApplication
+
+    thread = vm._images_threads[-1] if vm._images_threads else None
+    if thread is None or not thread.isRunning():
+        QCoreApplication.processEvents()
+        return
+    loop = QEventLoop()
+    thread.finished.connect(loop.quit)
+    QTimer.singleShot(timeout_ms, loop.quit)
+    loop.exec()
     QCoreApplication.processEvents()
 
 
@@ -358,7 +373,7 @@ def wait_for_remove(vm, timeout_ms: int = 2000) -> None:
     """Wait for the remove-from-collection thread to finish."""
     from PySide6.QtCore import QCoreApplication
 
-    thread = vm._remove_thread
+    thread = vm._remove_threads[-1] if vm._remove_threads else None
     if thread is None or not thread.isRunning():
         QCoreApplication.processEvents()
         return
@@ -455,3 +470,31 @@ def test_remove_images_from_collection_does_not_emit_images_removed_from_library
     wait_for_remove(vm)
 
     assert received == []
+
+
+# ---------------------------------------------------------------------------
+# Thread lifecycle — background QThreads must not outlive their tracking
+# list entry, or Qt aborts with "QThread: Destroyed while thread is still
+# running" once the Python wrapper is garbage collected mid-run.
+# ---------------------------------------------------------------------------
+
+
+def test_load_fetch_thread_is_removed_from_tracking_list_after_completion(qapp):
+    vm = _vm(collections_fetcher=lambda: SAMPLE_COLLECTIONS)
+    vm.load()
+    wait_for_collections_fetch(vm)
+    assert vm._fetch_threads == []
+
+
+def test_load_collection_images_thread_is_removed_from_tracking_list_after_completion(qapp):
+    vm = _vm(collection_images_fetcher=lambda cid: SAMPLE_IMAGES)
+    vm.loadCollectionImages("col-1")
+    wait_for_images(vm)
+    assert vm._images_threads == []
+
+
+def test_remove_images_from_collection_thread_is_removed_from_tracking_list_after_completion(qapp):
+    vm = _vm(collection_remover=lambda cid, iid: True)
+    vm.removeImagesFromCollection("col-1", ["img-1"], False)
+    wait_for_remove(vm)
+    assert vm._remove_threads == []

@@ -87,6 +87,40 @@ Image {
 
 `AppContainer` must hold a strong Python reference to every registered object as an instance attribute (e.g., `self._library_vm`). If Python's garbage collector reclaims the object, QML is left with a dangling C++ pointer and will crash silently. `AppContainer` owns all registered objects for the lifetime of the application.
 
+### Background work: QThread lifecycle
+
+ViewModels run blocking I/O (API calls, file scans, imports, deletes) on private `QThread` subclasses so the UI stays responsive. **A `QThread`'s Python wrapper must never be allowed to drop to a zero refcount while `run()` is still executing.** If it is freed mid-run, `~QThread()` sees `isRunning() == True` and Qt calls `qFatal("QThread: Destroyed while thread is still running")`, aborting the whole process — surfacing as `SIGABRT` or `SIGSEGV` depending on what the fatal handler touches while unwinding.
+
+This happens easily with a single overwritable attribute:
+
+```python
+# 🛑 UNSAFE — a second call overwrites the only Python reference to the
+# first thread while it may still be running, and nothing keeps the
+# wrapper alive until Qt has actually finished with it.
+def loadCollectionImages(self, collection_id):
+    thread = _ImagesThread(self._fetcher, collection_id)
+    thread.result.connect(self._on_images_result)
+    self._images_thread = thread
+    thread.start()
+```
+
+The safe pattern — used throughout `viewmodels/` (e.g. `LibraryViewModel._delete_threads`, `MetadataViewModel._active_fetch_threads`) — keeps the thread in a list for its entire run and only releases it once Qt confirms it has actually finished:
+
+```python
+# ✅ SAFE — the list holds a strong reference for the thread's whole
+# run; `finished` fires only once Qt has fully marked the thread as
+# not-running, so list cleanup and deleteLater are race-free.
+def loadCollectionImages(self, collection_id):
+    thread = _ImagesThread(self._fetcher, collection_id)
+    thread.result.connect(self._on_images_result)
+    self._images_threads.append(thread)
+    thread.finished.connect(lambda t=thread: self._images_threads.remove(t) if t in self._images_threads else None)
+    thread.finished.connect(thread.deleteLater)
+    thread.start()
+```
+
+Always pair an active-thread list with `finished -> remove-from-list` and `finished -> deleteLater`. If a new request can make an in-flight result stale (e.g. typing a new search term before the old one returns), also disconnect the old threads' `result` signal up front — see `TagSearchViewModel.search()` / `MetadataViewModel.loadImage()`.
+
 
 ## 3. QML Organization & Import Rules
 
@@ -160,5 +194,7 @@ When tasked with adding a new feature slice (e.g., a "User Tags" manager), follo
 > 🛑 **NEVER let ViewModels manage UI layout.** A ViewModel should manipulate data collections, booleans, and strings. It should never know about pixels, anchors, colors, or specific QML file names.
 
 > ⚠️ **Mind the Python Garbage Collector.** Every object registered via `setContextProperty` must be stored as an instance attribute on `AppContainer` (e.g., `self._library_vm`). If Python loses the reference, the GC will destroy the object and leave QML with a corrupted C++ pointer — often a silent crash.
+
+> 🛑 **NEVER store a background `QThread` in a single overwritable attribute.** A second call replaces the only Python reference to the first thread, letting the GC free it mid-`run()` — Qt then aborts the whole process with `qFatal("QThread: Destroyed while thread is still running")`. Track active threads in a list and connect `finished` to both list-removal and `deleteLater`. See "Background work: QThread lifecycle" above.
 
 > 💡 **Keep Component Names Contextual.** If a component is highly specific to a single view, prefix its name with that view (e.g., `CollectionSidebarItem.qml`). If it is used across 2 or more views, keep it generic (e.g., `FilterChip.qml`).

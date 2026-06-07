@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Callable
 
 from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
 from PySide6.QtQml import QJSValue
@@ -60,8 +60,8 @@ class ImportViewModel(QObject):
         self._updated_count = 0
         self._conflict_choices: dict[str, str] = {}
         self._scan_total: int = 0
-        self._scan_thread: Optional[_ScanThread] = None
-        self._import_thread: Optional[_ImportThread] = None
+        self._scan_threads: list = []
+        self._import_threads: list = []
 
     # ------------------------------------------------------------------
     # Properties
@@ -136,7 +136,9 @@ class ImportViewModel(QObject):
         self._set_state("Scanning")
         thread = _ScanThread(self._scanner, list(paths))
         thread.result.connect(self._on_scan_result)
-        self._scan_thread = thread
+        self._scan_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._scan_threads.remove(t) if t in self._scan_threads else None)
+        thread.finished.connect(thread.deleteLater)
         thread.start()
 
     @Slot(str, str)
@@ -160,7 +162,9 @@ class ImportViewModel(QObject):
             self._conflict_resolver,
         )
         thread.result.connect(self._on_import_result)
-        self._import_thread = thread
+        self._import_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._import_threads.remove(t) if t in self._import_threads else None)
+        thread.finished.connect(thread.deleteLater)
         thread.start()
 
     @Slot()
