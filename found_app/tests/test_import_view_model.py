@@ -649,3 +649,26 @@ def test_scan_paths_after_prepare_import_completes_normally(qapp, tmp_path):
     wait_for_state(vm, "Previewing")
     assert vm.loadingState == "Previewing"
     assert vm.pendingFiles == ["/path/a.jpg", "/path/b.png"]
+
+
+# ---------------------------------------------------------------------------
+# Thread lifecycle — background QThreads must not outlive their tracking
+# list entry, or Qt aborts with "QThread: Destroyed while thread is still
+# running" once the Python wrapper is garbage collected mid-run.
+# ---------------------------------------------------------------------------
+
+
+def test_scan_thread_is_removed_from_tracking_list_after_completion(qapp):
+    vm = _vm()
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    assert vm._scan_threads == []
+
+
+def test_import_thread_is_removed_from_tracking_list_after_completion(qapp):
+    vm = _vm()
+    vm.scanPaths([])
+    wait_for_state(vm, "Previewing")
+    vm.executeImport()
+    wait_for_state(vm, "Complete")
+    assert vm._import_threads == []

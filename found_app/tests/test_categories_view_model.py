@@ -89,6 +89,19 @@ def test_load_sets_state_to_error_on_failure(qapp):
     assert vm.loadingState == "Error"
 
 
+# ---------------------------------------------------------------------------
+# Thread lifecycle — background QThreads must not outlive their tracking
+# list entry, or Qt aborts with "QThread: Destroyed while thread is still
+# running" once the Python wrapper is garbage collected mid-run.
+# ---------------------------------------------------------------------------
+
+
+def test_load_fetch_thread_is_removed_from_tracking_list_after_completion(qapp):
+    vm = _vm()
+    _load(vm)
+    assert vm._fetch_threads == []
+
+
 def test_categories_sorted_alphabetically(qapp):
     vm = _vm()
     _load(vm)

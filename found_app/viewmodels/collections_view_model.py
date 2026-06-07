@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable
 
 from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
 from PySide6.QtQml import QJSValue
@@ -33,9 +33,9 @@ class CollectionsViewModel(QObject):
         self._loading_state = "Idle"
         self._collection_grid_model = ThumbnailGridModel(parent=self)
         self._current_collection_id: str = ""
-        self._fetch_thread: Optional[_FetchThread] = None
-        self._images_thread: Optional[_ImagesThread] = None
-        self._remove_thread: Optional[_RemoveImagesThread] = None
+        self._fetch_threads: list = []
+        self._images_threads: list = []
+        self._remove_threads: list = []
 
     # ------------------------------------------------------------------
     # Properties
@@ -62,7 +62,9 @@ class CollectionsViewModel(QObject):
         self._set_state("Loading")
         thread = _FetchThread(self._collections_fetcher)
         thread.result.connect(self._on_collections_result)
-        self._fetch_thread = thread
+        self._fetch_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._fetch_threads.remove(t) if t in self._fetch_threads else None)
+        thread.finished.connect(thread.deleteLater)
         thread.start()
 
     @Slot(str)
@@ -90,7 +92,9 @@ class CollectionsViewModel(QObject):
         self._collection_grid_model.clear()
         thread = _ImagesThread(self._collection_images_fetcher, collection_id)
         thread.result.connect(self._on_images_result)
-        self._images_thread = thread
+        self._images_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._images_threads.remove(t) if t in self._images_threads else None)
+        thread.finished.connect(thread.deleteLater)
         thread.start()
 
     @Slot()
@@ -111,7 +115,9 @@ class CollectionsViewModel(QObject):
         thread.result.connect(
             lambda ok: self._on_remove_images_result(ok, collection_id, also_from_library)
         )
-        self._remove_thread = thread
+        self._remove_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._remove_threads.remove(t) if t in self._remove_threads else None)
+        thread.finished.connect(thread.deleteLater)
         thread.start()
 
     # ------------------------------------------------------------------
