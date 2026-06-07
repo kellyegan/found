@@ -391,3 +391,98 @@ def test_verify_image_no_op_when_no_verifier(qapp):
     wait_for_state(vm, "Ready")
     vm.verifyImage("aaaa-0001")  # must not raise
     assert vm.missingCount == 0
+
+
+# ---------------------------------------------------------------------------
+# removeImages
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_deleter(deleter=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        bulk_deleter=deleter,
+    )
+
+
+def _wait_for_loading(vm, timeout_ms=2000):
+    if vm.loadingState == "Loading":
+        return
+    loop = QEventLoop()
+    vm.loadingStateChanged.connect(lambda name: loop.quit() if name == "Loading" else None)
+    QTimer.singleShot(timeout_ms, loop.quit)
+    loop.exec()
+
+
+def test_remove_images_calls_bulk_deleter(qapp):
+    calls = []
+
+    def deleter(image_ids):
+        calls.append(image_ids)
+        return True
+
+    vm = _make_vm_with_deleter(deleter)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.removeImages(["aaaa-0001"])
+    _wait_for_loading(vm)
+
+    assert calls == [["aaaa-0001"]]
+
+
+def test_remove_images_reloads_on_success(qapp):
+    vm = _make_vm_with_deleter(lambda image_ids: True)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.removeImages(["aaaa-0001"])
+    _wait_for_loading(vm)
+
+    assert vm.loadingState == "Loading"
+
+
+def test_remove_images_does_not_reload_on_failure(qapp):
+    vm = _make_vm_with_deleter(lambda image_ids: False)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    QTimer.singleShot(500, loop.quit)
+    vm.removeImages(["aaaa-0001"])
+    loop.exec()
+
+    assert vm.loadingState == "Ready"
+
+
+def test_remove_images_is_noop_with_empty_list(qapp):
+    calls = []
+
+    def deleter(image_ids):
+        calls.append(image_ids)
+        return True
+
+    vm = _make_vm_with_deleter(deleter)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.removeImages([])
+
+    loop = QEventLoop()
+    QTimer.singleShot(300, loop.quit)
+    loop.exec()
+
+    assert calls == []
+
+
+def test_remove_images_no_op_when_no_deleter(qapp):
+    vm = _make_vm_with_deleter(deleter=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.removeImages(["aaaa-0001"])  # must not raise
+
+    loop = QEventLoop()
+    QTimer.singleShot(300, loop.quit)
+    loop.exec()
+
+    assert vm.loadingState == "Ready"
