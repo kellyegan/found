@@ -1,4 +1,6 @@
 import QtQuick
+import QtQuick.Window
+import "../components"
 
 Item {
     id: root
@@ -25,6 +27,12 @@ Item {
     signal prevRequested()
     signal nextRequested()
     signal imageLoadFailed(string imageId)
+    signal removeImageRequested(string imageId)
+
+    // Pending removal — drives the confirmation dialog below. Always targets
+    // only the image currently being viewed, never other selected images.
+    property string _removeId: ""
+    property string _removeMessage: ""
 
     property real zoomLevel: 1.0
     property real panOffsetX: 0.0
@@ -71,6 +79,19 @@ Item {
         onActivated: {
             if (NavigationManager.immersiveMode) NavigationManager.setImmersive(false)
             else NavigationManager.goBack()
+        }
+    }
+
+    // Remove the currently-viewed image from the library — never affects any
+    // other selected images, and stays out of the way of text inputs (e.g.
+    // the metadata sidebar's tag/category editors).
+    Shortcut {
+        sequences: [StandardKey.Delete, "Backspace"]
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: {
+            if (root.imageId === "") return
+            root._removeId = root.imageId
+            root._removeMessage = "Are you sure you want to remove " + root.filename + " from the library?"
         }
     }
 
@@ -274,6 +295,27 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.nextRequested()
             }
+        }
+    }
+
+    ConfirmDialog {
+        id: removeDialog
+        anchors.fill: parent
+        z: 50
+        open: root._removeId !== ""
+        message: root._removeMessage
+        onConfirmed: {
+            var idToRemove = root._removeId
+            root._removeId = ""
+            root._removeMessage = ""
+            if (root.hasNext) NavigationManager.goNext()
+            else if (root.hasPrev) NavigationManager.goPrev()
+            else NavigationManager.goBack()
+            root.removeImageRequested(idToRemove)
+        }
+        onCancelled: {
+            root._removeId = ""
+            root._removeMessage = ""
         }
     }
 }

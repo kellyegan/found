@@ -234,6 +234,9 @@ Item {
             imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
                            ? baseUrl + "/api/v1/images/" + NavigationManager.currentEntry.image_id + "/file"
                            : ""
+            filename: NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id && LibraryState.gridModel
+                          ? LibraryState.gridModel.filenameForId(NavigationManager.currentEntry.image_id)
+                          : ""
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
             hasNext: NavigationManager.hasNext
             hasPrev: NavigationManager.hasPrev
@@ -243,6 +246,7 @@ Item {
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
             onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
+            onRemoveImageRequested: function(imageId) { LibraryState.removeImages([imageId]) }
         }
 
         // Sidebar overlay — rendered above content, below nav bar

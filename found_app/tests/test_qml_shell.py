@@ -543,6 +543,18 @@ def test_image_view_has_prev_is_writable(engine):
 
 
 # ---------------------------------------------------------------------------
+# ImageView removal — Slice 9 Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_has_remove_image_requested_signal(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    received = []
+    obj.removeImageRequested.connect(lambda image_id: received.append(image_id))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
 # CollectionItem
 # ---------------------------------------------------------------------------
 
