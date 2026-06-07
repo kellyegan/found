@@ -11,6 +11,25 @@ Item {
     property bool rightPanelOpen: false
 
     signal loadMoreRequested()
+    signal removeImagesRequested(var imageIds)
+
+    // Pending removal — drives the confirmation dialog below
+    property var _removeIds: []
+    property string _removeMessage: ""
+
+    function _pluralize(count, noun) {
+        return count + " " + noun + (count === 1 ? "" : "s")
+    }
+
+    function _requestRemoval(ids, message) {
+        root._removeIds = ids
+        root._removeMessage = message
+    }
+
+    function _clearRemoval() {
+        root._removeIds = []
+        root._removeMessage = ""
+    }
 
     // Keyboard shortcuts — scoped to this view via root.visible
     Shortcut {
@@ -34,6 +53,19 @@ Item {
         onActivated: {
             if (SelectionManager.primaryId !== "")
                 SelectionManager.requestOpen(SelectionManager.primaryId)
+        }
+    }
+
+    Shortcut {
+        sequences: [StandardKey.Delete, "Backspace"]
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: {
+            var ids = SelectionManager.selectedIds
+            if (ids.length === 0) return
+            root._requestRemoval(
+                ids,
+                "Are you sure you want to remove " + root._pluralize(ids.length, "selected item") + " from library?"
+            )
         }
     }
 
@@ -81,10 +113,27 @@ Item {
         rightPanelOpen: root.rightPanelOpen
         onLoadMoreRequested: root.loadMoreRequested()
         onScrollXChanged: function(x) { NavigationManager.updateScrollX(x) }
+        onRemoveRequested: function(imageId, filename) {
+            root._requestRemoval([imageId], "Are you sure you want to remove " + filename + " from the library?")
+        }
     }
 
     function scrollToX(x) {
         thumbnailGrid.scrollToX(x)
+    }
+
+    ConfirmDialog {
+        id: removeDialog
+        anchors.fill: parent
+        z: 50
+        open: root._removeIds.length > 0
+        message: root._removeMessage
+        onConfirmed: {
+            root.removeImagesRequested(root._removeIds)
+            SelectionManager.clear()
+            root._clearRemoval()
+        }
+        onCancelled: root._clearRemoval()
     }
 
     // Error

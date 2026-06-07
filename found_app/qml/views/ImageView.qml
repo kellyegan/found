@@ -1,4 +1,6 @@
 import QtQuick
+import QtQuick.Window
+import "../components"
 
 Item {
     id: root
@@ -9,6 +11,12 @@ Item {
     property string fileStatus: "available"
     property bool hasNext: false
     property bool hasPrev: false
+
+    // Set when this image was opened from within a collection — drives the
+    // removal dialog to default to "remove from this collection" (with an
+    // option to also remove from the library) rather than a straight
+    // library removal.
+    property string collectionId: ""
 
     // Inset from left/right edges so buttons clear the panel edge tabs.
     // 40 = 16px edge-tab + 24px gap. Measured from the viewport edge, so
@@ -25,6 +33,12 @@ Item {
     signal prevRequested()
     signal nextRequested()
     signal imageLoadFailed(string imageId)
+    signal removeImageRequested(string imageId, string collectionId, bool alsoFromLibrary)
+
+    // Pending removal — drives the confirmation dialog below. Always targets
+    // only the image currently being viewed, never other selected images.
+    property string _removeId: ""
+    property string _removeMessage: ""
 
     property real zoomLevel: 1.0
     property real panOffsetX: 0.0
@@ -71,6 +85,22 @@ Item {
         onActivated: {
             if (NavigationManager.immersiveMode) NavigationManager.setImmersive(false)
             else NavigationManager.goBack()
+        }
+    }
+
+    // Remove the currently-viewed image from the library — never affects any
+    // other selected images, and stays out of the way of text inputs (e.g.
+    // the metadata sidebar's tag/category editors).
+    Shortcut {
+        sequences: [StandardKey.Delete, "Backspace"]
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: {
+            if (root.imageId === "") return
+            root._removeId = root.imageId
+            root._removeMessage = root.collectionId !== ""
+                ? "Are you sure you want to remove " + root.filename + " from this collection?"
+                : "Are you sure you want to remove " + root.filename + " from the library?"
+            removeDialog.checkboxChecked = false
         }
     }
 
@@ -274,6 +304,31 @@ Item {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.nextRequested()
             }
+        }
+    }
+
+    ConfirmDialog {
+        id: removeDialog
+        anchors.fill: parent
+        z: 50
+        open: root._removeId !== ""
+        message: root._removeMessage
+        checkboxLabel: root.collectionId !== "" ? "Also remove from library" : ""
+        onConfirmed: {
+            var idToRemove = root._removeId
+            var alsoFromLibrary = removeDialog.checkboxChecked
+            root._removeId = ""
+            root._removeMessage = ""
+            removeDialog.checkboxChecked = false
+            if (root.hasNext) NavigationManager.goNext()
+            else if (root.hasPrev) NavigationManager.goPrev()
+            else NavigationManager.goBack()
+            root.removeImageRequested(idToRemove, root.collectionId, alsoFromLibrary)
+        }
+        onCancelled: {
+            root._removeId = ""
+            root._removeMessage = ""
+            removeDialog.checkboxChecked = false
         }
     }
 }

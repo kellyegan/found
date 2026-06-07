@@ -150,6 +150,7 @@ Item {
             leftPanelOpen: readyContainer.sidebarOpen
             rightPanelOpen: readyContainer.metadataSidebarOpen
             onLoadMoreRequested: LibraryState.load_more()
+            onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
         }
 
         // Central navigation handler — restores library state and collapses
@@ -189,7 +190,10 @@ Item {
             }
         }
 
-        // Double-click on an image: save state and push image view
+        // Double-click on an image: save state and push image view.
+        // When opened from within a collection, carry that collection's
+        // identity along and browse its images (not the library's), so
+        // prev/next and the removal dialog stay scoped to that collection.
         Connections {
             target: SelectionManager
             function onOpenRequested(imageId) {
@@ -198,9 +202,15 @@ Item {
                     SelectionManager.primaryId,
                     SelectionManager.anchorId
                 )
+                var fromCollection = NavigationManager.currentView === "collection"
+                var entry = NavigationManager.currentEntry
                 NavigationManager.push("image", {
                     "image_id": imageId,
-                    "context_ids": LibraryState.gridModel ? LibraryState.gridModel.allIds : []
+                    "context_ids": fromCollection && CollectionsState.collectionGridModel
+                        ? CollectionsState.collectionGridModel.allIds
+                        : (LibraryState.gridModel ? LibraryState.gridModel.allIds : []),
+                    "collection_id": fromCollection ? entry.collection_id : null,
+                    "collection_name": fromCollection ? entry.collection_name : null
                 })
             }
         }
@@ -216,6 +226,13 @@ Item {
             loadingState: CollectionsState.loadingState
             leftPanelOpen: readyContainer.sidebarOpen
             rightPanelOpen: readyContainer.metadataSidebarOpen
+            onRemoveImagesRequested: function(imageIds, alsoFromLibrary) {
+                CollectionsState.removeImagesFromCollection(
+                    NavigationManager.currentEntry.collection_id ?? "",
+                    imageIds,
+                    alsoFromLibrary
+                )
+            }
         }
 
         // Image view (Slice 5)
@@ -226,6 +243,14 @@ Item {
             imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
                            ? baseUrl + "/api/v1/images/" + NavigationManager.currentEntry.image_id + "/file"
                            : ""
+            filename: {
+                if (NavigationManager.currentView !== "image" || !NavigationManager.currentEntry.image_id) return ""
+                var imgId = NavigationManager.currentEntry.image_id
+                var inCollection = (NavigationManager.currentEntry.collection_id ?? "") !== ""
+                var srcModel = inCollection ? CollectionsState.collectionGridModel : LibraryState.gridModel
+                return srcModel ? srcModel.filenameForId(imgId) : ""
+            }
+            collectionId: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.collection_id ?? "") : ""
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
             hasNext: NavigationManager.hasNext
             hasPrev: NavigationManager.hasPrev
@@ -235,6 +260,12 @@ Item {
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
             onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
+            onRemoveImageRequested: function(imageId, collectionId, alsoFromLibrary) {
+                if (collectionId !== "")
+                    CollectionsState.removeImagesFromCollection(collectionId, [imageId], alsoFromLibrary)
+                else
+                    LibraryState.removeImages([imageId])
+            }
         }
 
         // Sidebar overlay — rendered above content, below nav bar

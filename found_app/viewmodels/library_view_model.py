@@ -2,6 +2,7 @@ from enum import Enum, auto
 from typing import Callable
 
 from PySide6.QtCore import QObject, QThread, Property, Signal, Slot
+from PySide6.QtQml import QJSValue
 
 from found_app.models.thumbnail_grid_model import ThumbnailGridModel
 
@@ -22,16 +23,19 @@ class LibraryViewModel(QObject):
         page_fetcher: Callable[..., dict | None],
         filter_state=None,
         image_verifier: Callable | None = None,
+        bulk_deleter: Callable | None = None,
         parent=None,
     ):
         super().__init__(parent)
         self._page_fetcher = page_fetcher
         self._image_verifier = image_verifier
+        self._bulk_deleter = bulk_deleter
         self._loading_state = LibraryLoadingState.Loading
         self._grid_model = ThumbnailGridModel(parent=self)
         self._grid_model.missingCountChanged.connect(self.missingCountChanged)
         self._thread: _PageThread | None = None
         self._verify_threads: list = []
+        self._delete_threads: list = []
         self._is_fetching = False
         self._filter_state = filter_state
         if filter_state is not None:
@@ -69,6 +73,24 @@ class LibraryViewModel(QObject):
         thread.finished.connect(lambda t=thread: self._verify_threads.remove(t) if t in self._verify_threads else None)
         thread.finished.connect(thread.deleteLater)
         thread.start()
+
+    @Slot("QVariant")
+    def removeImages(self, image_ids) -> None:
+        if isinstance(image_ids, QJSValue):
+            image_ids = image_ids.toVariant() or []
+        image_ids = list(image_ids)
+        if not image_ids or self._bulk_deleter is None:
+            return
+        thread = _DeleteThread(self._bulk_deleter, image_ids)
+        thread.result.connect(self._on_delete_result)
+        self._delete_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._delete_threads.remove(t) if t in self._delete_threads else None)
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+
+    def _on_delete_result(self, ok: bool) -> None:
+        if ok:
+            self.reload()
 
     @Slot()
     def load_more(self) -> None:
@@ -128,6 +150,22 @@ class _PageThread(QThread):
             self.result.emit(page)
         except Exception:
             self.result.emit(None)
+
+
+class _DeleteThread(QThread):
+    result = Signal(bool)
+
+    def __init__(self, deleter: Callable, image_ids: list, parent=None):
+        super().__init__(parent)
+        self._deleter = deleter
+        self._image_ids = image_ids
+
+    def run(self) -> None:
+        try:
+            ok = self._deleter(self._image_ids)
+            self.result.emit(bool(ok))
+        except Exception:
+            self.result.emit(False)
 
 
 class _VerifyThread(QThread):

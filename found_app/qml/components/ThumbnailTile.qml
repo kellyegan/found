@@ -11,6 +11,7 @@ Item {
 
     signal tileClicked(string imageId, int modifiers)
     signal tileDoubleClicked(string imageId)
+    signal removeRequested(string imageId)
 
     // Floating proxy parented to the window so it can move across the whole scene
     Item {
@@ -146,14 +147,42 @@ Item {
 
     // MouseArea covers the full cell so the gap between tiles is also clickable
     MouseArea {
+        id: tileMouseArea
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
+        hoverEnabled: true
         onClicked: function(mouse) {
             forceActiveFocus()
             root.tileClicked(root.imageId, mouse.modifiers)
         }
         onDoubleClicked: function(mouse) {
             root.tileDoubleClicked(root.imageId)
+        }
+    }
+
+    // Hover-revealed remove button — top-right corner
+    Rectangle {
+        id: removeButton
+        width: 20
+        height: 20
+        radius: 10
+        anchors { top: parent.top; right: parent.right; margins: root.inset + 4 }
+        color: removeArea.containsMouse ? "#cc4444" : "#00000099"
+        visible: tileMouseArea.containsMouse
+
+        Text {
+            anchors.centerIn: parent
+            text: "✕"
+            color: "#ffffff"
+            font.pixelSize: 11
+        }
+
+        MouseArea {
+            id: removeArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.removeRequested(root.imageId)
         }
     }
 }

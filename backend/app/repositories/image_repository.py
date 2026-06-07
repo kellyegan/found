@@ -5,8 +5,9 @@ from uuid import UUID
 from sqlmodel import Session, select
 
 from app.models.category import Category, ImageCategory
-from app.models.collection import CollectionImage
+from app.models.collection import Collection, CollectionImage
 from app.models.image import FileStatus, Image
+from app.models.import_result import ImportResult
 from app.models.tag import ImageTag, Tag
 from app.utils.pagination import decode_cursor, encode_cursor
 
@@ -124,13 +125,54 @@ class ImageRepository:
         return image
 
     def delete(self, image: Image) -> None:
+        self._purge_references([image.id])
         self.session.delete(image)
         self.session.commit()
 
     def bulk_delete(self, image_ids: List[UUID]) -> None:
         """Remove multiple image records in a single transaction. Ignores IDs not found."""
+        self._purge_references(image_ids)
         for image_id in image_ids:
             image = self.session.get(Image, image_id)
             if image:
                 self.session.delete(image)
         self.session.commit()
+
+    def _purge_references(self, image_ids: List[UUID]) -> None:
+        """Remove rows in other tables that reference the given images.
+
+        SQLite enforces no FK cascade for these association tables, so this
+        cleanup must happen explicitly before the Image rows are deleted.
+        """
+        ids = set(image_ids)
+        if not ids:
+            return
+
+        for row in self.session.exec(select(ImageTag).where(ImageTag.image_id.in_(ids))).all():
+            self.session.delete(row)
+        for row in self.session.exec(select(ImageCategory).where(ImageCategory.image_id.in_(ids))).all():
+            self.session.delete(row)
+
+        collection_links = self.session.exec(
+            select(CollectionImage).where(CollectionImage.image_id.in_(ids))
+        ).all()
+        affected_collection_ids = {link.collection_id for link in collection_links}
+        for link in collection_links:
+            self.session.delete(link)
+
+        for collection_id in affected_collection_ids:
+            collection = self.session.get(Collection, collection_id)
+            if collection and collection.cover_image_id in ids:
+                remaining = self.session.exec(
+                    select(CollectionImage)
+                    .where(CollectionImage.collection_id == collection_id)
+                    .order_by(CollectionImage.sort_order)
+                ).all()
+                collection.cover_image_id = remaining[0].image_id if remaining else None
+                self.session.add(collection)
+
+        for result in self.session.exec(
+            select(ImportResult).where(ImportResult.existing_image_id.in_(ids))
+        ).all():
+            result.existing_image_id = None
+            self.session.add(result)

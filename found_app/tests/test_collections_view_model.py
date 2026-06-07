@@ -10,6 +10,8 @@ Covers:
 - addImagesToCollection() delegates to images_adder with correct args
 - loadCollectionImages() populates collectionGridModel
 - loadCollectionImages() clears previous model before loading
+- removeImagesFromCollection() removes each image, optionally also deletes
+  from the library, reloads the collection grid, and signals library removal
 """
 
 import pytest
@@ -36,12 +38,16 @@ def _vm(
     collection_creator=None,
     images_adder=None,
     collection_images_fetcher=None,
+    collection_remover=None,
+    bulk_deleter=None,
 ):
     return CollectionsViewModel(
         collections_fetcher=collections_fetcher or (lambda: []),
         collection_creator=collection_creator or (lambda name: None),
         images_adder=images_adder or (lambda cid, iids: False),
         collection_images_fetcher=collection_images_fetcher or (lambda cid: []),
+        collection_remover=collection_remover or (lambda cid, iid: False),
+        bulk_deleter=bulk_deleter,
     )
 
 
@@ -341,3 +347,111 @@ def test_reload_collection_images_noop_when_no_collection_loaded(qapp):
     QTimer.singleShot(100, loop.quit)
     loop.exec()
     assert fetcher_calls == []
+
+
+# ---------------------------------------------------------------------------
+# removeImagesFromCollection()
+# ---------------------------------------------------------------------------
+
+
+def wait_for_remove(vm, timeout_ms: int = 2000) -> None:
+    """Wait for the remove-from-collection thread to finish."""
+    from PySide6.QtCore import QCoreApplication
+
+    thread = vm._remove_thread
+    if thread is None or not thread.isRunning():
+        QCoreApplication.processEvents()
+        return
+    loop = QEventLoop()
+    thread.finished.connect(loop.quit)
+    QTimer.singleShot(timeout_ms, loop.quit)
+    loop.exec()
+    QCoreApplication.processEvents()
+
+
+def test_remove_images_from_collection_calls_remover_for_each_id(qapp):
+    calls = []
+    vm = _vm(collection_remover=lambda cid, iid: calls.append((cid, iid)) or True)
+    vm.removeImagesFromCollection("col-1", ["img-1", "img-2"], False)
+    wait_for_remove(vm)
+    assert calls == [("col-1", "img-1"), ("col-1", "img-2")]
+
+
+def test_remove_images_from_collection_reloads_on_success(qapp):
+    fetcher_calls = []
+
+    def fetcher(cid):
+        fetcher_calls.append(cid)
+        return SAMPLE_IMAGES
+
+    vm = _vm(collection_remover=lambda cid, iid: True, collection_images_fetcher=fetcher)
+    vm.removeImagesFromCollection("col-1", ["img-1"], False)
+    wait_for_remove(vm)
+    wait_for_images(vm)
+
+    assert fetcher_calls == ["col-1"]
+    assert vm.collectionGridModel.count == 2
+
+
+def test_remove_images_from_collection_does_not_reload_on_failure(qapp):
+    fetcher_calls = []
+    vm = _vm(
+        collection_remover=lambda cid, iid: False,
+        collection_images_fetcher=lambda cid: fetcher_calls.append(cid) or SAMPLE_IMAGES,
+    )
+    vm.removeImagesFromCollection("col-1", ["img-1"], False)
+    wait_for_remove(vm)
+
+    assert fetcher_calls == []
+
+
+def test_remove_images_from_collection_is_noop_with_empty_list(qapp):
+    calls = []
+    vm = _vm(collection_remover=lambda cid, iid: calls.append((cid, iid)) or True)
+    vm.removeImagesFromCollection("col-1", [], False)
+
+    assert calls == []
+
+
+def test_remove_images_from_collection_also_deletes_from_library_when_flagged(qapp):
+    delete_calls = []
+    vm = _vm(
+        collection_remover=lambda cid, iid: True,
+        bulk_deleter=lambda iids: delete_calls.append(iids) or True,
+    )
+    vm.removeImagesFromCollection("col-1", ["img-1", "img-2"], True)
+    wait_for_remove(vm)
+
+    assert delete_calls == [["img-1", "img-2"]]
+
+
+def test_remove_images_from_collection_does_not_delete_from_library_when_not_flagged(qapp):
+    delete_calls = []
+    vm = _vm(
+        collection_remover=lambda cid, iid: True,
+        bulk_deleter=lambda iids: delete_calls.append(iids) or True,
+    )
+    vm.removeImagesFromCollection("col-1", ["img-1"], False)
+    wait_for_remove(vm)
+
+    assert delete_calls == []
+
+
+def test_remove_images_from_collection_emits_images_removed_from_library_when_flagged(qapp):
+    received = []
+    vm = _vm(collection_remover=lambda cid, iid: True, bulk_deleter=lambda iids: True)
+    vm.imagesRemovedFromLibrary.connect(lambda: received.append(1))
+    vm.removeImagesFromCollection("col-1", ["img-1"], True)
+    wait_for_remove(vm)
+
+    assert received == [1]
+
+
+def test_remove_images_from_collection_does_not_emit_images_removed_from_library_when_not_flagged(qapp):
+    received = []
+    vm = _vm(collection_remover=lambda cid, iid: True)
+    vm.imagesRemovedFromLibrary.connect(lambda: received.append(1))
+    vm.removeImagesFromCollection("col-1", ["img-1"], False)
+    wait_for_remove(vm)
+
+    assert received == []

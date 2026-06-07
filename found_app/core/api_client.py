@@ -372,6 +372,26 @@ class ApiClient:
         except Exception:
             return False
 
+    def delete_image(self, image_id: str) -> bool:
+        try:
+            response = self._sync_client.delete(
+                f"/api/v1/images/{image_id}", timeout=10.0
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
+    def bulk_delete_images(self, image_ids: list) -> bool:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/bulk/delete",
+                json={"image_ids": image_ids},
+                timeout=10.0,
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
     async def close(self) -> None:
         await self._client.aclose()
 

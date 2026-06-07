@@ -111,3 +111,10 @@ class ThumbnailGridModel(QAbstractListModel):
     @Property(list, notify=countChanged)
     def allIds(self) -> list:
         return [item["id"] for item in self._items]
+
+    @Slot(str, result=str)
+    def filenameForId(self, image_id: str) -> str:
+        for item in self._items:
+            if str(item.get("id", "")) == image_id:
+                return item.get("filename", "")
+        return ""

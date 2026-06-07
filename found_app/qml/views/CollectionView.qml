@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Window
 import "../components"
 
 Item {
@@ -11,6 +12,40 @@ Item {
     property bool rightPanelOpen: false
 
     signal loadMoreRequested()
+    signal removeImagesRequested(var imageIds, bool alsoFromLibrary)
+
+    // Pending removal — drives the confirmation dialog below
+    property var _removeIds: []
+    property string _removeMessage: ""
+
+    function _pluralize(count, noun) {
+        return count + " " + noun + (count === 1 ? "" : "s")
+    }
+
+    function _requestRemoval(ids, message) {
+        root._removeIds = ids
+        root._removeMessage = message
+        removeDialog.checkboxChecked = false
+    }
+
+    function _clearRemoval() {
+        root._removeIds = []
+        root._removeMessage = ""
+        removeDialog.checkboxChecked = false
+    }
+
+    Shortcut {
+        sequences: [StandardKey.Delete, "Backspace"]
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: {
+            var ids = SelectionManager.selectedIds
+            if (ids.length === 0) return
+            root._requestRemoval(
+                ids,
+                "Are you sure you want to remove " + root._pluralize(ids.length, "selected item") + " from this collection?"
+            )
+        }
+    }
 
     // Loading state
     Text {
@@ -47,5 +82,23 @@ Item {
         leftPanelOpen: root.leftPanelOpen
         rightPanelOpen: root.rightPanelOpen
         onLoadMoreRequested: root.loadMoreRequested()
+        onRemoveRequested: function(imageId, filename) {
+            root._requestRemoval([imageId], "Are you sure you want to remove " + filename + " from this collection?")
+        }
+    }
+
+    ConfirmDialog {
+        id: removeDialog
+        anchors.fill: parent
+        z: 50
+        open: root._removeIds.length > 0
+        message: root._removeMessage
+        checkboxLabel: "Also remove from library"
+        onConfirmed: {
+            root.removeImagesRequested(root._removeIds, removeDialog.checkboxChecked)
+            SelectionManager.clear()
+            root._clearRemoval()
+        }
+        onCancelled: root._clearRemoval()
     }
 }

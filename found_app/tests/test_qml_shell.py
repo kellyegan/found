@@ -258,6 +258,13 @@ def test_library_view_right_panel_open_defaults_to_false(engine):
     assert obj.property("rightPanelOpen") is False
 
 
+def test_library_view_has_remove_images_requested_signal(engine):
+    obj = load_component(engine, "views/LibraryView.qml")
+    received = []
+    obj.removeImagesRequested.connect(lambda ids: received.append(ids))
+    assert isinstance(received, list)
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
@@ -308,6 +315,72 @@ def test_main_qml_loads_with_app_window(qapp):
     assert e.rootObjects(), "main.qml failed to load"
 
 
+def test_open_image_from_collection_carries_collection_context(qapp):
+    """Opening an image while browsing a collection should push the image
+    view scoped to that collection: collection_id/name carried along, and
+    context_ids drawn from the collection's images (not the library's) so
+    prev/next browsing stays inside the collection."""
+    theme = ThemeManager()
+    app_state = AppStateManager()
+    library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    collections_state = CollectionsViewModel(
+        collections_fetcher=lambda: [],
+        collection_creator=lambda name: None,
+        images_adder=lambda cid, iids: False,
+        collection_images_fetcher=lambda cid: [],
+    )
+    import_state = ImportViewModel(
+        scanner=lambda paths: {"new": [], "already_imported": [], "conflicts": [], "invalid": []},
+        importer=lambda paths: "job-id",
+        job_fetcher=lambda jid: {"status": "completed", "total_files": 0, "processed_files": 0,
+                                  "successful_imports": 0, "duplicate_paths": 0,
+                                  "duplicate_hashes": 0, "failed_imports": 0},
+    )
+    e = QQmlApplicationEngine()
+    e.rootContext().setContextProperty("Theme", theme)
+    e.rootContext().setContextProperty("AppState", app_state)
+    e.rootContext().setContextProperty("LibraryState", library_state)
+    e.rootContext().setContextProperty("SelectionManager", selection)
+    e.rootContext().setContextProperty("NavigationManager", navigation)
+    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
+    e.rootContext().setContextProperty("CategoriesState", categories_state)
+    e.rootContext().setContextProperty("CollectionsState", collections_state)
+    e.rootContext().setContextProperty("ImportState", import_state)
+    e.rootContext().setContextProperty("FilterState", FilterStateManager())
+    e.rootContext().setContextProperty("MetadataState", MetadataViewModel(image_fetcher=lambda image_id: None))
+    e.rootContext().setContextProperty("TagSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
+    e.rootContext().setContextProperty("TagEditorSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
+    e.rootContext().setContextProperty("TagEditorState", TagEditorViewModel(
+        image_tags_fetcher=lambda image_id: [],
+        tag_modifier=lambda image_ids, add_ids, remove_ids: True,
+    ))
+    e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
+    e.rootContext().setContextProperty("foundVersion", "0.1.0")
+    e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
+    e.load(str(QML_DIR / "main.qml"))
+    assert e.rootObjects(), "main.qml failed to load"
+
+    collections_state.collectionGridModel.appendPage(
+        [
+            {"id": "img-1", "filename": "a.jpg", "file_status": "available"},
+            {"id": "img-2", "filename": "b.jpg", "file_status": "available"},
+        ],
+        None,
+        False,
+    )
+    navigation.push("collection", {"collection_id": "col-1", "collection_name": "Portraits"})
+
+    selection.requestOpen("img-2")
+
+    entry = navigation.currentEntry
+    assert entry["view"] == "image"
+    assert entry["collection_id"] == "col-1"
+    assert entry["collection_name"] == "Portraits"
+    assert entry["context_ids"] == ["img-1", "img-2"]
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailTile
 # ---------------------------------------------------------------------------
@@ -350,6 +423,13 @@ def test_thumbnail_tile_image_id_is_writable(engine):
 def test_thumbnail_tile_has_inset_property(engine):
     obj = load_component(engine, "components/ThumbnailTile.qml")
     assert obj.property("inset") == 0
+
+
+def test_thumbnail_tile_has_remove_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailTile.qml")
+    received = []
+    obj.removeRequested.connect(lambda image_id: received.append(image_id))
+    assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------
@@ -395,6 +475,13 @@ def test_thumbnail_grid_left_panel_open_defaults_to_false(engine):
 def test_thumbnail_grid_right_panel_open_defaults_to_false(engine):
     obj = load_component(engine, "components/ThumbnailGrid.qml")
     assert obj.property("rightPanelOpen") is False
+
+
+def test_thumbnail_grid_has_remove_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
+    received = []
+    obj.removeRequested.connect(lambda image_id, filename: received.append((image_id, filename)))
+    assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------
@@ -522,6 +609,38 @@ def test_image_view_has_prev_is_writable(engine):
 
 
 # ---------------------------------------------------------------------------
+# ImageView removal — Slice 9 Commit 7
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_has_remove_image_requested_signal(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    received = []
+    obj.removeImageRequested.connect(
+        lambda image_id, collection_id, also_from_library: received.append(
+            (image_id, collection_id, also_from_library)
+        )
+    )
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# ImageView collection-aware removal — Slice 9 Commit 9
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_collection_id_defaults_to_empty(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    assert obj.property("collectionId") == ""
+
+
+def test_image_view_collection_id_is_writable(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    obj.setProperty("collectionId", "col-1")
+    assert obj.property("collectionId") == "col-1"
+
+
+# ---------------------------------------------------------------------------
 # CollectionItem
 # ---------------------------------------------------------------------------
 
@@ -618,6 +737,13 @@ def test_collection_view_left_panel_open_defaults_to_false(engine):
 def test_collection_view_right_panel_open_defaults_to_false(engine):
     obj = load_component(engine, "views/CollectionView.qml")
     assert obj.property("rightPanelOpen") is False
+
+
+def test_collection_view_has_remove_images_requested_signal(engine):
+    obj = load_component(engine, "views/CollectionView.qml")
+    received = []
+    obj.removeImagesRequested.connect(lambda ids, also_from_library: received.append((ids, also_from_library)))
+    assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------

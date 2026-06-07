@@ -44,6 +44,7 @@ class AppContainer:
             page_fetcher=self._api_client.fetch_images_page,
             filter_state=self._filter_state,
             image_verifier=self._api_client.verify_image,
+            bulk_deleter=self._api_client.bulk_delete_images,
         )
         self._categories_state = CategoriesViewModel(
             categories_fetcher=self._api_client.list_categories,
@@ -59,6 +60,8 @@ class AppContainer:
             collection_creator=self._api_client.create_collection,
             images_adder=self._api_client.add_images_to_collection,
             collection_images_fetcher=self._api_client.fetch_collection_images,
+            collection_remover=self._api_client.remove_image_from_collection,
+            bulk_deleter=self._api_client.bulk_delete_images,
         )
         self._import_state = ImportViewModel(
             scanner=self._api_client.scan_paths,
@@ -128,6 +131,7 @@ class AppContainer:
         self._collection_editor_state.modified.connect(
             self._collections_state.reloadCollectionImages
         )
+        self._collections_state.imagesRemovedFromLibrary.connect(self._library_state.reload)
 
     def wire_engine(self, engine) -> None:
         app_metadata = get_app_metadata()
