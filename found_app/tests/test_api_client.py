@@ -1041,3 +1041,77 @@ def test_remove_image_from_collection_returns_false_on_exception():
     client, mock_http = make_sync_client()
     mock_http.delete.side_effect = Exception("timeout")
     assert client.remove_image_from_collection("col-1", "img-1") is False
+
+
+# ---------------------------------------------------------------------------
+# delete_image
+# ---------------------------------------------------------------------------
+
+
+def test_delete_image_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(200, {"success": True, "data": None})
+    assert client.delete_image("img-1") is True
+
+
+def test_delete_image_uses_correct_url():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(200, {"success": True, "data": None})
+    client.delete_image("img-1")
+    url = mock_http.delete.call_args.args[0]
+    assert url == "/api/v1/images/img-1"
+
+
+def test_delete_image_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.delete_image("img-1") is False
+
+
+def test_delete_image_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.delete.side_effect = Exception("timeout")
+    assert client.delete_image("img-1") is False
+
+
+# ---------------------------------------------------------------------------
+# bulk_delete_images
+# ---------------------------------------------------------------------------
+
+
+def test_bulk_delete_images_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": None})
+    assert client.bulk_delete_images(["img-1", "img-2"]) is True
+
+
+def test_bulk_delete_images_posts_correct_body():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": None})
+    client.bulk_delete_images(["img-1", "img-2"])
+    body = mock_http.post.call_args.kwargs["json"]
+    assert body == {"image_ids": ["img-1", "img-2"]}
+
+
+def test_bulk_delete_images_uses_correct_url():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": None})
+    client.bulk_delete_images(["img-1"])
+    url = mock_http.post.call_args.args[0]
+    assert url == "/api/v1/images/bulk/delete"
+
+
+def test_bulk_delete_images_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.bulk_delete_images(["img-1"]) is False
+
+
+def test_bulk_delete_images_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.bulk_delete_images(["img-1"]) is False
