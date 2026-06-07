@@ -352,6 +352,13 @@ def test_thumbnail_tile_has_inset_property(engine):
     assert obj.property("inset") == 0
 
 
+def test_thumbnail_tile_has_remove_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailTile.qml")
+    received = []
+    obj.removeRequested.connect(lambda image_id: received.append(image_id))
+    assert isinstance(received, list)
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailGrid
 # ---------------------------------------------------------------------------
