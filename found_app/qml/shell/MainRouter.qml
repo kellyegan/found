@@ -243,9 +243,14 @@ Item {
             imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
                            ? baseUrl + "/api/v1/images/" + NavigationManager.currentEntry.image_id + "/file"
                            : ""
-            filename: NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id && LibraryState.gridModel
-                          ? LibraryState.gridModel.filenameForId(NavigationManager.currentEntry.image_id)
-                          : ""
+            filename: {
+                if (NavigationManager.currentView !== "image" || !NavigationManager.currentEntry.image_id) return ""
+                var imgId = NavigationManager.currentEntry.image_id
+                var inCollection = (NavigationManager.currentEntry.collection_id ?? "") !== ""
+                var srcModel = inCollection ? CollectionsState.collectionGridModel : LibraryState.gridModel
+                return srcModel ? srcModel.filenameForId(imgId) : ""
+            }
+            collectionId: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.collection_id ?? "") : ""
             fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
             hasNext: NavigationManager.hasNext
             hasPrev: NavigationManager.hasPrev
@@ -255,7 +260,12 @@ Item {
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
             onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
-            onRemoveImageRequested: function(imageId) { LibraryState.removeImages([imageId]) }
+            onRemoveImageRequested: function(imageId, collectionId, alsoFromLibrary) {
+                if (collectionId !== "")
+                    CollectionsState.removeImagesFromCollection(collectionId, [imageId], alsoFromLibrary)
+                else
+                    LibraryState.removeImages([imageId])
+            }
         }
 
         // Sidebar overlay — rendered above content, below nav bar

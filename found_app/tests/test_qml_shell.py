@@ -616,8 +616,28 @@ def test_image_view_has_prev_is_writable(engine):
 def test_image_view_has_remove_image_requested_signal(engine):
     obj = load_component(engine, "views/ImageView.qml")
     received = []
-    obj.removeImageRequested.connect(lambda image_id: received.append(image_id))
+    obj.removeImageRequested.connect(
+        lambda image_id, collection_id, also_from_library: received.append(
+            (image_id, collection_id, also_from_library)
+        )
+    )
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# ImageView collection-aware removal — Slice 9 Commit 9
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_collection_id_defaults_to_empty(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    assert obj.property("collectionId") == ""
+
+
+def test_image_view_collection_id_is_writable(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    obj.setProperty("collectionId", "col-1")
+    assert obj.property("collectionId") == "col-1"
 
 
 # ---------------------------------------------------------------------------
