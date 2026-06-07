@@ -190,7 +190,10 @@ Item {
             }
         }
 
-        // Double-click on an image: save state and push image view
+        // Double-click on an image: save state and push image view.
+        // When opened from within a collection, carry that collection's
+        // identity along and browse its images (not the library's), so
+        // prev/next and the removal dialog stay scoped to that collection.
         Connections {
             target: SelectionManager
             function onOpenRequested(imageId) {
@@ -199,9 +202,15 @@ Item {
                     SelectionManager.primaryId,
                     SelectionManager.anchorId
                 )
+                var fromCollection = NavigationManager.currentView === "collection"
+                var entry = NavigationManager.currentEntry
                 NavigationManager.push("image", {
                     "image_id": imageId,
-                    "context_ids": LibraryState.gridModel ? LibraryState.gridModel.allIds : []
+                    "context_ids": fromCollection && CollectionsState.collectionGridModel
+                        ? CollectionsState.collectionGridModel.allIds
+                        : (LibraryState.gridModel ? LibraryState.gridModel.allIds : []),
+                    "collection_id": fromCollection ? entry.collection_id : null,
+                    "collection_name": fromCollection ? entry.collection_name : null
                 })
             }
         }

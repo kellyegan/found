@@ -315,6 +315,72 @@ def test_main_qml_loads_with_app_window(qapp):
     assert e.rootObjects(), "main.qml failed to load"
 
 
+def test_open_image_from_collection_carries_collection_context(qapp):
+    """Opening an image while browsing a collection should push the image
+    view scoped to that collection: collection_id/name carried along, and
+    context_ids drawn from the collection's images (not the library's) so
+    prev/next browsing stays inside the collection."""
+    theme = ThemeManager()
+    app_state = AppStateManager()
+    library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    collections_state = CollectionsViewModel(
+        collections_fetcher=lambda: [],
+        collection_creator=lambda name: None,
+        images_adder=lambda cid, iids: False,
+        collection_images_fetcher=lambda cid: [],
+    )
+    import_state = ImportViewModel(
+        scanner=lambda paths: {"new": [], "already_imported": [], "conflicts": [], "invalid": []},
+        importer=lambda paths: "job-id",
+        job_fetcher=lambda jid: {"status": "completed", "total_files": 0, "processed_files": 0,
+                                  "successful_imports": 0, "duplicate_paths": 0,
+                                  "duplicate_hashes": 0, "failed_imports": 0},
+    )
+    e = QQmlApplicationEngine()
+    e.rootContext().setContextProperty("Theme", theme)
+    e.rootContext().setContextProperty("AppState", app_state)
+    e.rootContext().setContextProperty("LibraryState", library_state)
+    e.rootContext().setContextProperty("SelectionManager", selection)
+    e.rootContext().setContextProperty("NavigationManager", navigation)
+    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
+    e.rootContext().setContextProperty("CategoriesState", categories_state)
+    e.rootContext().setContextProperty("CollectionsState", collections_state)
+    e.rootContext().setContextProperty("ImportState", import_state)
+    e.rootContext().setContextProperty("FilterState", FilterStateManager())
+    e.rootContext().setContextProperty("MetadataState", MetadataViewModel(image_fetcher=lambda image_id: None))
+    e.rootContext().setContextProperty("TagSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
+    e.rootContext().setContextProperty("TagEditorSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
+    e.rootContext().setContextProperty("TagEditorState", TagEditorViewModel(
+        image_tags_fetcher=lambda image_id: [],
+        tag_modifier=lambda image_ids, add_ids, remove_ids: True,
+    ))
+    e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
+    e.rootContext().setContextProperty("foundVersion", "0.1.0")
+    e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
+    e.load(str(QML_DIR / "main.qml"))
+    assert e.rootObjects(), "main.qml failed to load"
+
+    collections_state.collectionGridModel.appendPage(
+        [
+            {"id": "img-1", "filename": "a.jpg", "file_status": "available"},
+            {"id": "img-2", "filename": "b.jpg", "file_status": "available"},
+        ],
+        None,
+        False,
+    )
+    navigation.push("collection", {"collection_id": "col-1", "collection_name": "Portraits"})
+
+    selection.requestOpen("img-2")
+
+    entry = navigation.currentEntry
+    assert entry["view"] == "image"
+    assert entry["collection_id"] == "col-1"
+    assert entry["collection_name"] == "Portraits"
+    assert entry["context_ids"] == ["img-1", "img-2"]
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailTile
 # ---------------------------------------------------------------------------
