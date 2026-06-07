@@ -237,6 +237,23 @@ def test_all_ids_empty_after_clear(qapp):
 
 
 # ---------------------------------------------------------------------------
+# filenameForId
+# ---------------------------------------------------------------------------
+
+
+def test_filename_for_id_returns_matching_filename(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert model.filenameForId("bbbb-2222") == "cat.jpg"
+
+
+def test_filename_for_id_returns_empty_string_when_not_found(qapp):
+    model = ThumbnailGridModel()
+    model.appendPage(SAMPLE_ITEMS, None, False)
+    assert model.filenameForId("nope") == ""
+
+
+# ---------------------------------------------------------------------------
 # missingCount
 # ---------------------------------------------------------------------------
 
