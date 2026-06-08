@@ -397,3 +397,48 @@ def test_immersive_changed_fires_on_toggle(qapp):
     nm.navigationChanged.connect(lambda: received.append(1))
     nm.toggleImmersive()
     assert received
+
+
+# ---------------------------------------------------------------------------
+# lastReturnedImageId
+# ---------------------------------------------------------------------------
+
+
+def test_last_returned_image_id_empty_initially(qapp):
+    assert _nm().lastReturnedImageId == ""
+
+
+def test_go_back_from_image_view_sets_last_returned_image_id(qapp):
+    nm = _nm()
+    nm.push("image", {"image_id": "img-42"})
+    nm.goBack()
+    assert nm.lastReturnedImageId == "img-42"
+
+
+def test_go_back_from_collection_view_clears_last_returned_image_id(qapp):
+    nm = _nm()
+    nm.push("collection", {"collection_id": "col-1"})
+    nm.goBack()
+    assert nm.lastReturnedImageId == ""
+
+
+def test_go_back_noop_does_not_set_last_returned_image_id(qapp):
+    nm = _nm()
+    nm.goBack()  # stack empty — no-op
+    assert nm.lastReturnedImageId == ""
+
+
+def test_last_returned_image_id_reflects_navigation_within_image_view(qapp):
+    nm = _nm_image("img-b")
+    nm.goNext()  # advances to img-c
+    nm.goBack()
+    assert nm.lastReturnedImageId == "img-c"
+
+
+def test_go_back_from_image_view_emits_navigation_changed(qapp):
+    nm = _nm()
+    nm.push("image", {"image_id": "img-1"})
+    received = []
+    nm.navigationChanged.connect(lambda: received.append(1))
+    nm.goBack()
+    assert received

@@ -39,6 +39,7 @@ class NavigationManager(QObject):
         self._current = NavigationEntry(view="library")
         self._stack: list[NavigationEntry] = []
         self._immersive: bool = False
+        self._return_image_id: str = ""
 
     # ------------------------------------------------------------------
     # Properties
@@ -76,6 +77,10 @@ class NavigationManager(QObject):
     def immersiveMode(self) -> bool:
         return self._immersive
 
+    @Property(str, notify=navigationChanged)
+    def lastReturnedImageId(self) -> str:
+        return self._return_image_id
+
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
@@ -100,6 +105,7 @@ class NavigationManager(QObject):
         if not self._stack:
             return
         self._immersive = False
+        self._return_image_id = self._current.image_id if self._current.view == "image" else ""
         self._current = self._stack.pop()
         self.navigationChanged.emit()
 
