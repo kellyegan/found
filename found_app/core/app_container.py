@@ -62,6 +62,7 @@ class AppContainer:
             collection_images_fetcher=self._api_client.fetch_collection_images,
             collection_remover=self._api_client.remove_image_from_collection,
             bulk_deleter=self._api_client.bulk_delete_images,
+            collection_deleter=self._api_client.delete_collection,
         )
         self._import_state = ImportViewModel(
             scanner=self._api_client.scan_paths,

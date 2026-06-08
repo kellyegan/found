@@ -38,6 +38,10 @@ Item {
         property bool metadataSidebarOpen: false
         property string _lastView: ""
 
+        // Pending collection deletion — drives the confirmation dialog below
+        property string _removeCollectionId: ""
+        property string _removeCollectionName: ""
+
         TitleBar {
             id: titleBar
             anchors { top: parent.top; left: parent.left; right: parent.right }
@@ -295,6 +299,31 @@ Item {
                     ? SelectionManager.selectedIds
                     : [imageId]
                 CollectionsState.addImagesToCollection(collectionId, ids)
+            }
+
+            onRemoveCollectionRequested: function(collectionId, collectionName) {
+                readyContainer._removeCollectionId = collectionId
+                readyContainer._removeCollectionName = collectionName
+                removeCollectionDialog.checkboxChecked = false
+            }
+        }
+
+        // Collection-deletion confirmation — images are kept, only the collection is removed
+        ConfirmDialog {
+            id: removeCollectionDialog
+            anchors.fill: parent
+            z: 25
+            open: readyContainer._removeCollectionId !== ""
+            message: "Delete the collection “" + readyContainer._removeCollectionName + "”? Images in it will not be removed from your library."
+            confirmLabel: "Delete"
+            onConfirmed: {
+                CollectionsState.deleteCollection(readyContainer._removeCollectionId)
+                readyContainer._removeCollectionId = ""
+                readyContainer._removeCollectionName = ""
+            }
+            onCancelled: {
+                readyContainer._removeCollectionId = ""
+                readyContainer._removeCollectionName = ""
             }
         }
 
