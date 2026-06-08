@@ -42,6 +42,17 @@ Item {
         property string _removeCollectionId: ""
         property string _removeCollectionName: ""
 
+        // Background click handler — clears selection when the user clicks any
+        // area that no interactive element consumed (title bar background, panel
+        // edges, empty window corners, etc.).  z: -1 places it behind every other
+        // child so higher-z items (tiles, buttons, sidebars) consume their own
+        // events first and this only fires when nothing else did.
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onClicked: SelectionManager.clear()
+        }
+
         TitleBar {
             id: titleBar
             anchors { top: parent.top; left: parent.left; right: parent.right }

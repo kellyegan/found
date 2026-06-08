@@ -154,7 +154,14 @@ Item {
         hoverEnabled: true
         onClicked: function(mouse) {
             forceActiveFocus()
-            root.tileClicked(root.imageId, mouse.modifiers)
+            // Clicks within the inset border (the visual gap between tiles) deselect.
+            // Only clicks that land on the painted image area select the tile.
+            var isInner = mouse.x >= root.inset && mouse.x <= root.width  - root.inset
+                       && mouse.y >= root.inset && mouse.y <= root.height - root.inset
+            if (isInner)
+                root.tileClicked(root.imageId, mouse.modifiers)
+            else
+                SelectionManager.clear()
         }
         onDoubleClicked: function(mouse) {
             root.tileDoubleClicked(root.imageId)

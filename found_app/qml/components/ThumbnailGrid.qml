@@ -120,6 +120,18 @@ Item {
             }
         }
 
+        // Tap on any empty area (margins, space past last row) clears selection.
+        // indexAt uses content coordinates; TapHandler fires even when a tile
+        // MouseArea handles the same tap, so the index check is required.
+        TapHandler {
+            onTapped: function(eventPoint) {
+                var cx = eventPoint.position.x + grid.contentX
+                var cy = eventPoint.position.y + grid.contentY
+                if (grid.indexAt(cx, cy) < 0)
+                    SelectionManager.clear()
+            }
+        }
+
         // Trigger incremental load when right edge of content is within 3 viewport-widths
         onContentXChanged: _checkLoadMore()
         onCountChanged: _checkLoadMore()
