@@ -229,8 +229,41 @@ def test_side_panel_has_toggle_requested_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# SidePanel — dragOpenKeys
+# ---------------------------------------------------------------------------
+
+
+def test_side_panel_drag_open_keys_defaults_to_empty(engine):
+    obj = load_component(engine, "components/SidePanel.qml")
+    from PySide6.QtQml import QJSValue
+    val = obj.property("dragOpenKeys")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_side_panel_drag_open_keys_is_writable(engine):
+    obj = load_component(engine, "components/SidePanel.qml")
+    obj.setProperty("dragOpenKeys", ["found/image"])
+    from PySide6.QtQml import QJSValue
+    val = obj.property("dragOpenKeys")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == ["found/image"]
+
+
+# ---------------------------------------------------------------------------
 # CollectionsSidePanel — public API preserved after refactor
 # ---------------------------------------------------------------------------
+
+
+def test_collections_sidebar_drag_open_keys_set_to_image(full_engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(full_engine, "components/CollectionsSidePanel.qml")
+    val = obj.property("dragOpenKeys")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert "found/image" in (val or [])
 
 
 def test_collections_sidebar_still_loads(full_engine):
