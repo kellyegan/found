@@ -163,15 +163,22 @@ Item {
             target: NavigationManager
             function onNavigationChanged() {
                 var view = NavigationManager.currentView
+                var lastImg = NavigationManager.lastReturnedImageId
 
                 if (view === "library") {
                     var entry = NavigationManager.currentEntry
-                    SelectionManager.restore(
-                        entry.selection_ids,
-                        entry.primary_id,
-                        entry.anchor_id
-                    )
+                    if (lastImg !== "") {
+                        SelectionManager.select(lastImg)
+                    } else {
+                        SelectionManager.restore(
+                            entry.selection_ids,
+                            entry.primary_id,
+                            entry.anchor_id
+                        )
+                    }
                     libraryView.scrollToX(entry.scroll_x)
+                } else if (view === "collection" && lastImg !== "") {
+                    SelectionManager.select(lastImg)
                 }
 
                 if (view === "image" && readyContainer._lastView !== "image") {
@@ -201,6 +208,7 @@ Item {
         Connections {
             target: SelectionManager
             function onOpenRequested(imageId) {
+                SelectionManager.select(imageId)
                 NavigationManager.saveSelection(
                     SelectionManager.selectedIds,
                     SelectionManager.primaryId,
