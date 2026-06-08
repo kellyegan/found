@@ -18,6 +18,14 @@ Item {
         grid.contentX = x
     }
 
+    function navigateActive(direction) {
+        if (!root.model) return
+        var ids = root.model.allIds
+        SelectionManager.navigateInGrid(direction, ids, grid.rowCount)
+        var newIdx = ids.indexOf(SelectionManager.primaryId)
+        if (newIdx >= 0) grid.positionViewAtIndex(newIdx, GridView.Contain)
+    }
+
     GridView {
         id: grid
         anchors {
@@ -69,6 +77,10 @@ Item {
             selected: {
                 var _rev = SelectionManager.selectionRevision
                 return SelectionManager.isSelected(model.imageId ?? "")
+            }
+            active: {
+                var _rev = SelectionManager.selectionRevision
+                return SelectionManager.primaryId === (model.imageId ?? "")
             }
             onTileClicked: function(id, mods) {
                 if (mods & Qt.ControlModifier)
