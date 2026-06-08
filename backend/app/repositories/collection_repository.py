@@ -32,6 +32,12 @@ class CollectionRepository:
         return collection
 
     def delete(self, collection: Collection) -> None:
+        """Delete a collection and its image membership rows. Images themselves are untouched."""
+        links = self.session.exec(
+            select(CollectionImage).where(CollectionImage.collection_id == collection.id)
+        ).all()
+        for link in links:
+            self.session.delete(link)
         self.session.delete(collection)
         self.session.commit()
 

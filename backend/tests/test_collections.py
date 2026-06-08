@@ -1,4 +1,10 @@
+from uuid import UUID
+
 import pytest
+from sqlmodel import select
+
+from app.models.collection import CollectionImage
+from app.models.image import Image
 
 _COLLECTION = {"name": "Favourites", "description": "My best picks"}
 
@@ -43,6 +49,28 @@ def test_delete_collection(client, collection_id):
     response = client.delete(f"/api/v1/collections/{collection_id}")
     assert response.status_code == 200
     assert len(client.get("/api/v1/collections").json()["data"]) == 0
+
+
+def test_delete_collection_removes_join_rows_but_not_images(
+    client, collection_id, image_ids, session
+):
+    client.post(
+        f"/api/v1/collections/{collection_id}/images",
+        json={"image_ids": image_ids},
+    )
+
+    response = client.delete(f"/api/v1/collections/{collection_id}")
+    assert response.status_code == 200
+
+    remaining_links = session.exec(
+        select(CollectionImage).where(
+            CollectionImage.collection_id == UUID(collection_id)
+        )
+    ).all()
+    assert remaining_links == []
+
+    for image_id in image_ids:
+        assert session.get(Image, UUID(image_id)) is not None
 
 
 def test_add_images_to_collection(client, collection_id, image_ids):
