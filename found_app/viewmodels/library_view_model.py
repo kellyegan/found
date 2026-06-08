@@ -17,6 +17,7 @@ class LibraryLoadingState(Enum):
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
     missingCountChanged = Signal(int)
+    imageStatusChanged = Signal(str, str)  # image_id, status
 
     def __init__(
         self,
@@ -110,6 +111,7 @@ class LibraryViewModel(QObject):
     def _on_verify_result(self, image_id: str, status: str | None) -> None:
         if status:
             self._grid_model.updateItemStatus(image_id, status)
+            self.imageStatusChanged.emit(image_id, status)
 
     def _on_result(self, page: dict | None, is_initial: bool) -> None:
         self._is_fetching = False
