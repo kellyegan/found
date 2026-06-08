@@ -47,6 +47,12 @@ class TagRepository:
         return tag
 
     def delete(self, tag: Tag) -> None:
+        """Delete a tag and its image assignment rows. Images themselves are untouched."""
+        links = self.session.exec(
+            select(ImageTag).where(ImageTag.tag_id == tag.id)
+        ).all()
+        for link in links:
+            self.session.delete(link)
         self.session.delete(tag)
         self.session.commit()
 

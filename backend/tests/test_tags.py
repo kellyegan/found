@@ -1,4 +1,10 @@
+from uuid import UUID
+
 import pytest
+from sqlmodel import select
+
+from app.models.image import Image
+from app.models.tag import ImageTag
 
 
 @pytest.fixture
@@ -51,6 +57,20 @@ def test_delete_tag(client, tag_id):
     assert response.status_code == 200
     assert response.json()["success"] is True
     assert len(client.get("/api/v1/tags").json()["data"]) == 0
+
+
+def test_delete_tag_removes_join_rows_but_not_images(client, tag_id, image_id, session):
+    client.post(f"/api/v1/images/{image_id}/tags", json={"tag_ids": [tag_id]})
+
+    response = client.delete(f"/api/v1/tags/{tag_id}")
+    assert response.status_code == 200
+
+    remaining_links = session.exec(
+        select(ImageTag).where(ImageTag.tag_id == UUID(tag_id))
+    ).all()
+    assert remaining_links == []
+
+    assert session.get(Image, UUID(image_id)) is not None
 
 
 def test_add_tags_to_image(client, image_id, tag_id):

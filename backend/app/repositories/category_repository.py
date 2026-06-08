@@ -44,6 +44,12 @@ class CategoryRepository:
         return category
 
     def delete(self, category: Category) -> None:
+        """Delete a category and its image assignment rows. Images themselves are untouched."""
+        links = self.session.exec(
+            select(ImageCategory).where(ImageCategory.category_id == category.id)
+        ).all()
+        for link in links:
+            self.session.delete(link)
         self.session.delete(category)
         self.session.commit()
 

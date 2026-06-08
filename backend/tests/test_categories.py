@@ -1,4 +1,10 @@
+from uuid import UUID
+
 import pytest
+from sqlmodel import select
+
+from app.models.category import ImageCategory
+from app.models.image import Image
 
 _CATEGORY = {"name": "Architecture", "description": "Buildings and structures"}
 
@@ -45,6 +51,20 @@ def test_delete_category(client, category_id):
     response = client.delete(f"/api/v1/categories/{category_id}")
     assert response.status_code == 200
     assert len(client.get("/api/v1/categories").json()["data"]) == 0
+
+
+def test_delete_category_removes_join_rows_but_not_images(client, category_id, image_id, session):
+    client.post(f"/api/v1/images/{image_id}/categories", json={"category_ids": [category_id]})
+
+    response = client.delete(f"/api/v1/categories/{category_id}")
+    assert response.status_code == 200
+
+    remaining_links = session.exec(
+        select(ImageCategory).where(ImageCategory.category_id == UUID(category_id))
+    ).all()
+    assert remaining_links == []
+
+    assert session.get(Image, UUID(image_id)) is not None
 
 
 def test_assign_category_to_image(client, image_id, category_id):
