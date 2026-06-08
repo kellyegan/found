@@ -17,6 +17,26 @@ Rectangle {
 
     Behavior on color { ColorAnimation { duration: 100 } }
 
+    // hoverArea declared first so removeBtn/removeArea sits above it in z-order
+    MouseArea {
+        id: hoverArea
+        anchors.fill: parent
+        hoverEnabled: true
+        onClicked: root.clicked(root.collectionId, root.collectionName)
+    }
+
+    DropArea {
+        anchors.fill: parent
+        keys: ["found/image"]
+        onEntered: function(drag) { root.isDropTarget = true }
+        onExited: root.isDropTarget = false
+        onDropped: function(drop) {
+            root.isDropTarget = false
+            var iid = drop.source ? (drop.source.imageId ?? "") : ""
+            if (iid !== "") root.imageDropped(root.collectionId, iid)
+        }
+    }
+
     Text {
         anchors {
             left: parent.left; leftMargin: 12
@@ -63,24 +83,5 @@ Rectangle {
         border.color: "#44aa44"
         border.width: root.isDropTarget ? 1 : 0
         visible: root.isDropTarget
-    }
-
-    MouseArea {
-        id: hoverArea
-        anchors.fill: parent
-        hoverEnabled: true
-        onClicked: root.clicked(root.collectionId, root.collectionName)
-    }
-
-    DropArea {
-        anchors.fill: parent
-        keys: ["found/image"]
-        onEntered: function(drag) { root.isDropTarget = true }
-        onExited: root.isDropTarget = false
-        onDropped: function(drop) {
-            root.isDropTarget = false
-            var iid = drop.source ? (drop.source.imageId ?? "") : ""
-            if (iid !== "") root.imageDropped(root.collectionId, iid)
-        }
     }
 }
