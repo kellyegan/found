@@ -6,6 +6,7 @@ SidePanel {
     edge: "left"
     title: "Collections"
     panelIcon: "☰"
+    dragOpenKeys: ["found/image"]
 
     property var collections: []
 

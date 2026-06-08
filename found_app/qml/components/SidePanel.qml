@@ -8,6 +8,7 @@ Item {
     property string title: ""
     property string panelIcon: ""      // passed through to EdgeTab
     property int tabIndex: 0           // vertical slot index for stacking tabs on the same edge
+    property var dragOpenKeys: []      // drag mime keys that open this panel on hover when closed
 
     signal toggleRequested()
 
@@ -31,6 +32,19 @@ Item {
         open: root.open
         icon: root.panelIcon
         onClicked: root.toggleRequested()
+    }
+
+    // Spring-open on drag: hovering over the tab while dragging opens the panel
+    // so the user can drop onto a specific item without releasing first.
+    DropArea {
+        x: root.edge === "left" ? 0 : (parent.width - edgeTab.width)
+        y: edgeTab.y
+        width: edgeTab.width
+        height: edgeTab.height
+        keys: root.dragOpenKeys
+        enabled: !root.open && root.dragOpenKeys.length > 0
+        z: 2
+        onEntered: root.toggleRequested()
     }
 
     // Slide-in panel
