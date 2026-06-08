@@ -696,6 +696,82 @@ def test_collections_sidebar_collections_property_exists(engine):
 
 
 # ---------------------------------------------------------------------------
+# ImageGridPane
+# ---------------------------------------------------------------------------
+
+
+def test_image_grid_pane_qml_exists():
+    assert (QML_DIR / "components/ImageGridPane.qml").exists()
+
+
+def test_image_grid_pane_loads(engine):
+    load_component(engine, "components/ImageGridPane.qml")
+
+
+def test_image_grid_pane_loading_state_defaults_to_loading(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("loadingState") == "Loading"
+
+
+def test_image_grid_pane_loading_state_is_writable(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    obj.setProperty("loadingState", "Ready")
+    assert obj.property("loadingState") == "Ready"
+
+
+def test_image_grid_pane_grid_model_defaults_to_none(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("gridModel") is None
+
+
+def test_image_grid_pane_left_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("leftPanelOpen") is False
+
+
+def test_image_grid_pane_right_panel_open_defaults_to_false(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("rightPanelOpen") is False
+
+
+def test_image_grid_pane_empty_state_text_is_writable(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    obj.setProperty("emptyStateText", "Nothing here")
+    assert obj.property("emptyStateText") == "Nothing here"
+
+
+def test_image_grid_pane_remove_context_label_defaults_to_library(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("removeContextLabel") == "the library"
+
+
+def test_image_grid_pane_remove_checkbox_label_defaults_to_empty(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("removeCheckboxLabel") == ""
+
+
+def test_image_grid_pane_has_load_more_requested_signal(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    received = []
+    obj.loadMoreRequested.connect(lambda: received.append(True))
+    assert isinstance(received, list)
+
+
+def test_image_grid_pane_has_remove_images_requested_signal(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    received = []
+    obj.removeImagesRequested.connect(lambda ids, also: received.append((ids, also)))
+    assert isinstance(received, list)
+
+
+def test_image_grid_pane_has_scroll_x_changed_signal(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    received = []
+    obj.scrollXChanged.connect(lambda x: received.append(x))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
 # CollectionView
 # ---------------------------------------------------------------------------
 
