@@ -9,6 +9,7 @@ Rectangle {
 
     signal clicked(string collectionId, string collectionName)
     signal imageDropped(string collectionId, string imageId)
+    signal removeRequested(string collectionId, string collectionName)
 
     implicitHeight: 36
     color: isDropTarget ? "#2a3a2a" : (hoverArea.containsMouse ? "#252525" : "transparent")
@@ -16,19 +17,41 @@ Rectangle {
 
     Behavior on color { ColorAnimation { duration: 100 } }
 
-    Row {
-        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 12 }
-        spacing: Theme.spacingMd
+    Text {
+        anchors {
+            left: parent.left; leftMargin: 12
+            right: removeBtn.left; rightMargin: Theme.spacingMd
+            verticalCenter: parent.verticalCenter
+        }
+        text: root.collectionName
+        color: root.isDropTarget ? "#88cc88" : "#cccccc"
+        font.pixelSize: Theme.fontSizeMd
+        font.weight: Font.DemiBold
+        font.capitalization: Font.AllUppercase
+        elide: Text.ElideRight
+    }
+
+    Rectangle {
+        id: removeBtn
+        anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+        width: 20
+        height: 20
+        radius: 4
+        visible: hoverArea.containsMouse || removeArea.containsMouse
+        color: removeArea.containsMouse ? "#4a2a2a" : "transparent"
 
         Text {
-            anchors.verticalCenter: parent.verticalCenter
-            text: root.collectionName
-            color: root.isDropTarget ? "#88cc88" : "#cccccc"
-            font.pixelSize: Theme.fontSizeMd
-            font.weight: Font.DemiBold
-            font.capitalization: Font.AllUppercase
-            elide: Text.ElideRight
-            width: parent.width
+            anchors.centerIn: parent
+            text: "×"
+            font.pixelSize: 15
+            color: removeArea.containsMouse ? "#ff8888" : "#888888"
+        }
+
+        MouseArea {
+            id: removeArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: root.removeRequested(root.collectionId, root.collectionName)
         }
     }
 

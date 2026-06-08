@@ -19,6 +19,7 @@ class CollectionsViewModel(QObject):
         collection_images_fetcher: Callable,
         collection_remover: Callable | None = None,
         bulk_deleter: Callable | None = None,
+        collection_deleter: Callable | None = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -28,6 +29,7 @@ class CollectionsViewModel(QObject):
         self._collection_images_fetcher = collection_images_fetcher
         self._collection_remover = collection_remover
         self._bulk_deleter = bulk_deleter
+        self._collection_deleter = collection_deleter
 
         self._collections: list = []
         self._loading_state = "Idle"
@@ -77,6 +79,18 @@ class CollectionsViewModel(QObject):
             key=lambda c: c["name"].lower(),
         )
         self.collectionsChanged.emit()
+
+    @Slot(str)
+    def deleteCollection(self, collection_id: str) -> None:
+        if self._collection_deleter is None:
+            return
+        if not self._collection_deleter(collection_id):
+            return
+        self._collections = [c for c in self._collections if c["id"] != collection_id]
+        self.collectionsChanged.emit()
+        if self._current_collection_id == collection_id:
+            self._current_collection_id = ""
+            self._collection_grid_model.clear()
 
     @Slot(str, "QVariant")
     def addImagesToCollection(self, collection_id: str, image_ids) -> None:

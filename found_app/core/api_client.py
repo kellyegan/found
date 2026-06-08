@@ -329,6 +329,15 @@ class ApiClient:
         except Exception:
             return None
 
+    def delete_collection(self, collection_id: str) -> bool:
+        try:
+            response = self._sync_client.delete(
+                f"/api/v1/collections/{collection_id}", timeout=10.0
+            )
+            return response.json().get("success", False)
+        except Exception:
+            return False
+
     def add_images_to_collection(self, collection_id: str, image_ids: list) -> bool:
         try:
             response = self._sync_client.post(

@@ -1011,6 +1011,39 @@ def test_fetch_image_collections_returns_none_on_exception():
 
 
 # ---------------------------------------------------------------------------
+# delete_collection
+# ---------------------------------------------------------------------------
+
+
+def test_delete_collection_returns_true_on_success():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(200, {"success": True, "data": None})
+    assert client.delete_collection("col-1") is True
+
+
+def test_delete_collection_uses_correct_url():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(200, {"success": True, "data": None})
+    client.delete_collection("col-1")
+    url = mock_http.delete.call_args.args[0]
+    assert url == "/api/v1/collections/col-1"
+
+
+def test_delete_collection_returns_false_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.delete.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.delete_collection("col-1") is False
+
+
+def test_delete_collection_returns_false_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.delete.side_effect = Exception("timeout")
+    assert client.delete_collection("col-1") is False
+
+
+# ---------------------------------------------------------------------------
 # remove_image_from_collection
 # ---------------------------------------------------------------------------
 

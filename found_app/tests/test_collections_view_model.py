@@ -40,6 +40,7 @@ def _vm(
     collection_images_fetcher=None,
     collection_remover=None,
     bulk_deleter=None,
+    collection_deleter=None,
 ):
     return CollectionsViewModel(
         collections_fetcher=collections_fetcher or (lambda: []),
@@ -48,6 +49,7 @@ def _vm(
         collection_images_fetcher=collection_images_fetcher or (lambda cid: []),
         collection_remover=collection_remover or (lambda cid, iid: False),
         bulk_deleter=bulk_deleter,
+        collection_deleter=collection_deleter,
     )
 
 
@@ -470,6 +472,83 @@ def test_remove_images_from_collection_does_not_emit_images_removed_from_library
     wait_for_remove(vm)
 
     assert received == []
+
+
+# ---------------------------------------------------------------------------
+# deleteCollection()
+# ---------------------------------------------------------------------------
+
+
+def _loaded_vm(deleter):
+    vm = _vm(collections_fetcher=lambda: SAMPLE_COLLECTIONS, collection_deleter=deleter)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    return vm
+
+
+def test_delete_collection_calls_deleter_with_id(qapp):
+    calls = []
+    vm = _loaded_vm(lambda cid: calls.append(cid) or True)
+    vm.deleteCollection("col-1")
+    assert calls == ["col-1"]
+
+
+def test_delete_collection_removes_from_list_on_success(qapp):
+    vm = _loaded_vm(lambda cid: True)
+    vm.deleteCollection("col-1")
+    assert [c["id"] for c in vm.collections] == ["col-3", "col-2"]
+
+
+def test_delete_collection_noop_on_failure(qapp):
+    vm = _loaded_vm(lambda cid: False)
+    vm.deleteCollection("col-1")
+    assert [c["id"] for c in vm.collections] == ["col-1", "col-3", "col-2"]
+
+
+def test_delete_collection_emits_collections_changed_on_success(qapp):
+    received = []
+    vm = _loaded_vm(lambda cid: True)
+    vm.collectionsChanged.connect(lambda: received.append(1))
+    vm.deleteCollection("col-1")
+    assert received == [1]
+
+
+def test_delete_collection_does_not_emit_collections_changed_on_failure(qapp):
+    received = []
+    vm = _loaded_vm(lambda cid: False)
+    vm.collectionsChanged.connect(lambda: received.append(1))
+    vm.deleteCollection("col-1")
+    assert received == []
+
+
+def test_delete_collection_clears_grid_when_current_collection_is_deleted(qapp):
+    vm = _loaded_vm(lambda cid: True)
+    vm._collection_images_fetcher = lambda cid: SAMPLE_IMAGES
+    vm.loadCollectionImages("col-1")
+    wait_for_images(vm)
+    assert vm.collectionGridModel.count == 2
+
+    vm.deleteCollection("col-1")
+    assert vm.collectionGridModel.count == 0
+
+
+def test_delete_collection_leaves_grid_when_other_collection_is_deleted(qapp):
+    vm = _loaded_vm(lambda cid: True)
+    vm._collection_images_fetcher = lambda cid: SAMPLE_IMAGES
+    vm.loadCollectionImages("col-1")
+    wait_for_images(vm)
+    assert vm.collectionGridModel.count == 2
+
+    vm.deleteCollection("col-3")
+    assert vm.collectionGridModel.count == 2
+
+
+def test_delete_collection_is_noop_when_deleter_not_provided(qapp):
+    vm = _vm(collections_fetcher=lambda: SAMPLE_COLLECTIONS)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.deleteCollection("col-1")
+    assert [c["id"] for c in vm.collections] == ["col-1", "col-3", "col-2"]
 
 
 # ---------------------------------------------------------------------------

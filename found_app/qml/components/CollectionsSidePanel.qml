@@ -12,6 +12,7 @@ SidePanel {
     signal collectionClicked(string collectionId, string collectionName)
     signal createCollectionRequested(string name)
     signal imageDropped(string collectionId, string imageId)
+    signal removeCollectionRequested(string collectionId, string collectionName)
 
     // New collection input area
     Item {
@@ -107,6 +108,7 @@ SidePanel {
             collectionName: modelData.name ?? ""
             onClicked: (cid, cname) => root.collectionClicked(cid, cname)
             onImageDropped: (cid, iid) => root.imageDropped(cid, iid)
+            onRemoveRequested: (cid, cname) => root.removeCollectionRequested(cid, cname)
         }
 
         Text {
