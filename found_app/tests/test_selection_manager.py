@@ -372,3 +372,126 @@ def test_anchor_id_unchanged_on_toggle_remove(qapp):
     sm.toggle("b")
     sm.toggle("b")  # remove b — anchor stays at b from the add
     assert sm.anchorId == "b"
+
+
+# ---------------------------------------------------------------------------
+# navigateInGrid()
+#
+# Grid layout with GRID_IDS and row_count=3 (FlowTopToBottom):
+#   col 0: a(0) b(1) c(2)
+#   col 1: d(3) e(4) f(5)
+#   col 2: g(6) h(7) i(8)
+# ---------------------------------------------------------------------------
+
+GRID_IDS = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+GRID_ROWS = 3
+
+
+def _sm_at(image_id, all_ids=GRID_IDS):
+    sm = _sm()
+    sm.select(image_id)
+    return sm
+
+
+def test_navigate_right_moves_to_same_row_next_column(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "d"
+
+
+def test_navigate_right_from_middle_row(qapp):
+    sm = _sm_at("e")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "h"
+
+
+def test_navigate_left_moves_to_same_row_prev_column(qapp):
+    sm = _sm_at("d")
+    sm.navigateInGrid("left", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_down_moves_to_next_row_in_column(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("down", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "b"
+
+
+def test_navigate_up_moves_to_prev_row_in_column(qapp):
+    sm = _sm_at("b")
+    sm.navigateInGrid("up", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_up_at_top_of_column_is_noop(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("up", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_up_at_top_of_middle_column_is_noop(qapp):
+    sm = _sm_at("d")
+    sm.navigateInGrid("up", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "d"
+
+
+def test_navigate_down_at_bottom_of_column_is_noop(qapp):
+    sm = _sm_at("c")
+    sm.navigateInGrid("down", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "c"
+
+
+def test_navigate_left_at_first_column_is_noop(qapp):
+    sm = _sm_at("b")
+    sm.navigateInGrid("left", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "b"
+
+
+def test_navigate_right_at_last_column_is_noop(qapp):
+    sm = _sm_at("i")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "i"
+
+
+def test_navigate_right_into_shorter_last_column_snaps_to_last_item(qapp):
+    # 7-item grid: col 0=[a,b,c], col 1=[d,e,f], col 2=[g] (only row 0)
+    ids = ["a", "b", "c", "d", "e", "f", "g"]
+    sm = _sm_at("f", ids)
+    sm.navigateInGrid("right", ids, GRID_ROWS)
+    assert sm.primaryId == "g"
+
+
+def test_navigate_selects_only_the_new_image(qapp):
+    # primary is "b" after toggle; right from row=1,col=0 → row=1,col=1 = "e"
+    sm = _sm()
+    sm.select("a")
+    sm.toggle("b")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.selectionCount == 1
+    assert sm.primaryId == "e"
+
+
+def test_navigate_no_primary_id_selects_first(qapp):
+    sm = _sm()
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_emits_selection_changed(qapp):
+    sm = _sm_at("a")
+    received = []
+    sm.selectionChanged.connect(lambda: received.append(1))
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert received
+
+
+def test_navigate_empty_all_ids_is_noop(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("right", [], GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_zero_row_count_is_noop(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("right", GRID_IDS, 0)
+    assert sm.primaryId == "a"

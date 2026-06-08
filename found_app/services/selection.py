@@ -95,6 +95,34 @@ class SelectionManager(QObject):
     def requestOpen(self, image_id: str) -> None:
         self.openRequested.emit(image_id)
 
+    @Slot(str, list, int)
+    def navigateInGrid(self, direction: str, all_ids: list, row_count: int) -> None:
+        if not all_ids or row_count <= 0:
+            return
+        if self._primary not in all_ids:
+            self.select(all_ids[0])
+            return
+        idx = all_ids.index(self._primary)
+        count = len(all_ids)
+        row = idx % row_count
+        col = idx // row_count
+        new_idx = idx
+        if direction == "up":
+            if row > 0:
+                new_idx = idx - 1
+        elif direction == "down":
+            if row < row_count - 1 and idx + 1 < count:
+                new_idx = idx + 1
+        elif direction == "left":
+            if col > 0:
+                new_idx = (col - 1) * row_count + row
+        elif direction == "right":
+            next_col_start = (col + 1) * row_count
+            if next_col_start < count:
+                new_idx = min(next_col_start + row, count - 1)
+        if new_idx != idx:
+            self.select(all_ids[new_idx])
+
     @Slot("QVariant", str, str)
     def restore(self, selection_ids, primary_id: str, anchor_id: str) -> None:
         if isinstance(selection_ids, QJSValue):
