@@ -60,16 +60,26 @@ class SelectionManager(QObject):
             self._anchor = image_id
         self._bump()
 
-    @Slot(str, list)
-    def extendTo(self, image_id: str, all_ids: list) -> None:
+    @Slot(str, list, int)
+    def extendTo(self, image_id: str, all_ids: list, row_count: int) -> None:
         if not self._anchor or self._anchor not in all_ids or image_id not in all_ids:
             self.select(image_id)
             return
+        if row_count <= 0:
+            return
         anchor_idx = all_ids.index(self._anchor)
         target_idx = all_ids.index(image_id)
-        start = min(anchor_idx, target_idx)
-        end = max(anchor_idx, target_idx) + 1
-        self._selected = set(all_ids[start:end])
+        anchor_col, anchor_row = divmod(anchor_idx, row_count)
+        target_col, target_row = divmod(target_idx, row_count)
+        min_col, max_col = min(anchor_col, target_col), max(anchor_col, target_col)
+        min_row, max_row = min(anchor_row, target_row), max(anchor_row, target_row)
+        selected: set[str] = set()
+        for col in range(min_col, max_col + 1):
+            for row in range(min_row, max_row + 1):
+                idx = col * row_count + row
+                if idx < len(all_ids):
+                    selected.add(all_ids[idx])
+        self._selected = selected
         self._primary = image_id
         self._bump()
 

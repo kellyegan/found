@@ -108,7 +108,7 @@ Item {
                 if (mods & Qt.ControlModifier)
                     SelectionManager.toggle(id)
                 else if (mods & Qt.ShiftModifier)
-                    SelectionManager.extendTo(id, root.model ? root.model.allIds : [])
+                    SelectionManager.extendTo(id, root.model ? root.model.allIds : [], grid.rowCount)
                 else
                     SelectionManager.select(id)
             }

@@ -119,9 +119,10 @@ def test_toggle_deselects_when_only_item(qapp):
 
 
 def test_extend_to_selects_forward_range(qapp):
+    # Single-column grid (row_count == len): behaves like linear selection
     sm = _sm()
     sm.select("b")
-    sm.extendTo("d", IDS)
+    sm.extendTo("d", IDS, len(IDS))
     assert sm.isSelected("b")
     assert sm.isSelected("c")
     assert sm.isSelected("d")
@@ -132,7 +133,7 @@ def test_extend_to_selects_forward_range(qapp):
 def test_extend_to_selects_backward_range(qapp):
     sm = _sm()
     sm.select("d")
-    sm.extendTo("b", IDS)
+    sm.extendTo("b", IDS, len(IDS))
     assert sm.isSelected("b")
     assert sm.isSelected("c")
     assert sm.isSelected("d")
@@ -143,14 +144,14 @@ def test_extend_to_selects_backward_range(qapp):
 def test_extend_to_same_item_selects_one(qapp):
     sm = _sm()
     sm.select("c")
-    sm.extendTo("c", IDS)
+    sm.extendTo("c", IDS, len(IDS))
     assert sm.selectionCount == 1
     assert sm.isSelected("c")
 
 
 def test_extend_to_without_anchor_falls_back_to_select(qapp):
     sm = _sm()
-    sm.extendTo("b", IDS)
+    sm.extendTo("b", IDS, len(IDS))
     assert sm.selectionCount == 1
     assert sm.isSelected("b")
 
@@ -158,12 +159,88 @@ def test_extend_to_without_anchor_falls_back_to_select(qapp):
 def test_extend_to_anchor_stays_fixed_on_second_extend(qapp):
     sm = _sm()
     sm.select("b")
-    sm.extendTo("d", IDS)
-    sm.extendTo("e", IDS)
+    sm.extendTo("d", IDS, len(IDS))
+    sm.extendTo("e", IDS, len(IDS))
     # anchor is still "b", so range is b→e
     assert sm.isSelected("b")
     assert sm.isSelected("e")
     assert not sm.isSelected("a")
+
+
+# ---------------------------------------------------------------------------
+# extendTo() — box (rectangular) selection
+#
+# Grid layout with GRID_IDS and GRID_ROWS=3 (FlowTopToBottom):
+#   col 0: a(0) b(1) c(2)
+#   col 1: d(3) e(4) f(5)
+#   col 2: g(6) h(7) i(8)
+# ---------------------------------------------------------------------------
+
+
+def test_extend_to_box_selects_rectangular_region(qapp):
+    # anchor="a" (col 0, row 0) → target="e" (col 1, row 1): 2×2 box = {a, b, d, e}
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("e", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"a", "b", "d", "e"}
+
+
+def test_extend_to_box_reverse_direction(qapp):
+    # Same region selected regardless of anchor/target order
+    sm = _sm()
+    sm.select("e")
+    sm.extendTo("a", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"a", "b", "d", "e"}
+
+
+def test_extend_to_box_single_row_span(qapp):
+    # anchor="b" (col 0, row 1) → target="h" (col 2, row 1): 3 cols, 1 row = {b, e, h}
+    sm = _sm()
+    sm.select("b")
+    sm.extendTo("h", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"b", "e", "h"}
+
+
+def test_extend_to_box_single_column_span(qapp):
+    # anchor="d" (col 1, row 0) → target="f" (col 1, row 2): 1 col, 3 rows = {d, e, f}
+    sm = _sm()
+    sm.select("d")
+    sm.extendTo("f", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"d", "e", "f"}
+
+
+def test_extend_to_box_full_grid(qapp):
+    # anchor="a" (col 0, row 0) → target="i" (col 2, row 2): all 9 items
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("i", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == set(GRID_IDS)
+
+
+def test_extend_to_box_matches_user_description(qapp):
+    # "one row down and three columns over → 6 images in 2-row × 3-col box"
+    # anchor="a" (col 0, row 0) → target="h" (col 2, row 1)
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("h", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"a", "b", "d", "e", "g", "h"}
+    assert sm.selectionCount == 6
+
+
+def test_extend_to_box_anchor_fixed_on_second_extend(qapp):
+    # anchor="a", first extend to "e" (2×2), then extend to "i" (3×3)
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("e", GRID_IDS, GRID_ROWS)
+    sm.extendTo("i", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == set(GRID_IDS)
+
+
+def test_extend_to_box_sets_primary_to_target(qapp):
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("e", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "e"
 
 
 # ---------------------------------------------------------------------------
