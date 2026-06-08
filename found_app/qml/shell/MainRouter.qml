@@ -29,6 +29,7 @@ Item {
     // Ready state — navigation bar + view router
     Item {
         id: readyContainer
+        objectName: "readyContainer"
         anchors.fill: parent
         visible: root.appState === "Ready" && splashDismissed
 
@@ -36,7 +37,14 @@ Item {
         property bool categoriesBarOpen: false
         property bool filterDropdownOpen: false
         property bool metadataSidebarOpen: false
-        property string _lastView: ""
+        // Tracks last active view so navigation handler can save the departing state.
+        // Initialised to "library" because that is always the starting view.
+        property string _lastView: "library"
+        property var _viewPanelState: ({
+            library:    { sidebarOpen: false, categoriesBarOpen: false, metadataOpen: false },
+            collection: { categoriesBarOpen: false, metadataOpen: false },
+            image:      { metadataOpen: false }
+        })
 
         // Pending collection deletion — drives the confirmation dialog below
         property string _removeCollectionId: ""
@@ -168,23 +176,56 @@ Item {
             onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
         }
 
-        // Central navigation handler — restores library state and collapses
-        // panels on first entry into image view (not on prev/next within it).
+        // Central navigation handler — persists per-view panel states and restores
+        // selection/scroll on return to library or collection.
         Connections {
             target: NavigationManager
             function onNavigationChanged() {
                 var view = NavigationManager.currentView
+                var lastView = readyContainer._lastView
                 var lastImg = NavigationManager.lastReturnedImageId
 
+                // Save the departing view's panel state before switching.
+                if (lastView === "library") {
+                    readyContainer._viewPanelState.library.sidebarOpen = readyContainer.sidebarOpen
+                    readyContainer._viewPanelState.library.categoriesBarOpen = readyContainer.categoriesBarOpen
+                    readyContainer._viewPanelState.library.metadataOpen = readyContainer.metadataSidebarOpen
+                } else if (lastView === "collection") {
+                    readyContainer._viewPanelState.collection.categoriesBarOpen = readyContainer.categoriesBarOpen
+                    readyContainer._viewPanelState.collection.metadataOpen = readyContainer.metadataSidebarOpen
+                } else if (lastView === "image") {
+                    readyContainer._viewPanelState.image.metadataOpen = readyContainer.metadataSidebarOpen
+                }
+
+                // Restore the entering view's saved panel state.
+                if (view === "library") {
+                    var libState = readyContainer._viewPanelState.library
+                    readyContainer.sidebarOpen = libState.sidebarOpen
+                    readyContainer.categoriesBarOpen = libState.categoriesBarOpen
+                    readyContainer.metadataSidebarOpen = libState.metadataOpen
+                } else if (view === "collection") {
+                    var colState = readyContainer._viewPanelState.collection
+                    readyContainer.categoriesBarOpen = colState.categoriesBarOpen
+                    readyContainer.metadataSidebarOpen = colState.metadataOpen
+                } else if (view === "image") {
+                    if (lastView !== "image") {
+                        // First entry into image view — restore its saved state (closed by default).
+                        readyContainer.metadataSidebarOpen = readyContainer._viewPanelState.image.metadataOpen
+                    } else {
+                        // Navigating to a different image within image view —
+                        // update the active image so the grid tracks it.
+                        var newId = NavigationManager.currentEntry.image_id
+                        if (newId) SelectionManager.select(newId)
+                    }
+                }
+
+                // Restore selection/scroll on return to library or collection.
                 if (view === "library") {
                     var entry = NavigationManager.currentEntry
                     if (lastImg !== "" && lastImg !== entry.primary_id) {
-                        // User navigated to a different image in ImageView —
-                        // collapse multi-selection onto that image and scroll to it.
                         SelectionManager.select(lastImg)
                         libraryView.scrollToActiveImage()
                     } else {
-                        // User toggled back without navigating — restore selection intact.
                         SelectionManager.restore(
                             entry.selection_ids,
                             entry.primary_id,
@@ -197,19 +238,6 @@ Item {
                     if (lastImg !== "" && lastImg !== colEntry.primary_id) {
                         SelectionManager.select(lastImg)
                         collectionView.scrollToActiveImage()
-                    }
-                }
-
-                if (view === "image") {
-                    if (readyContainer._lastView !== "image") {
-                        // First entry into image view — collapse sidebars.
-                        readyContainer.metadataSidebarOpen = false
-                        readyContainer.sidebarOpen = false
-                    } else {
-                        // Navigating to a different image within image view —
-                        // update the active image so the grid tracks it.
-                        var newId = NavigationManager.currentEntry.image_id
-                        if (newId) SelectionManager.select(newId)
                     }
                 }
 
