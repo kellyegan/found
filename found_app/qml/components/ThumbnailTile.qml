@@ -7,6 +7,7 @@ Item {
     property string thumbnailUrl: ""
     property string fileStatus: "available"
     property bool selected: false
+    property bool active: false
     property int inset: 0
 
     signal tileClicked(string imageId, int modifiers)
@@ -135,12 +136,12 @@ Item {
             }
         }
 
-        // Selection highlight border
+        // Selection / active border — 2px for active, 1px for selected-only
         Rectangle {
             anchors.fill: parent
             color: "transparent"
             border.color: Theme.accent
-            border.width: root.selected ? 1 : 0
+            border.width: root.active ? 2 : (root.selected ? 1 : 0)
         }
 
     }
