@@ -23,7 +23,29 @@ Item {
         var ids = root.model.allIds
         SelectionManager.navigateInGrid(direction, ids, grid.rowCount)
         var newIdx = ids.indexOf(SelectionManager.primaryId)
-        if (newIdx >= 0) grid.positionViewAtIndex(newIdx, GridView.Contain)
+        if (newIdx >= 0) scrollToIndexAnimated(newIdx)
+    }
+
+    // Scroll to idx with a smooth animation. Uses positionViewAtIndex to
+    // compute the target contentX, then animates from the current position.
+    function scrollToIndexAnimated(idx) {
+        if (idx < 0 || !root.model) return
+        var fromX = grid.contentX
+        grid.positionViewAtIndex(idx, GridView.Contain)
+        var toX = grid.contentX
+        if (Math.abs(toX - fromX) < 1) return
+        grid.contentX = fromX
+        scrollAnim.from = fromX
+        scrollAnim.to = toX
+        scrollAnim.restart()
+    }
+
+    NumberAnimation {
+        id: scrollAnim
+        target: grid
+        property: "contentX"
+        duration: 350
+        easing.type: Easing.InOutCubic
     }
 
     GridView {

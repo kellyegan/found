@@ -146,6 +146,11 @@ Item {
         thumbnailGrid.scrollToX(x)
     }
 
+    function scrollToActiveImage() {
+        var ids = root.gridModel ? root.gridModel.allIds : []
+        thumbnailGrid.scrollToIndexAnimated(ids.indexOf(SelectionManager.primaryId))
+    }
+
     ConfirmDialog {
         id: removeDialog
         anchors.fill: parent

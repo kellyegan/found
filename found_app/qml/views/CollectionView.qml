@@ -98,6 +98,11 @@ Item {
         font.pixelSize: Theme.fontSizeMd
     }
 
+    function scrollToActiveImage() {
+        var ids = root.gridModel ? root.gridModel.allIds : []
+        thumbnailGrid.scrollToIndexAnimated(ids.indexOf(SelectionManager.primaryId))
+    }
+
     // Image grid
     ThumbnailGrid {
         id: thumbnailGrid

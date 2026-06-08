@@ -169,16 +169,20 @@ Item {
                     var entry = NavigationManager.currentEntry
                     if (lastImg !== "") {
                         SelectionManager.select(lastImg)
+                        libraryView.scrollToActiveImage()
                     } else {
                         SelectionManager.restore(
                             entry.selection_ids,
                             entry.primary_id,
                             entry.anchor_id
                         )
+                        libraryView.scrollToX(entry.scroll_x)
                     }
-                    libraryView.scrollToX(entry.scroll_x)
-                } else if (view === "collection" && lastImg !== "") {
-                    SelectionManager.select(lastImg)
+                } else if (view === "collection") {
+                    if (lastImg !== "") {
+                        SelectionManager.select(lastImg)
+                        collectionView.scrollToActiveImage()
+                    }
                 }
 
                 if (view === "image" && readyContainer._lastView !== "image") {
@@ -229,6 +233,7 @@ Item {
 
         // Collection view
         CollectionView {
+            id: collectionView
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             visible: NavigationManager.currentView === "collection"
