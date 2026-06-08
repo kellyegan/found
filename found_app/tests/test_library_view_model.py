@@ -393,6 +393,25 @@ def test_verify_image_no_op_when_no_verifier(qapp):
     assert vm.missingCount == 0
 
 
+def test_verify_image_emits_image_status_changed(qapp):
+    def verifier(image_id):
+        return "missing"
+
+    vm = _make_vm_with_verifier(verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    received = []
+    loop = QEventLoop()
+    vm.imageStatusChanged.connect(lambda iid, s: received.append((iid, s)))
+    vm.imageStatusChanged.connect(lambda *_: loop.quit())
+    QTimer.singleShot(2000, loop.quit)
+    vm.verifyImage("aaaa-0001")
+    loop.exec()
+
+    assert received == [("aaaa-0001", "missing")]
+
+
 # ---------------------------------------------------------------------------
 # removeImages
 # ---------------------------------------------------------------------------

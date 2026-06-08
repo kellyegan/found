@@ -488,4 +488,12 @@ Item {
             }
         }
     }
+
+    // Propagate image status changes from library verification to the active collection grid.
+    Connections {
+        target: LibraryState
+        function onImageStatusChanged(imageId, status) {
+            CollectionsState.collectionGridModel.updateItemStatus(imageId, status)
+        }
+    }
 }
