@@ -178,10 +178,13 @@ Item {
 
                 if (view === "library") {
                     var entry = NavigationManager.currentEntry
-                    if (lastImg !== "") {
+                    if (lastImg !== "" && lastImg !== entry.primary_id) {
+                        // User navigated to a different image in ImageView —
+                        // collapse multi-selection onto that image and scroll to it.
                         SelectionManager.select(lastImg)
                         libraryView.scrollToActiveImage()
                     } else {
+                        // User toggled back without navigating — restore selection intact.
                         SelectionManager.restore(
                             entry.selection_ids,
                             entry.primary_id,
@@ -190,15 +193,24 @@ Item {
                         libraryView.scrollToX(entry.scroll_x)
                     }
                 } else if (view === "collection") {
-                    if (lastImg !== "") {
+                    var colEntry = NavigationManager.currentEntry
+                    if (lastImg !== "" && lastImg !== colEntry.primary_id) {
                         SelectionManager.select(lastImg)
                         collectionView.scrollToActiveImage()
                     }
                 }
 
-                if (view === "image" && readyContainer._lastView !== "image") {
-                    readyContainer.metadataSidebarOpen = false
-                    readyContainer.sidebarOpen = false
+                if (view === "image") {
+                    if (readyContainer._lastView !== "image") {
+                        // First entry into image view — collapse sidebars.
+                        readyContainer.metadataSidebarOpen = false
+                        readyContainer.sidebarOpen = false
+                    } else {
+                        // Navigating to a different image within image view —
+                        // update the active image so the grid tracks it.
+                        var newId = NavigationManager.currentEntry.image_id
+                        if (newId) SelectionManager.select(newId)
+                    }
                 }
 
                 readyContainer._lastView = view
@@ -223,7 +235,6 @@ Item {
         Connections {
             target: SelectionManager
             function onOpenRequested(imageId) {
-                SelectionManager.select(imageId)
                 NavigationManager.saveSelection(
                     SelectionManager.selectedIds,
                     SelectionManager.primaryId,
