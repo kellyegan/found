@@ -42,6 +42,17 @@ Item {
         property string _removeCollectionId: ""
         property string _removeCollectionName: ""
 
+        // Background click handler — clears selection when the user clicks any
+        // area that no interactive element consumed (title bar background, panel
+        // edges, empty window corners, etc.).  z: -1 places it behind every other
+        // child so higher-z items (tiles, buttons, sidebars) consume their own
+        // events first and this only fires when nothing else did.
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+            onClicked: SelectionManager.clear()
+        }
+
         TitleBar {
             id: titleBar
             anchors { top: parent.top; left: parent.left; right: parent.right }
@@ -163,20 +174,43 @@ Item {
             target: NavigationManager
             function onNavigationChanged() {
                 var view = NavigationManager.currentView
+                var lastImg = NavigationManager.lastReturnedImageId
 
                 if (view === "library") {
                     var entry = NavigationManager.currentEntry
-                    SelectionManager.restore(
-                        entry.selection_ids,
-                        entry.primary_id,
-                        entry.anchor_id
-                    )
-                    libraryView.scrollToX(entry.scroll_x)
+                    if (lastImg !== "" && lastImg !== entry.primary_id) {
+                        // User navigated to a different image in ImageView —
+                        // collapse multi-selection onto that image and scroll to it.
+                        SelectionManager.select(lastImg)
+                        libraryView.scrollToActiveImage()
+                    } else {
+                        // User toggled back without navigating — restore selection intact.
+                        SelectionManager.restore(
+                            entry.selection_ids,
+                            entry.primary_id,
+                            entry.anchor_id
+                        )
+                        libraryView.scrollToX(entry.scroll_x)
+                    }
+                } else if (view === "collection") {
+                    var colEntry = NavigationManager.currentEntry
+                    if (lastImg !== "" && lastImg !== colEntry.primary_id) {
+                        SelectionManager.select(lastImg)
+                        collectionView.scrollToActiveImage()
+                    }
                 }
 
-                if (view === "image" && readyContainer._lastView !== "image") {
-                    readyContainer.metadataSidebarOpen = false
-                    readyContainer.sidebarOpen = false
+                if (view === "image") {
+                    if (readyContainer._lastView !== "image") {
+                        // First entry into image view — collapse sidebars.
+                        readyContainer.metadataSidebarOpen = false
+                        readyContainer.sidebarOpen = false
+                    } else {
+                        // Navigating to a different image within image view —
+                        // update the active image so the grid tracks it.
+                        var newId = NavigationManager.currentEntry.image_id
+                        if (newId) SelectionManager.select(newId)
+                    }
                 }
 
                 readyContainer._lastView = view
@@ -221,6 +255,7 @@ Item {
 
         // Collection view
         CollectionView {
+            id: collectionView
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
             visible: NavigationManager.currentView === "collection"

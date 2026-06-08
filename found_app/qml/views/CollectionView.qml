@@ -35,6 +35,30 @@ Item {
     }
 
     Shortcut {
+        sequence: "Up"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("up")
+    }
+
+    Shortcut {
+        sequence: "Down"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("down")
+    }
+
+    Shortcut {
+        sequence: "Left"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("left")
+    }
+
+    Shortcut {
+        sequence: "Right"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("right")
+    }
+
+    Shortcut {
         sequences: [StandardKey.Delete, "Backspace"]
         enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
         onActivated: {
@@ -74,8 +98,14 @@ Item {
         font.pixelSize: Theme.fontSizeMd
     }
 
+    function scrollToActiveImage() {
+        var ids = root.gridModel ? root.gridModel.allIds : []
+        thumbnailGrid.scrollToIndexAnimated(ids.indexOf(SelectionManager.primaryId))
+    }
+
     // Image grid
     ThumbnailGrid {
+        id: thumbnailGrid
         anchors.fill: parent
         visible: root.loadingState === "Ready"
         model: root.gridModel

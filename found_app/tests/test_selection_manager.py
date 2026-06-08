@@ -119,9 +119,10 @@ def test_toggle_deselects_when_only_item(qapp):
 
 
 def test_extend_to_selects_forward_range(qapp):
+    # Single-column grid (row_count == len): behaves like linear selection
     sm = _sm()
     sm.select("b")
-    sm.extendTo("d", IDS)
+    sm.extendTo("d", IDS, len(IDS))
     assert sm.isSelected("b")
     assert sm.isSelected("c")
     assert sm.isSelected("d")
@@ -132,7 +133,7 @@ def test_extend_to_selects_forward_range(qapp):
 def test_extend_to_selects_backward_range(qapp):
     sm = _sm()
     sm.select("d")
-    sm.extendTo("b", IDS)
+    sm.extendTo("b", IDS, len(IDS))
     assert sm.isSelected("b")
     assert sm.isSelected("c")
     assert sm.isSelected("d")
@@ -143,14 +144,14 @@ def test_extend_to_selects_backward_range(qapp):
 def test_extend_to_same_item_selects_one(qapp):
     sm = _sm()
     sm.select("c")
-    sm.extendTo("c", IDS)
+    sm.extendTo("c", IDS, len(IDS))
     assert sm.selectionCount == 1
     assert sm.isSelected("c")
 
 
 def test_extend_to_without_anchor_falls_back_to_select(qapp):
     sm = _sm()
-    sm.extendTo("b", IDS)
+    sm.extendTo("b", IDS, len(IDS))
     assert sm.selectionCount == 1
     assert sm.isSelected("b")
 
@@ -158,12 +159,88 @@ def test_extend_to_without_anchor_falls_back_to_select(qapp):
 def test_extend_to_anchor_stays_fixed_on_second_extend(qapp):
     sm = _sm()
     sm.select("b")
-    sm.extendTo("d", IDS)
-    sm.extendTo("e", IDS)
+    sm.extendTo("d", IDS, len(IDS))
+    sm.extendTo("e", IDS, len(IDS))
     # anchor is still "b", so range is b→e
     assert sm.isSelected("b")
     assert sm.isSelected("e")
     assert not sm.isSelected("a")
+
+
+# ---------------------------------------------------------------------------
+# extendTo() — box (rectangular) selection
+#
+# Grid layout with GRID_IDS and GRID_ROWS=3 (FlowTopToBottom):
+#   col 0: a(0) b(1) c(2)
+#   col 1: d(3) e(4) f(5)
+#   col 2: g(6) h(7) i(8)
+# ---------------------------------------------------------------------------
+
+
+def test_extend_to_box_selects_rectangular_region(qapp):
+    # anchor="a" (col 0, row 0) → target="e" (col 1, row 1): 2×2 box = {a, b, d, e}
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("e", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"a", "b", "d", "e"}
+
+
+def test_extend_to_box_reverse_direction(qapp):
+    # Same region selected regardless of anchor/target order
+    sm = _sm()
+    sm.select("e")
+    sm.extendTo("a", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"a", "b", "d", "e"}
+
+
+def test_extend_to_box_single_row_span(qapp):
+    # anchor="b" (col 0, row 1) → target="h" (col 2, row 1): 3 cols, 1 row = {b, e, h}
+    sm = _sm()
+    sm.select("b")
+    sm.extendTo("h", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"b", "e", "h"}
+
+
+def test_extend_to_box_single_column_span(qapp):
+    # anchor="d" (col 1, row 0) → target="f" (col 1, row 2): 1 col, 3 rows = {d, e, f}
+    sm = _sm()
+    sm.select("d")
+    sm.extendTo("f", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"d", "e", "f"}
+
+
+def test_extend_to_box_full_grid(qapp):
+    # anchor="a" (col 0, row 0) → target="i" (col 2, row 2): all 9 items
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("i", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == set(GRID_IDS)
+
+
+def test_extend_to_box_matches_user_description(qapp):
+    # "one row down and three columns over → 6 images in 2-row × 3-col box"
+    # anchor="a" (col 0, row 0) → target="h" (col 2, row 1)
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("h", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == {"a", "b", "d", "e", "g", "h"}
+    assert sm.selectionCount == 6
+
+
+def test_extend_to_box_anchor_fixed_on_second_extend(qapp):
+    # anchor="a", first extend to "e" (2×2), then extend to "i" (3×3)
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("e", GRID_IDS, GRID_ROWS)
+    sm.extendTo("i", GRID_IDS, GRID_ROWS)
+    assert set(sm.selectedIds) == set(GRID_IDS)
+
+
+def test_extend_to_box_sets_primary_to_target(qapp):
+    sm = _sm()
+    sm.select("a")
+    sm.extendTo("e", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "e"
 
 
 # ---------------------------------------------------------------------------
@@ -372,3 +449,126 @@ def test_anchor_id_unchanged_on_toggle_remove(qapp):
     sm.toggle("b")
     sm.toggle("b")  # remove b — anchor stays at b from the add
     assert sm.anchorId == "b"
+
+
+# ---------------------------------------------------------------------------
+# navigateInGrid()
+#
+# Grid layout with GRID_IDS and row_count=3 (FlowTopToBottom):
+#   col 0: a(0) b(1) c(2)
+#   col 1: d(3) e(4) f(5)
+#   col 2: g(6) h(7) i(8)
+# ---------------------------------------------------------------------------
+
+GRID_IDS = ["a", "b", "c", "d", "e", "f", "g", "h", "i"]
+GRID_ROWS = 3
+
+
+def _sm_at(image_id, all_ids=GRID_IDS):
+    sm = _sm()
+    sm.select(image_id)
+    return sm
+
+
+def test_navigate_right_moves_to_same_row_next_column(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "d"
+
+
+def test_navigate_right_from_middle_row(qapp):
+    sm = _sm_at("e")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "h"
+
+
+def test_navigate_left_moves_to_same_row_prev_column(qapp):
+    sm = _sm_at("d")
+    sm.navigateInGrid("left", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_down_moves_to_next_row_in_column(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("down", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "b"
+
+
+def test_navigate_up_moves_to_prev_row_in_column(qapp):
+    sm = _sm_at("b")
+    sm.navigateInGrid("up", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_up_at_top_of_column_is_noop(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("up", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_up_at_top_of_middle_column_is_noop(qapp):
+    sm = _sm_at("d")
+    sm.navigateInGrid("up", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "d"
+
+
+def test_navigate_down_at_bottom_of_column_is_noop(qapp):
+    sm = _sm_at("c")
+    sm.navigateInGrid("down", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "c"
+
+
+def test_navigate_left_at_first_column_is_noop(qapp):
+    sm = _sm_at("b")
+    sm.navigateInGrid("left", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "b"
+
+
+def test_navigate_right_at_last_column_is_noop(qapp):
+    sm = _sm_at("i")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "i"
+
+
+def test_navigate_right_into_shorter_last_column_snaps_to_last_item(qapp):
+    # 7-item grid: col 0=[a,b,c], col 1=[d,e,f], col 2=[g] (only row 0)
+    ids = ["a", "b", "c", "d", "e", "f", "g"]
+    sm = _sm_at("f", ids)
+    sm.navigateInGrid("right", ids, GRID_ROWS)
+    assert sm.primaryId == "g"
+
+
+def test_navigate_selects_only_the_new_image(qapp):
+    # primary is "b" after toggle; right from row=1,col=0 → row=1,col=1 = "e"
+    sm = _sm()
+    sm.select("a")
+    sm.toggle("b")
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.selectionCount == 1
+    assert sm.primaryId == "e"
+
+
+def test_navigate_no_primary_id_selects_first(qapp):
+    sm = _sm()
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_emits_selection_changed(qapp):
+    sm = _sm_at("a")
+    received = []
+    sm.selectionChanged.connect(lambda: received.append(1))
+    sm.navigateInGrid("right", GRID_IDS, GRID_ROWS)
+    assert received
+
+
+def test_navigate_empty_all_ids_is_noop(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("right", [], GRID_ROWS)
+    assert sm.primaryId == "a"
+
+
+def test_navigate_zero_row_count_is_noop(qapp):
+    sm = _sm_at("a")
+    sm.navigateInGrid("right", GRID_IDS, 0)
+    assert sm.primaryId == "a"

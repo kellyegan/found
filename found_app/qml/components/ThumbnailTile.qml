@@ -7,6 +7,7 @@ Item {
     property string thumbnailUrl: ""
     property string fileStatus: "available"
     property bool selected: false
+    property bool active: false
     property int inset: 0
 
     signal tileClicked(string imageId, int modifiers)
@@ -135,12 +136,12 @@ Item {
             }
         }
 
-        // Selection highlight border
+        // Selection / active border — 2px for active, 1px for selected-only
         Rectangle {
             anchors.fill: parent
             color: "transparent"
             border.color: Theme.accent
-            border.width: root.selected ? 1 : 0
+            border.width: root.active ? 2 : (root.selected ? 1 : 0)
         }
 
     }
@@ -153,7 +154,14 @@ Item {
         hoverEnabled: true
         onClicked: function(mouse) {
             forceActiveFocus()
-            root.tileClicked(root.imageId, mouse.modifiers)
+            // Clicks within the inset border (the visual gap between tiles) deselect.
+            // Only clicks that land on the painted image area select the tile.
+            var isInner = mouse.x >= root.inset && mouse.x <= root.width  - root.inset
+                       && mouse.y >= root.inset && mouse.y <= root.height - root.inset
+            if (isInner)
+                root.tileClicked(root.imageId, mouse.modifiers)
+            else
+                SelectionManager.clear()
         }
         onDoubleClicked: function(mouse) {
             root.tileDoubleClicked(root.imageId)

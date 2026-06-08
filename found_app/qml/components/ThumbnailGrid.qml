@@ -18,6 +18,36 @@ Item {
         grid.contentX = x
     }
 
+    function navigateActive(direction) {
+        if (!root.model) return
+        var ids = root.model.allIds
+        SelectionManager.navigateInGrid(direction, ids, grid.rowCount)
+        var newIdx = ids.indexOf(SelectionManager.primaryId)
+        if (newIdx >= 0) scrollToIndexAnimated(newIdx)
+    }
+
+    // Scroll to idx with a smooth animation. Uses positionViewAtIndex to
+    // compute the target contentX, then animates from the current position.
+    function scrollToIndexAnimated(idx) {
+        if (idx < 0 || !root.model) return
+        var fromX = grid.contentX
+        grid.positionViewAtIndex(idx, GridView.Contain)
+        var toX = grid.contentX
+        if (Math.abs(toX - fromX) < 1) return
+        grid.contentX = fromX
+        scrollAnim.from = fromX
+        scrollAnim.to = toX
+        scrollAnim.restart()
+    }
+
+    NumberAnimation {
+        id: scrollAnim
+        target: grid
+        property: "contentX"
+        duration: 350
+        easing.type: Easing.InOutCubic
+    }
+
     GridView {
         id: grid
         anchors {
@@ -70,11 +100,15 @@ Item {
                 var _rev = SelectionManager.selectionRevision
                 return SelectionManager.isSelected(model.imageId ?? "")
             }
+            active: {
+                var _rev = SelectionManager.selectionRevision
+                return SelectionManager.primaryId === (model.imageId ?? "")
+            }
             onTileClicked: function(id, mods) {
                 if (mods & Qt.ControlModifier)
                     SelectionManager.toggle(id)
                 else if (mods & Qt.ShiftModifier)
-                    SelectionManager.extendTo(id, root.model ? root.model.allIds : [])
+                    SelectionManager.extendTo(id, root.model ? root.model.allIds : [], grid.rowCount)
                 else
                     SelectionManager.select(id)
             }
@@ -83,6 +117,18 @@ Item {
             }
             onRemoveRequested: function(id) {
                 root.removeRequested(id, model.filename ?? "")
+            }
+        }
+
+        // Tap on any empty area (margins, space past last row) clears selection.
+        // indexAt uses content coordinates; TapHandler fires even when a tile
+        // MouseArea handles the same tap, so the index check is required.
+        TapHandler {
+            onTapped: function(eventPoint) {
+                var cx = eventPoint.position.x + grid.contentX
+                var cy = eventPoint.position.y + grid.contentY
+                if (grid.indexAt(cx, cy) < 0)
+                    SelectionManager.clear()
             }
         }
 
