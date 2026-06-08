@@ -60,74 +60,21 @@ uvicorn app.main:app --reload
 
 Found has a FastAPI + SQLite backend that indexes images in-place (files are never copied or moved) and a PySide6/QML frontend. The frontend communicates with the backend exclusively through its REST API — no direct database or filesystem access.
 
-```
-backend/
-├── app/
-│   ├── main.py          # FastAPI app, lifespan, /health
-│   ├── api/v1/          # Route modules (one file per resource)
-│   ├── core/
-│   │   ├── config.py    # Pydantic Settings; reads .env
-│   │   └── database.py  # SQLModel engine, get_session dependency
-│   ├── models/          # SQLModel table definitions
-│   ├── schemas/         # Request/response Pydantic models
-│   ├── services/        # Business logic
-│   └── repositories/    # DB query layer
-├── tests/
-│   ├── conftest.py      # in-memory SQLite fixtures
-│   └── test_*.py
-├── data/                # gitignored — runtime DB and thumbnail cache
-├── migrations/          # Alembic migration scripts
-├── requirements.txt
-└── requirements-dev.txt
+## Development workflow _IMPORTANT_
 
-found_app/
-├── __main__.py          # Entry point — wires all components and starts the app
-├── api/
-│   └── client.py        # Async ApiClient (httpx); list_images(), health_check()
-├── app/
-│   └── controller.py    # AppController — connects process manager to app state
-├── backend/
-│   ├── process_manager.py    # Launches and monitors the backend subprocess
-│   └── connection_monitor.py # Runtime health polling
-├── library/
-│   ├── view_model.py          # LibraryViewModel — owns ThumbnailGridModel, drives loading
-│   ├── thumbnail_grid_model.py # QAbstractListModel for the image grid
-│   └── thumbnail_provider.py  # QQuickAsyncImageProvider with LRU cache
-├── qml/                 # QML UI components
-│   ├── main.qml
-│   ├── AppWindow.qml
-│   ├── MainRouter.qml
-│   ├── SplashScreen.qml
-│   ├── LibraryView.qml
-│   ├── ThumbnailGrid.qml
-│   └── ThumbnailTile.qml
-├── state/
-│   └── app_state.py     # AppStateManager — startup lifecycle state machine
-├── theme/
-│   └── theme.py         # ThemeManager — design tokens exposed to QML
-├── tests/
-│   └── test_*.py
-├── requirements.txt
-└── requirements-dev.txt
-```
+When preparing to write new code:
 
-## Development workflow
+1. **First break new code up into the smallest necessary change.** Changes should complete a single, distinct logical task. It should be easy to roll back without breaking the system and simple enough for another developer to understand the "why" at a glance.
+2. **Write tests first** This project uses Test Drive Development (TDD). The workflow is RED, GREEN, REFACTOR
+3. **Write the minimum implementation to make it pass**
+4. **Run the full suite to confirm nothing regressed.**
+5. **Git commits should always be clean functional code** Write commit messages in the imperative mood that describe _why_, not just _what_.
 
 ### Test Driven Development
-
-This project uses TDD. Always write failing tests first, before writing implementation code:
-
-1. Write a test that captures the intended behaviour — confirm it fails for the right reason (missing feature, not a setup error)
-2. Write the minimum implementation to make it pass
-3. Run the full suite to confirm nothing regressed
 
 Backend tests use an in-memory SQLite engine. The `run_migrations` call in the app lifespan is patched out in `conftest.py`; schema is created directly via `SQLModel.metadata.create_all()`.
 
 Frontend tests use an offscreen Qt platform (`QT_QPA_PLATFORM=offscreen`). QML component tests use `QQmlEngine` with `Theme` registered as a context property.
-
-### Git practices
-
-Commits should be small and focused — one logical change per commit. Prefer a commit per feature slice or bug fix rather than batching unrelated changes together. Write commit messages in the imperative mood that describe _why_, not just _what_. Keep work-in-progress off `main`; use feature branches for anything non-trivial.
 
 ## Key conventions
 
