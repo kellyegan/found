@@ -35,6 +35,30 @@ Item {
     }
 
     Shortcut {
+        sequence: "Up"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("up")
+    }
+
+    Shortcut {
+        sequence: "Down"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("down")
+    }
+
+    Shortcut {
+        sequence: "Left"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("left")
+    }
+
+    Shortcut {
+        sequence: "Right"
+        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("right")
+    }
+
+    Shortcut {
         sequences: [StandardKey.Delete, "Backspace"]
         enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
         onActivated: {
@@ -76,6 +100,7 @@ Item {
 
     // Image grid
     ThumbnailGrid {
+        id: thumbnailGrid
         anchors.fill: parent
         visible: root.loadingState === "Ready"
         model: root.gridModel
