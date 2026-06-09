@@ -35,8 +35,9 @@ class ImageRepository:
 
     def get_by_path_prefix(self, prefix: str) -> List[Image]:
         """Return all images whose path starts with prefix."""
+        escaped = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         return list(self.session.exec(
-            select(Image).where(Image.path.like(f"{prefix}%"))
+            select(Image).where(Image.path.like(f"{escaped}%", escape="\\"))
         ).all())
 
     def list(

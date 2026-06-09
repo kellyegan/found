@@ -42,6 +42,16 @@ def test_get_by_path_prefix_does_not_match_partial_directory_name(session, make_
     assert result[0].path == "/Volumes/Drive/photos/a.jpg"
 
 
+def test_get_by_path_prefix_treats_underscore_as_literal_not_wildcard(session, make_image):
+    make_image("/Volumes/My_Drive/photos/a.jpg")
+    make_image("/Volumes/MyXDrive/photos/b.jpg")  # 'X' sits where '_' wildcard would match
+
+    result = ImageRepository(session).get_by_path_prefix("/Volumes/My_Drive/")
+
+    assert len(result) == 1
+    assert result[0].path == "/Volumes/My_Drive/photos/a.jpg"
+
+
 # ---------------------------------------------------------------------------
 # Commit 2 — Service: derive_relocation_prefixes + relocate_by_prefix
 # ---------------------------------------------------------------------------
