@@ -12,6 +12,7 @@ Item {
     property bool hasError: false
     property string libraryLoadingState: "Loading"
     readonly property bool relocatePrefixDialogOpen: readyContainer._prefixAffectedCount > 0
+    readonly property bool relocationResultDialogOpen: readyContainer._relocationResultMessage !== ""
 
     SplashScreen {
         id: splashScreen
@@ -58,6 +59,7 @@ Item {
         property int _prefixAffectedCount: 0
         property string _oldPrefix: ""
         property string _newPrefix: ""
+        property string _relocationResultMessage: ""
 
         // Background click handler — clears selection when the user clicks any
         // area that no interactive element consumed (title bar background, panel
@@ -401,6 +403,18 @@ Item {
                 readyContainer._prefixAffectedCount = 0
                 readyContainer._oldPrefix = ""
                 readyContainer._newPrefix = ""
+                var parts = []
+                if (updated > 0)
+                    parts.push(updated + (updated === 1 ? " image relocated." : " images relocated."))
+                if (notFound > 0)
+                    parts.push(notFound + (notFound === 1 ? " file not found at expected path." : " files not found at expected paths."))
+                if (conflicts > 0)
+                    parts.push(conflicts + (conflicts === 1 ? " file already exists at target path." : " files already exist at target paths."))
+                if (mismatched > 0)
+                    parts.push(mismatched + (mismatched === 1 ? " file did not match expected content." : " files did not match expected content."))
+                if (updated === 0 && notFound === 0 && conflicts === 0 && mismatched === 0)
+                    parts.push("No images were relocated.")
+                readyContainer._relocationResultMessage = parts.join("\n")
             }
         }
 
@@ -425,6 +439,18 @@ Item {
                 readyContainer._oldPrefix = ""
                 readyContainer._newPrefix = ""
             }
+        }
+
+        // Relocation result — shows how many images were relocated vs. not found
+        ConfirmDialog {
+            id: relocationResultDialog
+            anchors.fill: parent
+            z: 26
+            open: readyContainer._relocationResultMessage !== ""
+            message: readyContainer._relocationResultMessage
+            confirmLabel: "OK"
+            showCancel: false
+            onConfirmed: readyContainer._relocationResultMessage = ""
         }
 
         // Collection-deletion confirmation — images are kept, only the collection is removed

@@ -214,6 +214,11 @@ def test_main_router_relocate_prefix_dialog_closed_by_default(engine):
     assert obj.property("relocatePrefixDialogOpen") is False
 
 
+def test_main_router_relocation_result_dialog_closed_by_default(engine):
+    obj = load_component(engine, "shell/MainRouter.qml")
+    assert obj.property("relocationResultDialogOpen") is False
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------

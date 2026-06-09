@@ -138,3 +138,14 @@ def test_has_cancelled_signal(engine):
     received = []
     obj.cancelled.connect(lambda: received.append(1))
     assert isinstance(received, list)
+
+
+def test_show_cancel_defaults_to_true(engine):
+    obj = load_component(engine, "components/ConfirmDialog.qml")
+    assert obj.property("showCancel") is True
+
+
+def test_show_cancel_is_writable(engine):
+    obj = load_component(engine, "components/ConfirmDialog.qml")
+    obj.setProperty("showCancel", False)
+    assert obj.property("showCancel") is False

@@ -7,6 +7,7 @@ Item {
     property string message: ""
     property string confirmLabel: "Confirm"
     property string cancelLabel: "Cancel"
+    property bool showCancel: true
     property string checkboxLabel: ""
     property bool checkboxChecked: false
 
@@ -102,6 +103,7 @@ Item {
                     color: cancelArea.containsMouse ? "#2a2a2a" : "transparent"
                     border.color: "#444444"
                     border.width: 1
+                    visible: root.showCancel
 
                     Text {
                         anchors.centerIn: parent
