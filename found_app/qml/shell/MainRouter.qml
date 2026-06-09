@@ -577,7 +577,10 @@ Item {
     // independent of readyContainer visibility.
     FileDialog {
         id: locateFileDialog
-        title: "Locate file"
+        title: {
+            var filename = readyContainer._pendingLocatedOldPath.split("/").pop()
+            return filename ? "Locate “" + filename + "”" : "Locate file"
+        }
         fileMode: FileDialog.OpenFile
         onAccepted: {
             var newPath = selectedFile.toString().replace(/^file:\/\//, "")
