@@ -17,8 +17,9 @@ class LibraryLoadingState(Enum):
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
     missingCountChanged = Signal(int)
-    imageStatusChanged = Signal(str, str)   # image_id, status
-    imageRelocated = Signal(str, str, str)  # image_id, old_path, new_path
+    imageStatusChanged = Signal(str, str)       # image_id, status
+    imageRelocated = Signal(str, str, str)      # image_id, old_path, new_path
+    relocationComplete = Signal(int, int, int, int)  # updated, not_found, conflicts, mismatched
 
     def __init__(
         self,
@@ -27,6 +28,7 @@ class LibraryViewModel(QObject):
         image_verifier: Callable | None = None,
         bulk_deleter: Callable | None = None,
         path_patcher: Callable | None = None,
+        prefix_relocator: Callable | None = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -34,6 +36,7 @@ class LibraryViewModel(QObject):
         self._image_verifier = image_verifier
         self._bulk_deleter = bulk_deleter
         self._path_patcher = path_patcher
+        self._prefix_relocator = prefix_relocator
         self._loading_state = LibraryLoadingState.Loading
         self._grid_model = ThumbnailGridModel(parent=self)
         self._grid_model.missingCountChanged.connect(self.missingCountChanged)
@@ -41,6 +44,7 @@ class LibraryViewModel(QObject):
         self._verify_threads: list = []
         self._delete_threads: list = []
         self._relocate_threads: list = []
+        self._relocate_prefix_threads: list = []
         self._is_fetching = False
         self._filter_state = filter_state
         if filter_state is not None:
@@ -95,6 +99,20 @@ class LibraryViewModel(QObject):
         thread.finished.connect(thread.deleteLater)
         thread.start()
 
+    @Slot(str, str)
+    def relocateByPrefix(self, old_prefix: str, new_prefix: str) -> None:
+        if self._prefix_relocator is None:
+            return
+        thread = _RelocateByPrefixThread(self._prefix_relocator, old_prefix, new_prefix)
+        thread.result.connect(self._on_relocate_by_prefix_result)
+        self._relocate_prefix_threads.append(thread)
+        thread.finished.connect(
+            lambda t=thread: self._relocate_prefix_threads.remove(t)
+            if t in self._relocate_prefix_threads else None
+        )
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+
     @Slot("QVariant")
     def removeImages(self, image_ids) -> None:
         if isinstance(image_ids, QJSValue):
@@ -140,6 +158,17 @@ class LibraryViewModel(QObject):
             return
         self._grid_model.updateItemStatus(image_id, "available")
         self.imageRelocated.emit(image_id, old_path, new_path)
+
+    def _on_relocate_by_prefix_result(self, data: dict | None) -> None:
+        if data is None:
+            return
+        self.relocationComplete.emit(
+            data.get("updated", 0),
+            data.get("not_found", 0),
+            data.get("conflicts", 0),
+            data.get("mismatched", 0),
+        )
+        self.reload()
 
     def _on_result(self, page: dict | None, is_initial: bool) -> None:
         self._is_fetching = False
@@ -210,6 +239,22 @@ class _RelocateImageThread(QThread):
     def run(self) -> None:
         try:
             self.result.emit(self._patcher(self._image_id, self._new_path))
+        except Exception:
+            self.result.emit(None)
+
+
+class _RelocateByPrefixThread(QThread):
+    result = Signal(object)  # dict | None — counts from relocate_by_prefix
+
+    def __init__(self, relocator: Callable, old_prefix: str, new_prefix: str, parent=None):
+        super().__init__(parent)
+        self._relocator = relocator
+        self._old_prefix = old_prefix
+        self._new_prefix = new_prefix
+
+    def run(self) -> None:
+        try:
+            self.result.emit(self._relocator(self._old_prefix, self._new_prefix))
         except Exception:
             self.result.emit(None)
 

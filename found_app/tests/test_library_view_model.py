@@ -604,3 +604,84 @@ def test_relocate_image_no_op_on_patcher_failure(qapp):
     loop.exec()
 
     assert vm.missingCount == 0  # unchanged — no spurious status update
+
+
+# ---------------------------------------------------------------------------
+# relocateByPrefix
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_relocator(relocator=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        prefix_relocator=relocator,
+    )
+
+
+RELOCATION_RESULT = {"updated": 3, "not_found": 1, "conflicts": 0, "mismatched": 0}
+
+
+def test_relocate_by_prefix_calls_relocator(qapp):
+    calls = []
+
+    def relocator(old_prefix, new_prefix):
+        calls.append((old_prefix, new_prefix))
+        return RELOCATION_RESULT
+
+    vm = _make_vm_with_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    _wait_for_signal(vm.relocationComplete)
+    vm.relocateByPrefix("/old/", "/new/")
+    _wait_for_signal(vm.relocationComplete)
+
+    assert ("/old/", "/new/") in calls
+
+
+def test_relocate_by_prefix_emits_relocation_complete_with_counts(qapp):
+    def relocator(old_prefix, new_prefix):
+        return {"updated": 3, "not_found": 1, "conflicts": 2, "mismatched": 0}
+
+    vm = _make_vm_with_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.relocateByPrefix("/old/", "/new/")
+    result = _wait_for_signal(vm.relocationComplete)
+
+    assert result == (3, 1, 2, 0)
+
+
+def test_relocate_by_prefix_triggers_reload_on_success(qapp):
+    vm = _make_vm_with_relocator(lambda op, np: RELOCATION_RESULT)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.relocateByPrefix("/old/", "/new/")
+    _wait_for_signal(vm.relocationComplete)
+    wait_for_state(vm, "Ready")
+
+    assert vm.loadingState == "Ready"
+
+
+def test_relocate_by_prefix_no_op_when_no_relocator(qapp):
+    vm = _make_vm_with_relocator(relocator=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.relocateByPrefix("/old/", "/new/")  # must not raise
+
+
+def test_relocate_by_prefix_no_op_on_failure(qapp):
+    def relocator(old_prefix, new_prefix):
+        return None
+
+    vm = _make_vm_with_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    QTimer.singleShot(500, loop.quit)
+    vm.relocateByPrefix("/old/", "/new/")
+    loop.exec()
+
+    assert vm.loadingState == "Ready"  # no reload triggered
