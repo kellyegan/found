@@ -131,6 +131,13 @@ class ImageRepository:
         self.session.refresh(image)
         return image
 
+    def batch_update(self, images: list) -> None:
+        for image in images:
+            self.session.add(image)
+        self.session.commit()
+        for image in images:
+            self.session.refresh(image)
+
     def delete(self, image: Image) -> None:
         self._purge_references([image.id])
         self.session.delete(image)

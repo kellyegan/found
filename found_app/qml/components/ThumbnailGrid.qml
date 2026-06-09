@@ -13,6 +13,7 @@ Item {
 
     signal loadMoreRequested()
     signal removeRequested(string imageId, string filename)
+    signal locateRequested(string imageId)
 
     function scrollToX(x) {
         grid.contentX = x
@@ -118,6 +119,7 @@ Item {
             onRemoveRequested: function(id) {
                 root.removeRequested(id, model.filename ?? "")
             }
+            onLocateRequested: function(id) { root.locateRequested(id) }
         }
 
         // Tap on any empty area (margins, space past last row) clears selection.

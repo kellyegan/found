@@ -209,6 +209,16 @@ def test_main_router_app_state_is_writable(engine):
     assert obj.property("appState") == "Ready"
 
 
+def test_main_router_relocate_prefix_dialog_closed_by_default(engine):
+    obj = load_component(engine, "shell/MainRouter.qml")
+    assert obj.property("relocatePrefixDialogOpen") is False
+
+
+def test_main_router_relocation_result_dialog_closed_by_default(engine):
+    obj = load_component(engine, "shell/MainRouter.qml")
+    assert obj.property("relocationResultDialogOpen") is False
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
@@ -262,6 +272,13 @@ def test_library_view_has_remove_images_requested_signal(engine):
     obj = load_component(engine, "views/LibraryView.qml")
     received = []
     obj.removeImagesRequested.connect(lambda ids: received.append(ids))
+    assert isinstance(received, list)
+
+
+def test_library_view_has_locate_requested_signal(engine):
+    obj = load_component(engine, "views/LibraryView.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
     assert isinstance(received, list)
 
 
@@ -432,6 +449,22 @@ def test_thumbnail_tile_has_remove_requested_signal(engine):
     assert isinstance(received, list)
 
 
+def test_thumbnail_tile_has_locate_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailTile.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
+    assert isinstance(received, list)
+
+
+def test_thumbnail_tile_locate_requested_signal_carries_image_id(engine):
+    obj = load_component(engine, "components/ThumbnailTile.qml")
+    obj.setProperty("imageId", "test-uuid-456")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
+    obj.locateRequested.emit("test-uuid-456")
+    assert received == ["test-uuid-456"]
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailGrid
 # ---------------------------------------------------------------------------
@@ -481,6 +514,13 @@ def test_thumbnail_grid_has_remove_requested_signal(engine):
     obj = load_component(engine, "components/ThumbnailGrid.qml")
     received = []
     obj.removeRequested.connect(lambda image_id, filename: received.append((image_id, filename)))
+    assert isinstance(received, list)
+
+
+def test_thumbnail_grid_has_locate_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
     assert isinstance(received, list)
 
 
@@ -768,6 +808,13 @@ def test_image_grid_pane_has_scroll_x_changed_signal(engine):
     obj = load_component(engine, "components/ImageGridPane.qml")
     received = []
     obj.scrollXChanged.connect(lambda x: received.append(x))
+    assert isinstance(received, list)
+
+
+def test_image_grid_pane_has_locate_requested_signal(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
     assert isinstance(received, list)
 
 

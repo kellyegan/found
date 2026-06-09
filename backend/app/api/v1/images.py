@@ -19,6 +19,7 @@ from app.schemas.category import BulkCategoryRequest
 from app.schemas.tag import BulkTagRequest
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.tag_repository import TagRepository
+from app.models.image import FileStatus
 from app.services.image_service import ImageService, derive_relocation_prefixes
 from app.services.import_service import ImportService
 
@@ -76,13 +77,16 @@ def preview_relocation(
     """Derive the path prefix mapping from a single relocated file and count affected images.
     Returns old_prefix, new_prefix, and the number of library images under old_prefix."""
     old_prefix, new_prefix = derive_relocation_prefixes(request.old_path, request.new_path)
-    affected = service.repo.get_by_path_prefix(old_prefix)
+    affected_count = sum(
+        1 for img in service.repo.get_by_path_prefix(old_prefix)
+        if img.file_status == FileStatus.missing
+    )
     return {
         "success": True,
         "data": RelocatePreviewResponse(
             old_prefix=old_prefix,
             new_prefix=new_prefix,
-            affected_count=len(affected),
+            affected_count=affected_count,
         ),
     }
 

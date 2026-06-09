@@ -96,3 +96,24 @@ def test_wire_engine_found_version_is_string(container, qapp):
     container.wire_engine(engine)
     version = engine.rootContext().contextProperty("foundVersion")
     assert isinstance(version, str)
+
+
+# ---------------------------------------------------------------------------
+# LibraryState relocation callables
+# ---------------------------------------------------------------------------
+
+
+def test_library_state_has_path_patcher_wired(container):
+    assert container._library_state._path_patcher is not None
+
+
+def test_library_state_has_prefix_relocator_wired(container):
+    assert container._library_state._prefix_relocator is not None
+
+
+def test_library_state_has_image_fetcher_wired(container):
+    assert container._library_state._image_fetcher is not None
+
+
+def test_library_state_has_preview_relocator_wired(container):
+    assert container._library_state._preview_relocator is not None

@@ -16,6 +16,7 @@ Item {
     signal loadMoreRequested()
     signal removeImagesRequested(var imageIds, bool alsoFromLibrary)
     signal scrollXChanged(real x)
+    signal locateRequested(string imageId)
 
     property var _removeIds: []
     property string _removeMessage: ""
@@ -159,6 +160,7 @@ Item {
         rightPanelOpen: root.rightPanelOpen
         onLoadMoreRequested: root.loadMoreRequested()
         onScrollXChanged: function(x) { root.scrollXChanged(x) }
+        onLocateRequested: function(imageId) { root.locateRequested(imageId) }
         onRemoveRequested: function(imageId, filename) {
             root._requestRemoval(
                 [imageId],
