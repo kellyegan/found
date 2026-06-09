@@ -203,6 +203,25 @@ def test_relocate_by_prefix_falls_back_to_path_when_no_hash(session, make_image,
     assert result.mismatched == []
 
 
+def test_relocate_by_prefix_uses_single_commit_for_bulk_update(session, make_image, tmp_path, monkeypatch):
+    new_dir = tmp_path / "new"
+    new_dir.mkdir()
+    for i in range(3):
+        PILImage.new("RGB", (10, 10)).save(new_dir / f"{i}.jpg", "JPEG")
+        make_image(f"/old/{i}.jpg")
+
+    commit_count = [0]
+    orig_commit = session.commit
+    def counting_commit():
+        commit_count[0] += 1
+        return orig_commit()
+    monkeypatch.setattr(session, "commit", counting_commit)
+
+    ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(new_dir) + "/")
+
+    assert commit_count[0] == 1
+
+
 def test_relocate_by_prefix_sets_file_status_available(session, make_image, tmp_path):
     PILImage.new("RGB", (10, 10)).save(tmp_path / "a.jpg", "JPEG")
     img = make_image("/old/a.jpg", file_status=FileStatus.missing)

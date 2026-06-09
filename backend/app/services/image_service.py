@@ -95,9 +95,11 @@ class ImageService:
 
         Only updates images whose candidate new path exists on disk.
         Returns a RelocateResult with lists of updated images and missing candidate paths.
+        All accepted updates are committed in a single transaction.
         """
         images = self.repo.get_by_path_prefix(old_prefix)
         result = RelocateResult()
+        pending: list[tuple[Image, str]] = []
         for image in images:
             new_path = new_prefix + image.path[len(old_prefix):]
             if not Path(new_path).exists():
@@ -107,7 +109,14 @@ class ImageService:
             elif image.sha256_hash and not _hash_matches(new_path, image.sha256_hash):
                 result.mismatched.append(new_path)
             else:
-                result.updated.append(self.patch_path(image.id, new_path))
+                pending.append((image, new_path))
+        for image, new_path in pending:
+            image.path = new_path
+            image.filename = Path(new_path).name
+            image.file_status = FileStatus.available
+            result.updated.append(image)
+        if result.updated:
+            self.repo.batch_update(result.updated)
         return result
 
     def delete_image(self, image_id: UUID) -> bool:
