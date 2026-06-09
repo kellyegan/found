@@ -265,6 +265,13 @@ def test_library_view_has_remove_images_requested_signal(engine):
     assert isinstance(received, list)
 
 
+def test_library_view_has_locate_requested_signal(engine):
+    obj = load_component(engine, "views/LibraryView.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
+    assert isinstance(received, list)
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
@@ -497,6 +504,13 @@ def test_thumbnail_grid_has_remove_requested_signal(engine):
     obj = load_component(engine, "components/ThumbnailGrid.qml")
     received = []
     obj.removeRequested.connect(lambda image_id, filename: received.append((image_id, filename)))
+    assert isinstance(received, list)
+
+
+def test_thumbnail_grid_has_locate_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
     assert isinstance(received, list)
 
 
@@ -784,6 +798,13 @@ def test_image_grid_pane_has_scroll_x_changed_signal(engine):
     obj = load_component(engine, "components/ImageGridPane.qml")
     received = []
     obj.scrollXChanged.connect(lambda x: received.append(x))
+    assert isinstance(received, list)
+
+
+def test_image_grid_pane_has_locate_requested_signal(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
     assert isinstance(received, list)
 
 

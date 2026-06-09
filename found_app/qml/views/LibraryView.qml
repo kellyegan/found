@@ -11,6 +11,7 @@ Item {
 
     signal loadMoreRequested()
     signal removeImagesRequested(var imageIds)
+    signal locateRequested(string imageId)
 
     function scrollToX(x) { pane.scrollToX(x) }
     function scrollToActiveImage() { pane.scrollToActiveImage() }
@@ -28,6 +29,7 @@ Item {
 
         onLoadMoreRequested: root.loadMoreRequested()
         onRemoveImagesRequested: function(imageIds, _) { root.removeImagesRequested(imageIds) }
+        onLocateRequested: function(imageId) { root.locateRequested(imageId) }
         onScrollXChanged: function(x) { NavigationManager.updateScrollX(x) }
     }
 }
