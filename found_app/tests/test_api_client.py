@@ -1184,3 +1184,75 @@ def test_patch_path_returns_none_on_exception():
     client, mock_http = make_sync_client()
     mock_http.patch.side_effect = Exception("timeout")
     assert client.patch_path("img-1", "/new/path.jpg") is None
+
+
+# ---------------------------------------------------------------------------
+# preview_relocation
+# ---------------------------------------------------------------------------
+
+
+def test_preview_relocation_returns_prefix_data():
+    client, mock_http = make_sync_client()
+    data = {"old_prefix": "/old/", "new_prefix": "/new/", "affected_count": 5}
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": data})
+    assert client.preview_relocation("/old/a.jpg", "/new/a.jpg") == data
+
+
+def test_preview_relocation_posts_to_correct_url_with_correct_body():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.preview_relocation("/old/a.jpg", "/new/a.jpg")
+    url = mock_http.post.call_args.args[0]
+    body = mock_http.post.call_args.kwargs["json"]
+    assert url == "/api/v1/images/preview-relocation"
+    assert body == {"old_path": "/old/a.jpg", "new_path": "/new/a.jpg"}
+
+
+def test_preview_relocation_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.preview_relocation("/old/a.jpg", "/new/a.jpg") is None
+
+
+def test_preview_relocation_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.preview_relocation("/old/a.jpg", "/new/a.jpg") is None
+
+
+# ---------------------------------------------------------------------------
+# relocate_by_prefix
+# ---------------------------------------------------------------------------
+
+
+def test_relocate_by_prefix_returns_result_data():
+    client, mock_http = make_sync_client()
+    data = {"updated": 3, "not_found": 1, "conflicts": 0, "mismatched": 0}
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": data})
+    assert client.relocate_by_prefix("/old/", "/new/") == data
+
+
+def test_relocate_by_prefix_posts_to_correct_url_with_correct_body():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(200, {"success": True, "data": {}})
+    client.relocate_by_prefix("/old/", "/new/")
+    url = mock_http.post.call_args.args[0]
+    body = mock_http.post.call_args.kwargs["json"]
+    assert url == "/api/v1/images/relocate-prefix"
+    assert body == {"old_prefix": "/old/", "new_prefix": "/new/"}
+
+
+def test_relocate_by_prefix_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.post.return_value = mock_response(
+        200, {"success": False, "error": {"code": "server_error", "message": "oops"}}
+    )
+    assert client.relocate_by_prefix("/old/", "/new/") is None
+
+
+def test_relocate_by_prefix_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.post.side_effect = Exception("timeout")
+    assert client.relocate_by_prefix("/old/", "/new/") is None
