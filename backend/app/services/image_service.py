@@ -91,25 +91,31 @@ class ImageService:
         return self.repo.update(image)
 
     def relocate_by_prefix(self, old_prefix: str, new_prefix: str) -> RelocateResult:
-        """Update paths for all images under old_prefix, substituting new_prefix.
+        """Update paths for all MISSING images under old_prefix, substituting new_prefix.
 
         Only updates images whose candidate new path exists on disk.
         Returns a RelocateResult with lists of updated images and missing candidate paths.
         All accepted updates are committed in a single transaction.
+        Handles the same-prefix case (drive reconnected at original mount point).
         """
-        images = self.repo.get_by_path_prefix(old_prefix)
+        images = [
+            img for img in self.repo.get_by_path_prefix(old_prefix)
+            if img.file_status == FileStatus.missing
+        ]
         result = RelocateResult()
         pending: list[tuple[Image, str]] = []
         for image in images:
             new_path = new_prefix + image.path[len(old_prefix):]
             if not Path(new_path).exists():
                 result.not_found.append(new_path)
-            elif self.repo.get_by_path(new_path) is not None:
-                result.conflicts.append(new_path)
-            elif image.sha256_hash and not _hash_matches(new_path, image.sha256_hash):
-                result.mismatched.append(new_path)
             else:
-                pending.append((image, new_path))
+                conflicting = self.repo.get_by_path(new_path)
+                if conflicting is not None and conflicting.id != image.id:
+                    result.conflicts.append(new_path)
+                elif image.sha256_hash and not _hash_matches(new_path, image.sha256_hash):
+                    result.mismatched.append(new_path)
+                else:
+                    pending.append((image, new_path))
         for image, new_path in pending:
             image.path = new_path
             image.filename = Path(new_path).name

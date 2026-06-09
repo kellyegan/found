@@ -101,7 +101,7 @@ def test_relocate_by_prefix_updates_images_whose_new_path_exists(session, make_i
     new_dir.mkdir()
     PILImage.new("RGB", (10, 10)).save(new_dir / "a.jpg", "JPEG")
 
-    make_image("/old/a.jpg")
+    make_image("/old/a.jpg", file_status=FileStatus.missing)
 
     result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(new_dir) + "/")
 
@@ -111,7 +111,7 @@ def test_relocate_by_prefix_updates_images_whose_new_path_exists(session, make_i
 
 
 def test_relocate_by_prefix_skips_images_whose_new_path_is_absent(session, make_image):
-    make_image("/old/a.jpg")
+    make_image("/old/a.jpg", file_status=FileStatus.missing)
 
     result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", "/nonexistent/")
 
@@ -121,8 +121,8 @@ def test_relocate_by_prefix_skips_images_whose_new_path_is_absent(session, make_
 
 def test_relocate_by_prefix_partial_results(session, make_image, tmp_path):
     PILImage.new("RGB", (10, 10)).save(tmp_path / "exists.jpg", "JPEG")
-    make_image("/old/exists.jpg")
-    make_image("/old/gone.jpg")
+    make_image("/old/exists.jpg", file_status=FileStatus.missing)
+    make_image("/old/gone.jpg", file_status=FileStatus.missing)
 
     result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(tmp_path) + "/")
 
@@ -136,7 +136,7 @@ def test_relocate_by_prefix_preserves_subdirectory_structure(session, make_image
     subdir.mkdir(parents=True)
     PILImage.new("RGB", (10, 10)).save(subdir / "a.jpg", "JPEG")
 
-    make_image("/old/subdir/a.jpg")
+    make_image("/old/subdir/a.jpg", file_status=FileStatus.missing)
 
     result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(new_dir) + "/")
 
@@ -171,7 +171,7 @@ def test_relocate_by_prefix_updates_when_hash_matches(session, make_image, tmp_p
     PILImage.new("RGB", (10, 10)).save(new_file, "JPEG")
     file_hash = hashlib.sha256(new_file.read_bytes()).hexdigest()
 
-    make_image("/old/a.jpg", sha256_hash=file_hash)
+    make_image("/old/a.jpg", sha256_hash=file_hash, file_status=FileStatus.missing)
 
     result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(tmp_path) + "/")
 
@@ -183,7 +183,7 @@ def test_relocate_by_prefix_mismatches_when_hash_differs(session, make_image, tm
     new_file = tmp_path / "a.jpg"
     PILImage.new("RGB", (10, 10)).save(new_file, "JPEG")
 
-    make_image("/old/a.jpg", sha256_hash="deadbeef" * 8)  # wrong hash
+    make_image("/old/a.jpg", sha256_hash="deadbeef" * 8, file_status=FileStatus.missing)
 
     result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(tmp_path) + "/")
 
@@ -195,7 +195,7 @@ def test_relocate_by_prefix_falls_back_to_path_when_no_hash(session, make_image,
     new_file = tmp_path / "a.jpg"
     PILImage.new("RGB", (10, 10)).save(new_file, "JPEG")
 
-    make_image("/old/a.jpg")  # sha256_hash defaults to None
+    make_image("/old/a.jpg", file_status=FileStatus.missing)  # sha256_hash defaults to None
 
     result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(tmp_path) + "/")
 
@@ -208,7 +208,7 @@ def test_relocate_by_prefix_uses_single_commit_for_bulk_update(session, make_ima
     new_dir.mkdir()
     for i in range(3):
         PILImage.new("RGB", (10, 10)).save(new_dir / f"{i}.jpg", "JPEG")
-        make_image(f"/old/{i}.jpg")
+        make_image(f"/old/{i}.jpg", file_status=FileStatus.missing)
 
     commit_count = [0]
     orig_commit = session.commit
@@ -237,8 +237,8 @@ def test_relocate_by_prefix_sets_file_status_available(session, make_image, tmp_
 # ---------------------------------------------------------------------------
 
 def test_preview_relocation_returns_derived_prefixes_and_count(client, make_image):
-    make_image("/Volumes/OldDrive/photos/a.jpg")
-    make_image("/Volumes/OldDrive/photos/b.jpg")
+    make_image("/Volumes/OldDrive/photos/a.jpg", file_status=FileStatus.missing)
+    make_image("/Volumes/OldDrive/photos/b.jpg", file_status=FileStatus.missing)
     make_image("/Volumes/Other/c.jpg")
 
     response = client.post("/api/v1/images/preview-relocation", json={
@@ -269,8 +269,8 @@ def test_relocate_prefix_updates_images_and_reports_counts(client, make_image, t
     for name in ["a.jpg", "b.jpg"]:
         PILImage.new("RGB", (10, 10)).save(new_dir / name, "JPEG")
 
-    make_image("/old/a.jpg")
-    make_image("/old/b.jpg")
+    make_image("/old/a.jpg", file_status=FileStatus.missing)
+    make_image("/old/b.jpg", file_status=FileStatus.missing)
 
     response = client.post("/api/v1/images/relocate-prefix", json={
         "old_prefix": "/old/",
@@ -284,7 +284,7 @@ def test_relocate_prefix_updates_images_and_reports_counts(client, make_image, t
 
 
 def test_relocate_prefix_reports_not_found_count(client, make_image):
-    make_image("/old/a.jpg")
+    make_image("/old/a.jpg", file_status=FileStatus.missing)
 
     response = client.post("/api/v1/images/relocate-prefix", json={
         "old_prefix": "/old/",
@@ -301,7 +301,7 @@ def test_relocate_prefix_reports_mismatched_count(client, make_image, tmp_path):
     new_file = tmp_path / "a.jpg"
     PILImage.new("RGB", (10, 10)).save(new_file, "JPEG")
 
-    make_image("/old/a.jpg", sha256_hash="deadbeef" * 8)
+    make_image("/old/a.jpg", sha256_hash="deadbeef" * 8, file_status=FileStatus.missing)
 
     response = client.post("/api/v1/images/relocate-prefix", json={
         "old_prefix": "/old/",
@@ -332,6 +332,47 @@ def test_relocate_prefix_reports_conflict_when_new_path_already_in_library(clien
     assert data["updated"] == 0
     assert data["not_found"] == 0
     assert data["conflicts"] == 1
+
+
+def test_relocate_by_prefix_skips_available_images(session, make_image, tmp_path):
+    new_file = tmp_path / "a.jpg"
+    PILImage.new("RGB", (10, 10)).save(new_file, "JPEG")
+    make_image("/old/a.jpg", file_status=FileStatus.available)
+
+    result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(tmp_path) + "/")
+
+    assert result.updated == []
+    assert result.not_found == []
+    assert result.conflicts == []
+
+
+def test_relocate_by_prefix_re_verifies_missing_when_prefix_unchanged(session, make_image, tmp_path):
+    """Drive reconnected at same mount point: re-confirming the same path marks images available."""
+    img_file = tmp_path / "a.jpg"
+    PILImage.new("RGB", (10, 10)).save(img_file, "JPEG")
+    img = make_image(str(img_file), file_status=FileStatus.missing)
+    prefix = str(tmp_path) + "/"
+
+    result = ImageService(ImageRepository(session)).relocate_by_prefix(prefix, prefix)
+
+    assert len(result.updated) == 1
+    assert result.updated[0].id == img.id
+    assert result.updated[0].file_status == FileStatus.available
+    assert result.conflicts == []
+
+
+def test_preview_relocation_only_counts_missing_images(client, make_image):
+    make_image("/Volumes/OldDrive/photos/a.jpg", file_status=FileStatus.missing)
+    make_image("/Volumes/OldDrive/photos/b.jpg")  # available — should not count
+    make_image("/Volumes/OldDrive/photos/c.jpg", file_status=FileStatus.missing)
+
+    response = client.post("/api/v1/images/preview-relocation", json={
+        "old_path": "/Volumes/OldDrive/photos/a.jpg",
+        "new_path": "/Volumes/NewDrive/photos/a.jpg",
+    })
+
+    assert response.status_code == 200
+    assert response.json()["data"]["affected_count"] == 2
 
 
 def test_relocate_prefix_no_match_is_no_op(client, make_image):
