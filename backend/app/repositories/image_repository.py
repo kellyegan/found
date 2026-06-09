@@ -33,6 +33,13 @@ class ImageRepository:
         """Return an image with this SHA-256 hash, or None. Used for duplicate detection."""
         return self.session.exec(select(Image).where(Image.sha256_hash == sha256_hash)).first()
 
+    def get_by_path_prefix(self, prefix: str) -> List[Image]:
+        """Return all images whose path starts with prefix."""
+        escaped = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        return list(self.session.exec(
+            select(Image).where(Image.path.like(f"{escaped}%", escape="\\"))
+        ).all())
+
     def list(
         self,
         cursor: Optional[str] = None,

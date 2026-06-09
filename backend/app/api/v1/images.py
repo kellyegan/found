@@ -9,13 +9,17 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.repositories.image_repository import ImageRepository
 from app.repositories.job_repository import JobRepository
-from app.schemas.image import ImageGridRead, ImageIdsRequest, ImagePatch, ImageRead
+from app.schemas.image import (
+    ImageGridRead, ImageIdsRequest, ImagePatch, ImageRead,
+    RelocatePreviewRequest, RelocatePreviewResponse,
+    RelocatePrefixRequest, RelocatePrefixResponse,
+)
 from app.schemas.job import ImportPreviewResponse, ImportRequest
 from app.schemas.category import BulkCategoryRequest
 from app.schemas.tag import BulkTagRequest
 from app.repositories.category_repository import CategoryRepository
 from app.repositories.tag_repository import TagRepository
-from app.services.image_service import ImageService
+from app.services.image_service import ImageService, derive_relocation_prefixes
 from app.services.import_service import ImportService
 
 router = APIRouter(tags=["Images"])
@@ -62,6 +66,44 @@ def import_images(
     job = service.create_job(len(request.paths))
     background_tasks.add_task(service.process_import, job.id, request.paths)
     return {"success": True, "data": {"job_id": str(job.id)}}
+
+
+@router.post("/images/preview-relocation", summary="Preview a prefix relocation")
+def preview_relocation(
+    request: RelocatePreviewRequest,
+    service: ImageService = Depends(_get_service),
+):
+    """Derive the path prefix mapping from a single relocated file and count affected images.
+    Returns old_prefix, new_prefix, and the number of library images under old_prefix."""
+    old_prefix, new_prefix = derive_relocation_prefixes(request.old_path, request.new_path)
+    affected = service.repo.get_by_path_prefix(old_prefix)
+    return {
+        "success": True,
+        "data": RelocatePreviewResponse(
+            old_prefix=old_prefix,
+            new_prefix=new_prefix,
+            affected_count=len(affected),
+        ),
+    }
+
+
+@router.post("/images/relocate-prefix", summary="Relocate images by path prefix")
+def relocate_prefix(
+    request: RelocatePrefixRequest,
+    service: ImageService = Depends(_get_service),
+):
+    """Update paths for all images under old_prefix, substituting new_prefix.
+    Only updates images whose new path exists on disk."""
+    result = service.relocate_by_prefix(request.old_prefix, request.new_prefix)
+    return {
+        "success": True,
+        "data": RelocatePrefixResponse(
+            updated=len(result.updated),
+            not_found=len(result.not_found),
+            conflicts=len(result.conflicts),
+            mismatched=len(result.mismatched),
+        ),
+    }
 
 
 @router.post("/images/verify", summary="Batch verify images")

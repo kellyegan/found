@@ -1,3 +1,5 @@
+from dataclasses import dataclass, field
+from hashlib import sha256
 from pathlib import Path
 from typing import List, Optional, Tuple
 from uuid import UUID
@@ -7,6 +9,48 @@ from app.models.image import FileStatus, Image
 from app.repositories.image_repository import ImageRepository
 from app.services.metadata_service import UnsupportedFileTypeError, extract_metadata
 from app.services.thumbnail_service import get_or_generate_thumbnail
+
+
+@dataclass
+class RelocateResult:
+    updated: List[Image] = field(default_factory=list)
+    not_found: List[str] = field(default_factory=list)
+    conflicts: List[str] = field(default_factory=list)
+    mismatched: List[str] = field(default_factory=list)
+
+
+def derive_relocation_prefixes(old_path: str, new_path: str) -> tuple[str, str]:
+    """Derive old and new path prefixes from a single relocated file.
+
+    Walks path components from right to left to find where the two paths
+    diverge, then returns the differing prefix portion with a trailing slash.
+    Falls back to parent-directory level when only the filename differs.
+    """
+    old_parts = Path(old_path).parts
+    new_parts = Path(new_path).parts
+
+    common = 0
+    for old_part, new_part in zip(reversed(old_parts), reversed(new_parts)):
+        if old_part != new_part:
+            break
+        common += 1
+
+    # Guard: identical paths or entire path matches — use parent dirs
+    if common >= min(len(old_parts), len(new_parts)):
+        common = 0
+
+    if common == 0:
+        old_prefix = str(Path(*old_parts[:-1])) + "/"
+        new_prefix = str(Path(*new_parts[:-1])) + "/"
+    else:
+        old_prefix = str(Path(*old_parts[:-common])) + "/"
+        new_prefix = str(Path(*new_parts[:-common])) + "/"
+
+    return old_prefix, new_prefix
+
+
+def _hash_matches(path: str, expected: str) -> bool:
+    return sha256(Path(path).read_bytes()).hexdigest() == expected
 
 
 class ImageService:
@@ -45,6 +89,26 @@ class ImageService:
         image.filename = Path(new_path).name
         image.file_status = FileStatus.available
         return self.repo.update(image)
+
+    def relocate_by_prefix(self, old_prefix: str, new_prefix: str) -> RelocateResult:
+        """Update paths for all images under old_prefix, substituting new_prefix.
+
+        Only updates images whose candidate new path exists on disk.
+        Returns a RelocateResult with lists of updated images and missing candidate paths.
+        """
+        images = self.repo.get_by_path_prefix(old_prefix)
+        result = RelocateResult()
+        for image in images:
+            new_path = new_prefix + image.path[len(old_prefix):]
+            if not Path(new_path).exists():
+                result.not_found.append(new_path)
+            elif self.repo.get_by_path(new_path) is not None:
+                result.conflicts.append(new_path)
+            elif image.sha256_hash and not _hash_matches(new_path, image.sha256_hash):
+                result.mismatched.append(new_path)
+            else:
+                result.updated.append(self.patch_path(image.id, new_path))
+        return result
 
     def delete_image(self, image_id: UUID) -> bool:
         image = self.repo.get_by_id(image_id)
