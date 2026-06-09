@@ -685,3 +685,128 @@ def test_relocate_by_prefix_no_op_on_failure(qapp):
     loop.exec()
 
     assert vm.loadingState == "Ready"  # no reload triggered
+
+
+# ---------------------------------------------------------------------------
+# requestLocate
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_image_fetcher(fetcher=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        image_fetcher=fetcher,
+    )
+
+
+def test_request_locate_calls_image_fetcher(qapp):
+    calls = []
+
+    def fetcher(image_id):
+        calls.append(image_id)
+        return {"id": image_id, "path": "/photos/a.jpg"}
+
+    vm = _make_vm_with_image_fetcher(fetcher)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.requestLocate("aaaa-0001")
+    _wait_for_signal(vm.locateDialogRequested)
+
+    assert "aaaa-0001" in calls
+
+
+def test_request_locate_emits_locate_dialog_requested(qapp):
+    def fetcher(image_id):
+        return {"id": image_id, "path": "/photos/a.jpg"}
+
+    vm = _make_vm_with_image_fetcher(fetcher)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.requestLocate("aaaa-0001")
+    result = _wait_for_signal(vm.locateDialogRequested)
+
+    assert result == ("aaaa-0001", "/photos/a.jpg")
+
+
+def test_request_locate_no_op_when_no_fetcher(qapp):
+    vm = _make_vm_with_image_fetcher(fetcher=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.requestLocate("aaaa-0001")  # must not raise
+
+
+def test_request_locate_no_op_on_failure(qapp):
+    vm = _make_vm_with_image_fetcher(fetcher=lambda image_id: None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    QTimer.singleShot(500, loop.quit)
+    vm.requestLocate("aaaa-0001")
+    loop.exec()  # no signal should fire
+
+
+# ---------------------------------------------------------------------------
+# previewRelocation
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_preview_relocator(relocator=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        preview_relocator=relocator,
+    )
+
+
+PREVIEW_RESULT = {"affected_count": 4, "old_prefix": "/old/", "new_prefix": "/new/"}
+
+
+def test_preview_relocation_calls_preview_relocator(qapp):
+    calls = []
+
+    def relocator(old_path, new_path):
+        calls.append((old_path, new_path))
+        return PREVIEW_RESULT
+
+    vm = _make_vm_with_preview_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.previewRelocation("/old/a.jpg", "/new/a.jpg")
+    _wait_for_signal(vm.relocationPreviewReady)
+
+    assert ("/old/a.jpg", "/new/a.jpg") in calls
+
+
+def test_preview_relocation_emits_relocation_preview_ready(qapp):
+    def relocator(old_path, new_path):
+        return {"affected_count": 4, "old_prefix": "/old/", "new_prefix": "/new/"}
+
+    vm = _make_vm_with_preview_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.previewRelocation("/old/a.jpg", "/new/a.jpg")
+    result = _wait_for_signal(vm.relocationPreviewReady)
+
+    assert result == (4, "/old/", "/new/")
+
+
+def test_preview_relocation_no_op_when_no_relocator(qapp):
+    vm = _make_vm_with_preview_relocator(relocator=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.previewRelocation("/old/a.jpg", "/new/a.jpg")  # must not raise
+
+
+def test_preview_relocation_no_op_on_failure(qapp):
+    vm = _make_vm_with_preview_relocator(relocator=lambda op, np: None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    QTimer.singleShot(500, loop.quit)
+    vm.previewRelocation("/old/a.jpg", "/new/a.jpg")
+    loop.exec()  # no signal should fire

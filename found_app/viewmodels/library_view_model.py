@@ -17,9 +17,11 @@ class LibraryLoadingState(Enum):
 class LibraryViewModel(QObject):
     loadingStateChanged = Signal(str)
     missingCountChanged = Signal(int)
-    imageStatusChanged = Signal(str, str)       # image_id, status
-    imageRelocated = Signal(str, str, str)      # image_id, old_path, new_path
-    relocationComplete = Signal(int, int, int, int)  # updated, not_found, conflicts, mismatched
+    imageStatusChanged = Signal(str, str)           # image_id, status
+    imageRelocated = Signal(str, str, str)          # image_id, old_path, new_path
+    relocationComplete = Signal(int, int, int, int) # updated, not_found, conflicts, mismatched
+    locateDialogRequested = Signal(str, str)        # image_id, image_path
+    relocationPreviewReady = Signal(int, str, str)  # affected_count, old_prefix, new_prefix
 
     def __init__(
         self,
@@ -29,6 +31,8 @@ class LibraryViewModel(QObject):
         bulk_deleter: Callable | None = None,
         path_patcher: Callable | None = None,
         prefix_relocator: Callable | None = None,
+        image_fetcher: Callable | None = None,
+        preview_relocator: Callable | None = None,
         parent=None,
     ):
         super().__init__(parent)
@@ -37,6 +41,8 @@ class LibraryViewModel(QObject):
         self._bulk_deleter = bulk_deleter
         self._path_patcher = path_patcher
         self._prefix_relocator = prefix_relocator
+        self._image_fetcher = image_fetcher
+        self._preview_relocator = preview_relocator
         self._loading_state = LibraryLoadingState.Loading
         self._grid_model = ThumbnailGridModel(parent=self)
         self._grid_model.missingCountChanged.connect(self.missingCountChanged)
@@ -45,6 +51,8 @@ class LibraryViewModel(QObject):
         self._delete_threads: list = []
         self._relocate_threads: list = []
         self._relocate_prefix_threads: list = []
+        self._locate_threads: list = []
+        self._preview_threads: list = []
         self._is_fetching = False
         self._filter_state = filter_state
         if filter_state is not None:
@@ -113,6 +121,32 @@ class LibraryViewModel(QObject):
         thread.finished.connect(thread.deleteLater)
         thread.start()
 
+    @Slot(str)
+    def requestLocate(self, image_id: str) -> None:
+        if self._image_fetcher is None:
+            return
+        thread = _RequestLocateThread(self._image_fetcher, image_id)
+        thread.result.connect(lambda data, iid=image_id: self._on_request_locate_result(iid, data))
+        self._locate_threads.append(thread)
+        thread.finished.connect(
+            lambda t=thread: self._locate_threads.remove(t) if t in self._locate_threads else None
+        )
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+
+    @Slot(str, str)
+    def previewRelocation(self, old_path: str, new_path: str) -> None:
+        if self._preview_relocator is None:
+            return
+        thread = _PreviewRelocationThread(self._preview_relocator, old_path, new_path)
+        thread.result.connect(self._on_preview_relocation_result)
+        self._preview_threads.append(thread)
+        thread.finished.connect(
+            lambda t=thread: self._preview_threads.remove(t) if t in self._preview_threads else None
+        )
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+
     @Slot("QVariant")
     def removeImages(self, image_ids) -> None:
         if isinstance(image_ids, QJSValue):
@@ -169,6 +203,22 @@ class LibraryViewModel(QObject):
             data.get("mismatched", 0),
         )
         self.reload()
+
+    def _on_request_locate_result(self, image_id: str, data: dict | None) -> None:
+        if data is None:
+            return
+        path = data.get("path", "")
+        if path:
+            self.locateDialogRequested.emit(image_id, path)
+
+    def _on_preview_relocation_result(self, data: dict | None) -> None:
+        if data is None:
+            return
+        self.relocationPreviewReady.emit(
+            data.get("affected_count", 0),
+            data.get("old_prefix", ""),
+            data.get("new_prefix", ""),
+        )
 
     def _on_result(self, page: dict | None, is_initial: bool) -> None:
         self._is_fetching = False
@@ -255,6 +305,37 @@ class _RelocateByPrefixThread(QThread):
     def run(self) -> None:
         try:
             self.result.emit(self._relocator(self._old_prefix, self._new_prefix))
+        except Exception:
+            self.result.emit(None)
+
+
+class _RequestLocateThread(QThread):
+    result = Signal(object)  # dict | None — full image record including path
+
+    def __init__(self, fetcher: Callable, image_id: str, parent=None):
+        super().__init__(parent)
+        self._fetcher = fetcher
+        self._image_id = image_id
+
+    def run(self) -> None:
+        try:
+            self.result.emit(self._fetcher(self._image_id))
+        except Exception:
+            self.result.emit(None)
+
+
+class _PreviewRelocationThread(QThread):
+    result = Signal(object)  # dict | None — {affected_count, old_prefix, new_prefix}
+
+    def __init__(self, relocator: Callable, old_path: str, new_path: str, parent=None):
+        super().__init__(parent)
+        self._relocator = relocator
+        self._old_path = old_path
+        self._new_path = new_path
+
+    def run(self) -> None:
+        try:
+            self.result.emit(self._relocator(self._old_path, self._new_path))
         except Exception:
             self.result.emit(None)
 
