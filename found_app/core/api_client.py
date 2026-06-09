@@ -207,7 +207,7 @@ class ApiClient:
             response = self._sync_client.post(
                 "/api/v1/images/relocate-prefix",
                 json={"old_prefix": old_prefix, "new_prefix": new_prefix},
-                timeout=30.0,
+                timeout=120.0,
             )
             data = response.json()
             return data.get("data") if data.get("success") else None

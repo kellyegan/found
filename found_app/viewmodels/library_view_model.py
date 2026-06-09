@@ -194,14 +194,13 @@ class LibraryViewModel(QObject):
         self.imageRelocated.emit(image_id, old_path, new_path)
 
     def _on_relocate_by_prefix_result(self, data: dict | None) -> None:
-        if data is None:
-            return
-        self.relocationComplete.emit(
-            data.get("updated", 0),
-            data.get("not_found", 0),
-            data.get("conflicts", 0),
-            data.get("mismatched", 0),
-        )
+        if data is not None:
+            self.relocationComplete.emit(
+                data.get("updated", 0),
+                data.get("not_found", 0),
+                data.get("conflicts", 0),
+                data.get("mismatched", 0),
+            )
         self.reload()
 
     def _on_request_locate_result(self, image_id: str, data: dict | None) -> None:

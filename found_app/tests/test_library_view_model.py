@@ -671,20 +671,27 @@ def test_relocate_by_prefix_no_op_when_no_relocator(qapp):
     vm.relocateByPrefix("/old/", "/new/")  # must not raise
 
 
-def test_relocate_by_prefix_no_op_on_failure(qapp):
-    def relocator(old_prefix, new_prefix):
-        return None
+def test_relocate_by_prefix_reloads_even_on_api_failure(qapp):
+    fetch_calls = [0]
 
-    vm = _make_vm_with_relocator(relocator)
+    def counting_fetcher(cursor=None, limit=100):
+        fetch_calls[0] += 1
+        return {"items": [], "next_cursor": None, "has_more": False}
+
+    vm = LibraryViewModel(
+        page_fetcher=counting_fetcher,
+        prefix_relocator=lambda op, np: None,
+    )
     vm.load()
     wait_for_state(vm, "Ready")
+    calls_after_initial_load = fetch_calls[0]
 
+    vm.relocateByPrefix("/old/", "/new/")
     loop = QEventLoop()
     QTimer.singleShot(500, loop.quit)
-    vm.relocateByPrefix("/old/", "/new/")
     loop.exec()
 
-    assert vm.loadingState == "Ready"  # no reload triggered
+    assert fetch_calls[0] > calls_after_initial_load
 
 
 # ---------------------------------------------------------------------------
