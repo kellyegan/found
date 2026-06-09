@@ -180,6 +180,16 @@ class ApiClient:
         except Exception:
             return None
 
+    def patch_path(self, image_id: str, new_path: str) -> dict | None:
+        try:
+            response = self._sync_client.patch(
+                f"/api/v1/images/{image_id}", json={"path": new_path}, timeout=10.0
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
     def resolve_conflict(self, image_id: str, new_path: str) -> bool:
         try:
             response = self._sync_client.patch(

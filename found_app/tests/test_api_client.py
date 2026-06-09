@@ -1148,3 +1148,39 @@ def test_bulk_delete_images_returns_false_on_exception():
     client, mock_http = make_sync_client()
     mock_http.post.side_effect = Exception("timeout")
     assert client.bulk_delete_images(["img-1"]) is False
+
+
+# ---------------------------------------------------------------------------
+# patch_path
+# ---------------------------------------------------------------------------
+
+
+def test_patch_path_returns_updated_image_data():
+    client, mock_http = make_sync_client()
+    image = {"id": "img-1", "path": "/new/path.jpg", "file_status": "available"}
+    mock_http.patch.return_value = mock_response(200, {"success": True, "data": image})
+    assert client.patch_path("img-1", "/new/path.jpg") == image
+
+
+def test_patch_path_uses_correct_url_and_body():
+    client, mock_http = make_sync_client()
+    mock_http.patch.return_value = mock_response(200, {"success": True, "data": {}})
+    client.patch_path("img-1", "/new/path.jpg")
+    url = mock_http.patch.call_args.args[0]
+    body = mock_http.patch.call_args.kwargs["json"]
+    assert url == "/api/v1/images/img-1"
+    assert body == {"path": "/new/path.jpg"}
+
+
+def test_patch_path_returns_none_on_api_failure():
+    client, mock_http = make_sync_client()
+    mock_http.patch.return_value = mock_response(
+        200, {"success": False, "error": {"code": "not_found", "message": "missing"}}
+    )
+    assert client.patch_path("img-1", "/new/path.jpg") is None
+
+
+def test_patch_path_returns_none_on_exception():
+    client, mock_http = make_sync_client()
+    mock_http.patch.side_effect = Exception("timeout")
+    assert client.patch_path("img-1", "/new/path.jpg") is None
