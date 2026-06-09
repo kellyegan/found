@@ -180,6 +180,40 @@ class ApiClient:
         except Exception:
             return None
 
+    def patch_path(self, image_id: str, new_path: str) -> dict | None:
+        try:
+            response = self._sync_client.patch(
+                f"/api/v1/images/{image_id}", json={"path": new_path}, timeout=10.0
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
+    def preview_relocation(self, old_path: str, new_path: str) -> dict | None:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/preview-relocation",
+                json={"old_path": old_path, "new_path": new_path},
+                timeout=10.0,
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
+    def relocate_by_prefix(self, old_prefix: str, new_prefix: str) -> dict | None:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/relocate-prefix",
+                json={"old_prefix": old_prefix, "new_prefix": new_prefix},
+                timeout=30.0,
+            )
+            data = response.json()
+            return data.get("data") if data.get("success") else None
+        except Exception:
+            return None
+
     def resolve_conflict(self, image_id: str, new_path: str) -> bool:
         try:
             response = self._sync_client.patch(
