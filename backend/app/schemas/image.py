@@ -65,3 +65,4 @@ class RelocatePrefixResponse(BaseModel):
     updated: int
     not_found: int
     conflicts: int
+    mismatched: int

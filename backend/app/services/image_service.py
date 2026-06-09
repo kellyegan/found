@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from hashlib import sha256
 from pathlib import Path
 from typing import List, Optional, Tuple
 from uuid import UUID
@@ -15,6 +16,7 @@ class RelocateResult:
     updated: List[Image] = field(default_factory=list)
     not_found: List[str] = field(default_factory=list)
     conflicts: List[str] = field(default_factory=list)
+    mismatched: List[str] = field(default_factory=list)
 
 
 def derive_relocation_prefixes(old_path: str, new_path: str) -> tuple[str, str]:
@@ -45,6 +47,10 @@ def derive_relocation_prefixes(old_path: str, new_path: str) -> tuple[str, str]:
         new_prefix = str(Path(*new_parts[:-common])) + "/"
 
     return old_prefix, new_prefix
+
+
+def _hash_matches(path: str, expected: str) -> bool:
+    return sha256(Path(path).read_bytes()).hexdigest() == expected
 
 
 class ImageService:
@@ -98,6 +104,8 @@ class ImageService:
                 result.not_found.append(new_path)
             elif self.repo.get_by_path(new_path) is not None:
                 result.conflicts.append(new_path)
+            elif image.sha256_hash and not _hash_matches(new_path, image.sha256_hash):
+                result.mismatched.append(new_path)
             else:
                 result.updated.append(self.patch_path(image.id, new_path))
         return result

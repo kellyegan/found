@@ -101,6 +101,7 @@ def relocate_prefix(
             updated=len(result.updated),
             not_found=len(result.not_found),
             conflicts=len(result.conflicts),
+            mismatched=len(result.mismatched),
         ),
     }
 
