@@ -138,6 +138,19 @@ def test_relocate_by_prefix_no_match_returns_empty(session, make_image):
     assert result.not_found == []
 
 
+def test_relocate_by_prefix_skips_when_new_path_already_in_library(session, make_image, tmp_path):
+    existing_file = tmp_path / "a.jpg"
+    PILImage.new("RGB", (10, 10)).save(existing_file, "JPEG")
+
+    make_image("/old/a.jpg", file_status=FileStatus.missing)
+    make_image(str(existing_file))  # already imported at the target path
+
+    result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(tmp_path) + "/")
+
+    assert result.updated == []
+    assert str(existing_file) in result.conflicts
+
+
 def test_relocate_by_prefix_sets_file_status_available(session, make_image, tmp_path):
     PILImage.new("RGB", (10, 10)).save(tmp_path / "a.jpg", "JPEG")
     img = make_image("/old/a.jpg", file_status=FileStatus.missing)
@@ -211,6 +224,25 @@ def test_relocate_prefix_reports_not_found_count(client, make_image):
     data = response.json()["data"]
     assert data["updated"] == 0
     assert data["not_found"] == 1
+
+
+def test_relocate_prefix_reports_conflict_when_new_path_already_in_library(client, make_image, tmp_path):
+    existing_file = tmp_path / "a.jpg"
+    PILImage.new("RGB", (10, 10)).save(existing_file, "JPEG")
+
+    make_image("/old/a.jpg", file_status=FileStatus.missing)
+    make_image(str(existing_file))  # already imported at the target path
+
+    response = client.post("/api/v1/images/relocate-prefix", json={
+        "old_prefix": "/old/",
+        "new_prefix": str(tmp_path) + "/",
+    })
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["updated"] == 0
+    assert data["not_found"] == 0
+    assert data["conflicts"] == 1
 
 
 def test_relocate_prefix_no_match_is_no_op(client, make_image):

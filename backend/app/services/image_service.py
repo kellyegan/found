@@ -14,6 +14,7 @@ from app.services.thumbnail_service import get_or_generate_thumbnail
 class RelocateResult:
     updated: List[Image] = field(default_factory=list)
     not_found: List[str] = field(default_factory=list)
+    conflicts: List[str] = field(default_factory=list)
 
 
 def derive_relocation_prefixes(old_path: str, new_path: str) -> tuple[str, str]:
@@ -93,10 +94,12 @@ class ImageService:
         result = RelocateResult()
         for image in images:
             new_path = new_prefix + image.path[len(old_prefix):]
-            if Path(new_path).exists():
-                result.updated.append(self.patch_path(image.id, new_path))
-            else:
+            if not Path(new_path).exists():
                 result.not_found.append(new_path)
+            elif self.repo.get_by_path(new_path) is not None:
+                result.conflicts.append(new_path)
+            else:
+                result.updated.append(self.patch_path(image.id, new_path))
         return result
 
     def delete_image(self, image_id: UUID) -> bool:

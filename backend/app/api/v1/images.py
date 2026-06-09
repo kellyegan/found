@@ -100,6 +100,7 @@ def relocate_prefix(
         "data": RelocatePrefixResponse(
             updated=len(result.updated),
             not_found=len(result.not_found),
+            conflicts=len(result.conflicts),
         ),
     }
 
