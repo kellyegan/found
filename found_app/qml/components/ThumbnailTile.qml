@@ -195,31 +195,21 @@ Item {
         }
     }
 
-    // Locate button — always visible when file is missing, bottom-right corner
+    // Locate button — always visible when file is missing, upper-left corner
     Rectangle {
         id: locateButton
         width: 22
         height: 22
         radius: 11
-        anchors { bottom: parent.bottom; right: parent.right; margins: root.inset + 4 }
-        color: locateArea.containsMouse ? "#cc7700" : "#ff880099"
+        anchors { top: parent.top; left: parent.left; margins: root.inset + 4 }
+        color: locateArea.containsMouse ? "#ffffff" : "#aaffffff"
         visible: root.fileStatus === "missing"
 
         Text {
             anchors.centerIn: parent
             text: "⚠"
-            color: "#ffffff"
+            color: "#555555"
             font.pixelSize: 11
-        }
-
-        HoverTooltip {
-            text: "File missing — click to locate"
-            visible: locateArea.containsMouse
-            anchors {
-                bottom: parent.top
-                horizontalCenter: parent.horizontalCenter
-                bottomMargin: 4
-            }
         }
 
         MouseArea {
@@ -228,6 +218,30 @@ Item {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: root.locateRequested(root.imageId)
+        }
+    }
+
+    // Tooltip parented to the window so it renders above all sibling tiles.
+    // Gate x/y on containsMouse so mapToGlobal runs after the tile is positioned.
+    HoverTooltip {
+        parent: root.Window.contentItem ?? root
+        text: "File missing — click to locate"
+        visible: locateArea.containsMouse
+
+        x: {
+            if (!locateArea.containsMouse) return 0
+            var g = locateButton.mapToGlobal(0, locateButton.height / 2)
+            var p = parent.mapFromGlobal(g.x, g.y)
+            // Default: right of button; fall back to left if tooltip would overflow
+            var rightX = p.x + locateButton.width + 8
+            return (rightX + width <= parent.width) ? rightX : p.x - width - 8
+        }
+        y: {
+            if (!locateArea.containsMouse) return 0
+            var g = locateButton.mapToGlobal(0, locateButton.height / 2)
+            var p = parent.mapFromGlobal(g.x, g.y)
+            // Sit slightly above button centre for a diagonal offset
+            return p.y - height / 2 - 8
         }
     }
 }
