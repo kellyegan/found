@@ -505,3 +505,183 @@ def test_remove_images_no_op_when_no_deleter(qapp):
     loop.exec()
 
     assert vm.loadingState == "Ready"
+
+
+# ---------------------------------------------------------------------------
+# relocateImage
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_patcher(patcher=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        path_patcher=patcher,
+    )
+
+
+def _wait_for_signal(signal, timeout_ms=2000):
+    loop = QEventLoop()
+    received = []
+    signal.connect(lambda *args: (received.append(args), loop.quit()))
+    QTimer.singleShot(timeout_ms, loop.quit)
+    loop.exec()
+    return received[0] if received else None
+
+
+def test_relocate_image_calls_path_patcher(qapp):
+    calls = []
+
+    def patcher(image_id, new_path):
+        calls.append((image_id, new_path))
+        return {"id": image_id, "path": new_path, "file_status": "available"}
+
+    vm = _make_vm_with_patcher(patcher)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    _wait_for_signal(vm.imageRelocated)
+    vm.relocateImage("aaaa-0001", "/old/a.jpg", "/new/a.jpg")
+    _wait_for_signal(vm.imageRelocated)
+
+    assert ("aaaa-0001", "/new/a.jpg") in calls
+
+
+def test_relocate_image_updates_grid_model_status_to_available(qapp):
+    missing_items = [
+        {"id": "aaaa-0001", "filename": "a.jpg", "width": 100, "height": 80, "file_status": "missing"},
+    ]
+
+    def patcher(image_id, new_path):
+        return {"id": image_id, "path": new_path, "file_status": "available"}
+
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=missing_items),
+        path_patcher=patcher,
+    )
+    vm.load()
+    wait_for_state(vm, "Ready")
+    assert vm.missingCount == 1
+
+    _wait_for_signal(vm.imageRelocated)
+    vm.relocateImage("aaaa-0001", "/old/a.jpg", "/new/a.jpg")
+    _wait_for_signal(vm.imageRelocated)
+
+    assert vm.missingCount == 0
+
+
+def test_relocate_image_emits_image_relocated_signal(qapp):
+    def patcher(image_id, new_path):
+        return {"id": image_id, "path": new_path, "file_status": "available"}
+
+    vm = _make_vm_with_patcher(patcher)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    result = _wait_for_signal(vm.imageRelocated)
+    vm.relocateImage("aaaa-0001", "/old/a.jpg", "/new/a.jpg")
+    result = _wait_for_signal(vm.imageRelocated)
+
+    assert result == ("aaaa-0001", "/old/a.jpg", "/new/a.jpg")
+
+
+def test_relocate_image_no_op_when_no_path_patcher(qapp):
+    vm = _make_vm_with_patcher(patcher=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.relocateImage("aaaa-0001", "/old/a.jpg", "/new/a.jpg")  # must not raise
+
+
+def test_relocate_image_no_op_on_patcher_failure(qapp):
+    def patcher(image_id, new_path):
+        return None  # simulate failure
+
+    vm = _make_vm_with_patcher(patcher)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    QTimer.singleShot(500, loop.quit)
+    vm.relocateImage("aaaa-0001", "/old/a.jpg", "/new/a.jpg")
+    loop.exec()
+
+    assert vm.missingCount == 0  # unchanged — no spurious status update
+
+
+# ---------------------------------------------------------------------------
+# relocateByPrefix
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_relocator(relocator=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        prefix_relocator=relocator,
+    )
+
+
+RELOCATION_RESULT = {"updated": 3, "not_found": 1, "conflicts": 0, "mismatched": 0}
+
+
+def test_relocate_by_prefix_calls_relocator(qapp):
+    calls = []
+
+    def relocator(old_prefix, new_prefix):
+        calls.append((old_prefix, new_prefix))
+        return RELOCATION_RESULT
+
+    vm = _make_vm_with_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    _wait_for_signal(vm.relocationComplete)
+    vm.relocateByPrefix("/old/", "/new/")
+    _wait_for_signal(vm.relocationComplete)
+
+    assert ("/old/", "/new/") in calls
+
+
+def test_relocate_by_prefix_emits_relocation_complete_with_counts(qapp):
+    def relocator(old_prefix, new_prefix):
+        return {"updated": 3, "not_found": 1, "conflicts": 2, "mismatched": 0}
+
+    vm = _make_vm_with_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.relocateByPrefix("/old/", "/new/")
+    result = _wait_for_signal(vm.relocationComplete)
+
+    assert result == (3, 1, 2, 0)
+
+
+def test_relocate_by_prefix_triggers_reload_on_success(qapp):
+    vm = _make_vm_with_relocator(lambda op, np: RELOCATION_RESULT)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.relocateByPrefix("/old/", "/new/")
+    _wait_for_signal(vm.relocationComplete)
+    wait_for_state(vm, "Ready")
+
+    assert vm.loadingState == "Ready"
+
+
+def test_relocate_by_prefix_no_op_when_no_relocator(qapp):
+    vm = _make_vm_with_relocator(relocator=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.relocateByPrefix("/old/", "/new/")  # must not raise
+
+
+def test_relocate_by_prefix_no_op_on_failure(qapp):
+    def relocator(old_prefix, new_prefix):
+        return None
+
+    vm = _make_vm_with_relocator(relocator)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    QTimer.singleShot(500, loop.quit)
+    vm.relocateByPrefix("/old/", "/new/")
+    loop.exec()
+
+    assert vm.loadingState == "Ready"  # no reload triggered
