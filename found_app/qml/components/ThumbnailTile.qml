@@ -13,6 +13,7 @@ Item {
     signal tileClicked(string imageId, int modifiers)
     signal tileDoubleClicked(string imageId)
     signal removeRequested(string imageId)
+    signal locateRequested(string imageId)
 
     // Floating proxy parented to the window so it can move across the whole scene
     Item {
@@ -191,6 +192,42 @@ Item {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onClicked: root.removeRequested(root.imageId)
+        }
+    }
+
+    // Locate button — always visible when file is missing, bottom-right corner
+    Rectangle {
+        id: locateButton
+        width: 22
+        height: 22
+        radius: 11
+        anchors { bottom: parent.bottom; right: parent.right; margins: root.inset + 4 }
+        color: locateArea.containsMouse ? "#cc7700" : "#ff880099"
+        visible: root.fileStatus === "missing"
+
+        Text {
+            anchors.centerIn: parent
+            text: "⚠"
+            color: "#ffffff"
+            font.pixelSize: 11
+        }
+
+        HoverTooltip {
+            text: "File missing — click to locate"
+            visible: locateArea.containsMouse
+            anchors {
+                bottom: parent.top
+                horizontalCenter: parent.horizontalCenter
+                bottomMargin: 4
+            }
+        }
+
+        MouseArea {
+            id: locateArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.locateRequested(root.imageId)
         }
     }
 }

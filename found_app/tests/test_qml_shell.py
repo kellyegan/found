@@ -432,6 +432,22 @@ def test_thumbnail_tile_has_remove_requested_signal(engine):
     assert isinstance(received, list)
 
 
+def test_thumbnail_tile_has_locate_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailTile.qml")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
+    assert isinstance(received, list)
+
+
+def test_thumbnail_tile_locate_requested_signal_carries_image_id(engine):
+    obj = load_component(engine, "components/ThumbnailTile.qml")
+    obj.setProperty("imageId", "test-uuid-456")
+    received = []
+    obj.locateRequested.connect(lambda image_id: received.append(image_id))
+    obj.locateRequested.emit("test-uuid-456")
+    assert received == ["test-uuid-456"]
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailGrid
 # ---------------------------------------------------------------------------
