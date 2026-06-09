@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Dialogs
 import "../views"
 import "../components"
 
@@ -10,6 +11,7 @@ Item {
     property string statusMessage: ""
     property bool hasError: false
     property string libraryLoadingState: "Loading"
+    readonly property bool relocatePrefixDialogOpen: readyContainer._prefixAffectedCount > 0
 
     SplashScreen {
         id: splashScreen
@@ -49,6 +51,13 @@ Item {
         // Pending collection deletion — drives the confirmation dialog below
         property string _removeCollectionId: ""
         property string _removeCollectionName: ""
+
+        // Pending locate/prefix-relocation flow
+        property string _pendingLocateImageId: ""
+        property string _pendingLocatedOldPath: ""
+        property int _prefixAffectedCount: 0
+        property string _oldPrefix: ""
+        property string _newPrefix: ""
 
         // Background click handler — clears selection when the user clicks any
         // area that no interactive element consumed (title bar background, panel
@@ -174,6 +183,7 @@ Item {
             rightPanelOpen: readyContainer.metadataSidebarOpen
             onLoadMoreRequested: LibraryState.load_more()
             onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
+            onLocateRequested: function(imageId) { LibraryState.requestLocate(imageId) }
         }
 
         // Central navigation handler — persists per-view panel states and restores
@@ -371,6 +381,52 @@ Item {
             }
         }
 
+        // Locate/prefix-relocation signal handlers
+        Connections {
+            target: LibraryState
+            function onLocateDialogRequested(imageId, imagePath) {
+                readyContainer._pendingLocateImageId = imageId
+                readyContainer._pendingLocatedOldPath = imagePath
+                locateFileDialog.open()
+            }
+            function onImageRelocated(imageId, oldPath, newPath) {
+                LibraryState.previewRelocation(oldPath, newPath)
+            }
+            function onRelocationPreviewReady(count, oldPrefix, newPrefix) {
+                readyContainer._oldPrefix = oldPrefix
+                readyContainer._newPrefix = newPrefix
+                readyContainer._prefixAffectedCount = count
+            }
+            function onRelocationComplete(updated, notFound, conflicts, mismatched) {
+                readyContainer._prefixAffectedCount = 0
+                readyContainer._oldPrefix = ""
+                readyContainer._newPrefix = ""
+            }
+        }
+
+        // Prefix-relocation confirmation — offer to bulk-relocate images sharing the old prefix
+        ConfirmDialog {
+            id: relocatePrefixDialog
+            anchors.fill: parent
+            z: 25
+            open: readyContainer._prefixAffectedCount > 0
+            message: {
+                var n = readyContainer._prefixAffectedCount
+                return "Found " + n + (n === 1 ? " other image" : " other images")
+                    + " in the same folder. Relocate them all to the new location?"
+            }
+            confirmLabel: "Relocate All"
+            onConfirmed: {
+                LibraryState.relocateByPrefix(readyContainer._oldPrefix, readyContainer._newPrefix)
+                readyContainer._prefixAffectedCount = 0
+            }
+            onCancelled: {
+                readyContainer._prefixAffectedCount = 0
+                readyContainer._oldPrefix = ""
+                readyContainer._newPrefix = ""
+            }
+        }
+
         // Collection-deletion confirmation — images are kept, only the collection is removed
         ConfirmDialog {
             id: removeCollectionDialog
@@ -514,6 +570,22 @@ Item {
             onConflictChoiceChanged: function(path, choice) {
                 ImportState.setConflictChoice(path, choice)
             }
+        }
+    }
+
+    // File picker for locating a missing image — parented to root so it is
+    // independent of readyContainer visibility.
+    FileDialog {
+        id: locateFileDialog
+        title: "Locate file"
+        fileMode: FileDialog.OpenFile
+        onAccepted: {
+            var newPath = selectedFile.toString().replace(/^file:\/\//, "")
+            LibraryState.relocateImage(
+                readyContainer._pendingLocateImageId,
+                readyContainer._pendingLocatedOldPath,
+                newPath
+            )
         }
     }
 

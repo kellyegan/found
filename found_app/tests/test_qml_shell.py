@@ -209,6 +209,11 @@ def test_main_router_app_state_is_writable(engine):
     assert obj.property("appState") == "Ready"
 
 
+def test_main_router_relocate_prefix_dialog_closed_by_default(engine):
+    obj = load_component(engine, "shell/MainRouter.qml")
+    assert obj.property("relocatePrefixDialogOpen") is False
+
+
 # ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
