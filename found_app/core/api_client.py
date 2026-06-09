@@ -424,6 +424,20 @@ class ApiClient:
         except Exception:
             return False
 
+    def batch_verify_images(self, image_ids: list) -> list:
+        try:
+            response = self._sync_client.post(
+                "/api/v1/images/verify",
+                json={"image_ids": image_ids},
+                timeout=30.0,
+            )
+            data = response.json()
+            if data.get("success"):
+                return data.get("data", {}).get("results", [])
+            return []
+        except Exception:
+            return []
+
     def bulk_delete_images(self, image_ids: list) -> bool:
         try:
             response = self._sync_client.post(
