@@ -129,6 +129,20 @@ def test_relocate_by_prefix_partial_results(session, make_image, tmp_path):
     assert len(result.not_found) == 1
 
 
+def test_relocate_by_prefix_preserves_subdirectory_structure(session, make_image, tmp_path):
+    new_dir = tmp_path / "new"
+    subdir = new_dir / "subdir"
+    subdir.mkdir(parents=True)
+    PILImage.new("RGB", (10, 10)).save(subdir / "a.jpg", "JPEG")
+
+    make_image("/old/subdir/a.jpg")
+
+    result = ImageService(ImageRepository(session)).relocate_by_prefix("/old/", str(new_dir) + "/")
+
+    assert len(result.updated) == 1
+    assert result.updated[0].path == str(subdir / "a.jpg")
+
+
 def test_relocate_by_prefix_no_match_returns_empty(session, make_image):
     make_image("/other/a.jpg")
 
