@@ -117,8 +117,13 @@ def batch_verify_images(
 ):
     """Verify file existence and refresh metadata for multiple images in one call.
     Sets file_status to missing when the file is gone, available when it is present."""
-    service.batch_verify(request.image_ids)
-    return {"success": True, "data": None}
+    results = service.batch_verify(request.image_ids)
+    return {
+        "success": True,
+        "data": {
+            "results": [{"id": str(image_id), "file_status": status} for image_id, status in results]
+        },
+    }
 
 
 @router.post("/images/bulk/delete", summary="Bulk delete images")

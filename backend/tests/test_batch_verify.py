@@ -90,3 +90,28 @@ def test_verify_processes_multiple_images(client, make_image, tmp_path):
 
     assert client.get(f"/api/v1/images/{img_present.id}").json()["data"]["file_status"] == FileStatus.available
     assert client.get(f"/api/v1/images/{img_gone.id}").json()["data"]["file_status"] == FileStatus.missing
+
+
+def test_verify_response_includes_results(client, make_image, tmp_path):
+    existing = tmp_path / "exists.jpg"
+    PILImage.new("RGB", (10, 10)).save(existing, "JPEG")
+
+    img_present = make_image(str(existing), file_status=FileStatus.missing)
+    img_gone    = make_image("/nonexistent/gone.jpg", file_status=FileStatus.available)
+
+    response = client.post(
+        "/api/v1/images/verify",
+        json={"image_ids": [str(img_present.id), str(img_gone.id)]},
+    )
+    data = response.json()
+    assert data["success"] is True
+    results = {r["id"]: r["file_status"] for r in data["data"]["results"]}
+    assert results[str(img_present.id)] == FileStatus.available
+    assert results[str(img_gone.id)] == FileStatus.missing
+
+
+def test_verify_response_results_empty_for_empty_input(client):
+    response = client.post("/api/v1/images/verify", json={"image_ids": []})
+    data = response.json()
+    assert data["success"] is True
+    assert data["data"]["results"] == []
