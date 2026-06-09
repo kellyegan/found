@@ -43,3 +43,24 @@ class ImagePatch(BaseModel):
 
 class ImageIdsRequest(BaseModel):
     image_ids: list[UUID]
+
+
+class RelocatePreviewRequest(BaseModel):
+    old_path: str
+    new_path: str
+
+
+class RelocatePreviewResponse(BaseModel):
+    old_prefix: str
+    new_prefix: str
+    affected_count: int
+
+
+class RelocatePrefixRequest(BaseModel):
+    old_prefix: str
+    new_prefix: str
+
+
+class RelocatePrefixResponse(BaseModel):
+    updated: int
+    not_found: int
