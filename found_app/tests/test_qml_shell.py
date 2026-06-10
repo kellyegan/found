@@ -17,7 +17,7 @@ Covers:
 
 import pytest
 from pathlib import Path
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QEventLoop, QTimer, QUrl
 from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
 
 import found_app
@@ -396,6 +396,164 @@ def test_open_image_from_collection_carries_collection_context(qapp):
     assert entry["collection_id"] == "col-1"
     assert entry["collection_name"] == "Portraits"
     assert entry["context_ids"] == ["img-1", "img-2"]
+
+
+# ---------------------------------------------------------------------------
+# Stale-missing banner wiring — MainRouter <-> MetadataState <-> LibraryState
+# ---------------------------------------------------------------------------
+
+
+def _wait_until(predicate, timeout_ms=2000):
+    if predicate():
+        return
+    loop = QEventLoop()
+    timer = QTimer()
+    timer.setInterval(20)
+
+    def tick():
+        if predicate():
+            loop.quit()
+
+    timer.timeout.connect(tick)
+    timer.start()
+    QTimer.singleShot(timeout_ms, loop.quit)
+    loop.exec()
+    timer.stop()
+
+
+def _build_app_engine(library_state, metadata_state, navigation, selection):
+    theme = ThemeManager()
+    app_state = AppStateManager()
+    collections_state = CollectionsViewModel(
+        collections_fetcher=lambda: [],
+        collection_creator=lambda name: None,
+        images_adder=lambda cid, iids: False,
+        collection_images_fetcher=lambda cid: [],
+    )
+    import_state = ImportViewModel(
+        scanner=lambda paths: {"new": [], "already_imported": [], "conflicts": [], "invalid": []},
+        importer=lambda paths: "job-id",
+        job_fetcher=lambda jid: {"status": "completed", "total_files": 0, "processed_files": 0,
+                                  "successful_imports": 0, "duplicate_paths": 0,
+                                  "duplicate_hashes": 0, "failed_imports": 0},
+    )
+    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
+    filter_state = FilterStateManager()
+    tag_search_state = TagSearchViewModel(tags_fetcher=lambda term: [])
+    tag_editor_search_state = TagSearchViewModel(tags_fetcher=lambda term: [])
+    tag_editor_state = TagEditorViewModel(
+        image_tags_fetcher=lambda image_id: [],
+        tag_modifier=lambda image_ids, add_ids, remove_ids: True,
+    )
+
+    e = QQmlApplicationEngine()
+    e.rootContext().setContextProperty("Theme", theme)
+    e.rootContext().setContextProperty("AppState", app_state)
+    e.rootContext().setContextProperty("LibraryState", library_state)
+    e.rootContext().setContextProperty("SelectionManager", selection)
+    e.rootContext().setContextProperty("NavigationManager", navigation)
+    e.rootContext().setContextProperty("CategoriesState", categories_state)
+    e.rootContext().setContextProperty("CollectionsState", collections_state)
+    e.rootContext().setContextProperty("ImportState", import_state)
+    e.rootContext().setContextProperty("FilterState", filter_state)
+    e.rootContext().setContextProperty("MetadataState", metadata_state)
+    e.rootContext().setContextProperty("TagSearchState", tag_search_state)
+    e.rootContext().setContextProperty("TagEditorSearchState", tag_editor_search_state)
+    e.rootContext().setContextProperty("TagEditorState", tag_editor_state)
+    e.rootContext().setContextProperty("baseUrl", "http://127.0.0.1:8000")
+    e.rootContext().setContextProperty("foundVersion", "0.1.0")
+    e.rootContext().setContextProperty("foundLicense", "GNU GPL v3.0")
+    e.load(str(QML_DIR / "main.qml"))
+    assert e.rootObjects(), "main.qml failed to load"
+
+    # Keep Python references alive for the engine's lifetime — QQmlContext does
+    # not retain ownership of context-property objects, so without this they
+    # are garbage collected as soon as this function returns, leaving the QML
+    # bindings pointing at null.
+    e._context_objects = (
+        theme, app_state, categories_state, collections_state, import_state,
+        filter_state, tag_search_state, tag_editor_search_state, tag_editor_state,
+    )
+    return e
+
+
+_MISSING_IMAGE = {
+    "id": "img-1", "filename": "a.jpg", "path": "/a.jpg",
+    "width": 100, "height": 100, "file_size": 100,
+    "imported_date": "2024-01-01", "file_status": "missing",
+}
+
+
+def test_stale_missing_metadata_triggers_verify_in_image_view(qapp):
+    """Loading metadata for an image still marked missing, while viewing it
+    in the image view, should kick off a re-verify — the file may have
+    reappeared since the grid was last loaded."""
+    verified_ids = []
+
+    def image_verifier(image_id):
+        verified_ids.append(image_id)
+        return "available"
+
+    library_state = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: None,
+        image_verifier=image_verifier,
+    )
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: _MISSING_IMAGE)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+
+    navigation.push("image", {"image_id": "img-1"})
+    metadata_state.loadImage("img-1")
+
+    _wait_until(lambda: verified_ids == ["img-1"])
+    assert verified_ids == ["img-1"]
+
+
+def test_stale_missing_metadata_does_not_trigger_verify_in_library_view(qapp):
+    """The stale-missing re-verify is scoped to the image view — selecting a
+    missing image in the library grid should not trigger it."""
+    verified_ids = []
+
+    def image_verifier(image_id):
+        verified_ids.append(image_id)
+        return "available"
+
+    library_state = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: None,
+        image_verifier=image_verifier,
+    )
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: _MISSING_IMAGE)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+
+    assert navigation.currentView == "library"
+    metadata_state.loadImage("img-1")
+    _wait_until(lambda: metadata_state.isMissing is True)
+
+    assert verified_ids == []
+
+
+def test_image_status_changed_clears_metadata_missing_banner(qapp):
+    """Once a verify resolves an image as available, the metadata panel's
+    missing banner for that image should clear in place."""
+    library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: _MISSING_IMAGE)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+
+    navigation.push("image", {"image_id": "img-1"})
+    metadata_state.loadImage("img-1")
+    _wait_until(lambda: metadata_state.isMissing is True)
+
+    library_state.imageStatusChanged.emit("img-1", "available")
+
+    assert metadata_state.isMissing is False
 
 
 # ---------------------------------------------------------------------------

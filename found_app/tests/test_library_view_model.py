@@ -412,6 +412,30 @@ def test_verify_image_emits_image_status_changed(qapp):
     assert received == [("aaaa-0001", "missing")]
 
 
+def test_verify_image_ignores_concurrent_duplicate_calls(qapp):
+    import time
+
+    calls = []
+
+    def verifier(image_id):
+        calls.append(image_id)
+        time.sleep(0.1)
+        return "missing"
+
+    vm = _make_vm_with_verifier(verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    vm.imageStatusChanged.connect(lambda *_: loop.quit())
+    QTimer.singleShot(2000, loop.quit)
+    vm.verifyImage("aaaa-0001")
+    vm.verifyImage("aaaa-0001")
+    loop.exec()
+
+    assert calls == ["aaaa-0001"]
+
+
 # ---------------------------------------------------------------------------
 # removeImages
 # ---------------------------------------------------------------------------

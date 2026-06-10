@@ -618,11 +618,26 @@ Item {
         }
     }
 
-    // Propagate image status changes from library verification to the active collection grid.
+    // Propagate image status changes from library verification to the active collection grid,
+    // and refresh the metadata panel's missing-file banner if it's showing the same image.
     Connections {
         target: LibraryState
         function onImageStatusChanged(imageId, status) {
             CollectionsState.collectionGridModel.updateItemStatus(imageId, status)
+            if (imageId === MetadataState.imageId) {
+                MetadataState.updateFileStatus(status)
+            }
+        }
+    }
+
+    // Re-check a missing image's file when its metadata loads in the image view —
+    // the file may have reappeared since the grid was last loaded.
+    Connections {
+        target: MetadataState
+        function onMetadataChanged() {
+            if (MetadataState.isMissing && NavigationManager.currentView === "image") {
+                LibraryState.verifyImage(MetadataState.imageId)
+            }
         }
     }
 }

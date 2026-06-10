@@ -48,6 +48,7 @@ class LibraryViewModel(QObject):
         self._grid_model.missingCountChanged.connect(self.missingCountChanged)
         self._thread: _PageThread | None = None
         self._verify_threads: list = []
+        self._verifying_ids: set = set()
         self._delete_threads: list = []
         self._relocate_threads: list = []
         self._relocate_prefix_threads: list = []
@@ -84,10 +85,14 @@ class LibraryViewModel(QObject):
     def verifyImage(self, image_id: str) -> None:
         if self._image_verifier is None:
             return
+        if image_id in self._verifying_ids:
+            return
+        self._verifying_ids.add(image_id)
         thread = _VerifyThread(self._image_verifier, image_id)
         thread.result.connect(lambda status, iid=image_id: self._on_verify_result(iid, status))
         self._verify_threads.append(thread)
         thread.finished.connect(lambda t=thread: self._verify_threads.remove(t) if t in self._verify_threads else None)
+        thread.finished.connect(lambda iid=image_id: self._verifying_ids.discard(iid))
         thread.finished.connect(thread.deleteLater)
         thread.start()
 
