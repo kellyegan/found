@@ -17,6 +17,7 @@ Item {
     signal removeImagesRequested(var imageIds, bool alsoFromLibrary)
     signal scrollXChanged(real x)
     signal locateRequested(string imageId)
+    signal viewportVerifyRequested(var imageIds)
 
     property var _removeIds: []
     property string _removeMessage: ""
@@ -161,6 +162,7 @@ Item {
         onLoadMoreRequested: root.loadMoreRequested()
         onScrollXChanged: function(x) { root.scrollXChanged(x) }
         onLocateRequested: function(imageId) { root.locateRequested(imageId) }
+        onViewportVerifyRequested: function(imageIds) { root.viewportVerifyRequested(imageIds) }
         onRemoveRequested: function(imageId, filename) {
             root._requestRemoval(
                 [imageId],

@@ -18,13 +18,15 @@ Covers:
 import pytest
 from pathlib import Path
 from PySide6.QtCore import QEventLoop, QMetaObject, QObject, QTimer, QUrl
-from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
+from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine, QJSValue
+from PySide6.QtQuick import QQuickWindow
 
 import found_app
 from found_app.theme.theme import ThemeManager
 from found_app.core.app_state import AppStateManager
 from found_app.services.filter_state import FilterStateManager
-from found_app.viewmodels.library_view_model import LibraryViewModel
+from found_app.viewmodels.library_view_model import LibraryViewModel, LibraryLoadingState
+from found_app.models.thumbnail_grid_model import ThumbnailGridModel
 from found_app.viewmodels.categories_view_model import CategoriesViewModel
 from found_app.viewmodels.collections_view_model import CollectionsViewModel
 from found_app.viewmodels.import_view_model import ImportViewModel
@@ -631,6 +633,37 @@ def test_missing_poll_does_not_trigger_verify_missing_when_nothing_missing(qapp)
     assert poll_calls == []
 
 
+def test_viewport_verify_requested_bubbles_to_library_state(qapp):
+    """A missing tile entering the viewport in the library view should reach
+    LibraryState.verifyBatch via the ThumbnailGrid -> ImageGridPane ->
+    LibraryView -> MainRouter bubbling chain."""
+    verify_calls = []
+
+    library_state = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: None,
+        batch_verifier=lambda ids: verify_calls.append(list(ids)) or [],
+    )
+    library_state._grid_model.appendPage(
+        [{"id": "img-1", "filename": "a.jpg", "file_status": "missing"}], None, False
+    )
+    library_state._set_state(LibraryLoadingState.Ready)
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: _MISSING_IMAGE)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+
+    root = engine.rootObjects()[0]
+    main_router = root.findChild(QObject, "mainRouter")
+    main_router.setProperty("appState", "Ready")
+    main_router.setProperty("splashDismissed", True)
+
+    _wait_until(lambda: verify_calls != [], timeout_ms=2000)
+
+    assert verify_calls
+    assert "img-1" in verify_calls[0]
+
+
 # ---------------------------------------------------------------------------
 # ThumbnailTile
 # ---------------------------------------------------------------------------
@@ -755,6 +788,73 @@ def test_thumbnail_grid_has_locate_requested_signal(engine):
     received = []
     obj.locateRequested.connect(lambda image_id: received.append(image_id))
     assert isinstance(received, list)
+
+
+def test_thumbnail_grid_has_viewport_verify_requested_signal(engine):
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
+    received = []
+    obj.viewportVerifyRequested.connect(lambda image_ids: received.append(image_ids))
+    assert isinstance(received, list)
+
+
+def test_thumbnail_grid_emits_viewport_verify_requested_for_missing_items(engine):
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
+    obj.setProperty("width", 400)
+    obj.setProperty("height", 400)
+
+    model = ThumbnailGridModel()
+    model.setParent(obj)
+    model.appendPage(
+        [
+            {"id": "img-1", "filename": "a.jpg", "file_status": "missing"},
+            {"id": "img-2", "filename": "b.jpg", "file_status": "available"},
+        ],
+        None,
+        False,
+    )
+    obj.setProperty("model", model)
+
+    received = []
+
+    def _on_verify_requested(image_ids):
+        if isinstance(image_ids, QJSValue):
+            image_ids = image_ids.toVariant() or []
+        received.append(list(image_ids))
+
+    obj.viewportVerifyRequested.connect(_on_verify_requested)
+
+    window = QQuickWindow()
+    obj.setParentItem(window.contentItem())
+    window.resize(400, 400)
+    window.show()
+
+    _wait_until(lambda: received != [], timeout_ms=2000)
+
+    assert received
+    assert "img-1" in received[0]
+    assert "img-2" not in received[0]
+
+
+def test_thumbnail_grid_does_not_emit_viewport_verify_for_available_items(engine):
+    obj = load_component(engine, "components/ThumbnailGrid.qml")
+    obj.setProperty("width", 400)
+    obj.setProperty("height", 400)
+
+    model = ThumbnailGridModel()
+    model.setParent(obj)
+    model.appendPage(
+        [{"id": "img-1", "filename": "a.jpg", "file_status": "available"}],
+        None,
+        False,
+    )
+    obj.setProperty("model", model)
+
+    received = []
+    obj.viewportVerifyRequested.connect(lambda image_ids: received.append(list(image_ids)))
+
+    _wait_until(lambda: False, timeout_ms=800)
+
+    assert received == []
 
 
 # ---------------------------------------------------------------------------

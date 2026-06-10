@@ -5,6 +5,7 @@ import "../components"
 
 Item {
     id: root
+    objectName: "mainRouter"
     anchors.fill: parent
 
     property string appState: "Launching"
@@ -186,6 +187,7 @@ Item {
             onLoadMoreRequested: LibraryState.load_more()
             onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
             onLocateRequested: function(imageId) { LibraryState.requestLocate(imageId) }
+            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
         }
 
         // Central navigation handler — persists per-view panel states and restores
@@ -312,6 +314,7 @@ Item {
                     alsoFromLibrary
                 )
             }
+            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
         }
 
         // Image view (Slice 5)
