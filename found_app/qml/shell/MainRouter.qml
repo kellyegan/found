@@ -640,4 +640,20 @@ Item {
             }
         }
     }
+
+    // Periodically re-check images marked missing, in case their files have
+    // reappeared (e.g. a removable drive was reconnected).
+    Timer {
+        id: missingPollTimer
+        objectName: "missingPollTimer"
+        interval: 120000
+        repeat: true
+        triggeredOnStart: true
+        running: root.appState === "Ready"
+        onTriggered: {
+            if (LibraryState.missingCount > 0) {
+                LibraryState.verifyMissing()
+            }
+        }
+    }
 }

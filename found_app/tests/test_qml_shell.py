@@ -17,7 +17,7 @@ Covers:
 
 import pytest
 from pathlib import Path
-from PySide6.QtCore import QEventLoop, QTimer, QUrl
+from PySide6.QtCore import QEventLoop, QMetaObject, QObject, QTimer, QUrl
 from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine
 
 import found_app
@@ -554,6 +554,81 @@ def test_image_status_changed_clears_metadata_missing_banner(qapp):
     library_state.imageStatusChanged.emit("img-1", "available")
 
     assert metadata_state.isMissing is False
+
+
+# ---------------------------------------------------------------------------
+# Automatic missing-image verification — startup + interval poll
+# ---------------------------------------------------------------------------
+
+
+def test_missing_poll_timer_has_120_second_interval(qapp):
+    library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: _MISSING_IMAGE)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+
+    root = engine.rootObjects()[0]
+    timer = root.findChild(QObject, "missingPollTimer")
+    assert timer is not None
+    assert timer.property("interval") == 120000
+    assert timer.property("repeat") is True
+
+
+def test_missing_poll_triggers_verify_missing_when_images_missing(qapp):
+    poll_calls = []
+
+    def missing_id_fetcher():
+        poll_calls.append(True)
+        return {"items": []}
+
+    library_state = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: None,
+        missing_id_fetcher=missing_id_fetcher,
+        batch_verifier=lambda ids: [],
+    )
+    library_state._grid_model.appendPage(
+        [{"id": "img-1", "filename": "a.jpg", "file_status": "missing"}], None, False
+    )
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: _MISSING_IMAGE)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+
+    root = engine.rootObjects()[0]
+    timer = root.findChild(QObject, "missingPollTimer")
+    QMetaObject.invokeMethod(timer, "triggered")
+
+    _wait_until(lambda: poll_calls == [True])
+    assert poll_calls == [True]
+
+
+def test_missing_poll_does_not_trigger_verify_missing_when_nothing_missing(qapp):
+    poll_calls = []
+
+    def missing_id_fetcher():
+        poll_calls.append(True)
+        return {"items": []}
+
+    library_state = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: None,
+        missing_id_fetcher=missing_id_fetcher,
+        batch_verifier=lambda ids: [],
+    )
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: _MISSING_IMAGE)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+
+    root = engine.rootObjects()[0]
+    timer = root.findChild(QObject, "missingPollTimer")
+    QMetaObject.invokeMethod(timer, "triggered")
+
+    _wait_until(lambda: False, timeout_ms=200)
+    assert poll_calls == []
 
 
 # ---------------------------------------------------------------------------
