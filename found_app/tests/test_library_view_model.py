@@ -437,6 +437,123 @@ def test_verify_image_ignores_concurrent_duplicate_calls(qapp):
 
 
 # ---------------------------------------------------------------------------
+# verifyBatch
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_batch_verifier(batch_verifier=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        batch_verifier=batch_verifier,
+    )
+
+
+def _wait_for_image_status_changed(vm, count=1, timeout_ms=2000):
+    received = []
+    loop = QEventLoop()
+
+    def on_changed(image_id, status):
+        received.append((image_id, status))
+        if len(received) >= count:
+            loop.quit()
+
+    vm.imageStatusChanged.connect(on_changed)
+    QTimer.singleShot(timeout_ms, loop.quit)
+    loop.exec()
+    return received
+
+
+def test_verify_batch_calls_batch_verifier_with_ids(qapp):
+    calls = []
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001", "bbbb-0002"])
+    _wait_for_image_status_changed(vm, count=2)
+
+    assert calls == [["aaaa-0001", "bbbb-0002"]]
+
+
+def test_verify_batch_emits_image_status_changed_per_result(qapp):
+    def batch_verifier(image_ids):
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001", "bbbb-0002"])
+    received = _wait_for_image_status_changed(vm, count=2)
+
+    assert sorted(received) == [("aaaa-0001", "missing"), ("bbbb-0002", "missing")]
+
+
+def test_verify_batch_updates_grid_model_status(qapp):
+    def batch_verifier(image_ids):
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001"])
+    _wait_for_image_status_changed(vm, count=1)
+
+    assert vm.missingCount == 1
+
+
+def test_verify_batch_no_op_when_no_verifier(qapp):
+    vm = _make_vm_with_batch_verifier(batch_verifier=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.verifyBatch(["aaaa-0001"])  # must not raise
+    assert vm.missingCount == 0
+
+
+def test_verify_batch_no_op_with_empty_list(qapp):
+    calls = []
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        return []
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch([])
+
+    assert calls == []
+
+
+def test_verify_batch_ignores_concurrent_duplicate_calls(qapp):
+    import time
+
+    calls = []
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        time.sleep(0.1)
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001"])
+    vm.verifyBatch(["aaaa-0001"])
+    _wait_for_image_status_changed(vm, count=1)
+
+    assert calls == [["aaaa-0001"]]
+
+
+# ---------------------------------------------------------------------------
 # removeImages
 # ---------------------------------------------------------------------------
 

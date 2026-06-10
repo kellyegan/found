@@ -28,6 +28,7 @@ class LibraryViewModel(QObject):
         page_fetcher: Callable[..., dict | None],
         filter_state=None,
         image_verifier: Callable | None = None,
+        batch_verifier: Callable | None = None,
         bulk_deleter: Callable | None = None,
         path_patcher: Callable | None = None,
         prefix_relocator: Callable | None = None,
@@ -38,6 +39,7 @@ class LibraryViewModel(QObject):
         super().__init__(parent)
         self._page_fetcher = page_fetcher
         self._image_verifier = image_verifier
+        self._batch_verifier = batch_verifier
         self._bulk_deleter = bulk_deleter
         self._path_patcher = path_patcher
         self._prefix_relocator = prefix_relocator
@@ -49,6 +51,8 @@ class LibraryViewModel(QObject):
         self._thread: _PageThread | None = None
         self._verify_threads: list = []
         self._verifying_ids: set = set()
+        self._batch_verify_threads: list = []
+        self._batch_verify_in_progress = False
         self._delete_threads: list = []
         self._relocate_threads: list = []
         self._relocate_prefix_threads: list = []
@@ -93,6 +97,23 @@ class LibraryViewModel(QObject):
         self._verify_threads.append(thread)
         thread.finished.connect(lambda t=thread: self._verify_threads.remove(t) if t in self._verify_threads else None)
         thread.finished.connect(lambda iid=image_id: self._verifying_ids.discard(iid))
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+
+    @Slot("QVariant")
+    def verifyBatch(self, image_ids) -> None:
+        if self._batch_verifier is None:
+            return
+        if isinstance(image_ids, QJSValue):
+            image_ids = image_ids.toVariant() or []
+        image_ids = list(image_ids)
+        if not image_ids or self._batch_verify_in_progress:
+            return
+        self._batch_verify_in_progress = True
+        thread = _BatchVerifyThread(self._batch_verifier, image_ids)
+        thread.result.connect(self._on_batch_verify_result)
+        self._batch_verify_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._batch_verify_threads.remove(t) if t in self._batch_verify_threads else None)
         thread.finished.connect(thread.deleteLater)
         thread.start()
 
@@ -189,6 +210,15 @@ class LibraryViewModel(QObject):
         if status:
             self._grid_model.updateItemStatus(image_id, status)
             self.imageStatusChanged.emit(image_id, status)
+
+    def _on_batch_verify_result(self, results: list) -> None:
+        self._batch_verify_in_progress = False
+        for item in results:
+            image_id = item.get("id")
+            status = item.get("file_status")
+            if image_id and status:
+                self._grid_model.updateItemStatus(image_id, status)
+                self.imageStatusChanged.emit(image_id, status)
 
     def _on_relocate_result(
         self, image_id: str, old_path: str, new_path: str, data: dict | None
@@ -358,3 +388,18 @@ class _VerifyThread(QThread):
             self.result.emit(status)
         except Exception:
             self.result.emit(None)
+
+
+class _BatchVerifyThread(QThread):
+    result = Signal(object)  # list[dict] — [{"id": ..., "file_status": ...}, ...]
+
+    def __init__(self, verifier: Callable, image_ids: list, parent=None):
+        super().__init__(parent)
+        self._verifier = verifier
+        self._image_ids = image_ids
+
+    def run(self) -> None:
+        try:
+            self.result.emit(self._verifier(self._image_ids))
+        except Exception:
+            self.result.emit([])
