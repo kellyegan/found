@@ -29,6 +29,7 @@ class LibraryViewModel(QObject):
         filter_state=None,
         image_verifier: Callable | None = None,
         batch_verifier: Callable | None = None,
+        missing_id_fetcher: Callable | None = None,
         bulk_deleter: Callable | None = None,
         path_patcher: Callable | None = None,
         prefix_relocator: Callable | None = None,
@@ -40,6 +41,7 @@ class LibraryViewModel(QObject):
         self._page_fetcher = page_fetcher
         self._image_verifier = image_verifier
         self._batch_verifier = batch_verifier
+        self._missing_id_fetcher = missing_id_fetcher
         self._bulk_deleter = bulk_deleter
         self._path_patcher = path_patcher
         self._prefix_relocator = prefix_relocator
@@ -53,6 +55,8 @@ class LibraryViewModel(QObject):
         self._verifying_ids: set = set()
         self._batch_verify_threads: list = []
         self._batch_verify_in_progress = False
+        self._verify_missing_threads: list = []
+        self._verify_missing_in_progress = False
         self._delete_threads: list = []
         self._relocate_threads: list = []
         self._relocate_prefix_threads: list = []
@@ -114,6 +118,20 @@ class LibraryViewModel(QObject):
         thread.result.connect(self._on_batch_verify_result)
         self._batch_verify_threads.append(thread)
         thread.finished.connect(lambda t=thread: self._batch_verify_threads.remove(t) if t in self._batch_verify_threads else None)
+        thread.finished.connect(thread.deleteLater)
+        thread.start()
+
+    @Slot()
+    def verifyMissing(self) -> None:
+        if self._missing_id_fetcher is None:
+            return
+        if self._verify_missing_in_progress:
+            return
+        self._verify_missing_in_progress = True
+        thread = _VerifyMissingThread(self._missing_id_fetcher)
+        thread.result.connect(self._on_verify_missing_result)
+        self._verify_missing_threads.append(thread)
+        thread.finished.connect(lambda t=thread: self._verify_missing_threads.remove(t) if t in self._verify_missing_threads else None)
         thread.finished.connect(thread.deleteLater)
         thread.start()
 
@@ -219,6 +237,14 @@ class LibraryViewModel(QObject):
             if image_id and status:
                 self._grid_model.updateItemStatus(image_id, status)
                 self.imageStatusChanged.emit(image_id, status)
+
+    def _on_verify_missing_result(self, page: dict | None) -> None:
+        self._verify_missing_in_progress = False
+        if not page:
+            return
+        image_ids = [item["id"] for item in page.get("items", []) if item.get("id")]
+        if image_ids:
+            self.verifyBatch(image_ids)
 
     def _on_relocate_result(
         self, image_id: str, old_path: str, new_path: str, data: dict | None
@@ -403,3 +429,17 @@ class _BatchVerifyThread(QThread):
             self.result.emit(self._verifier(self._image_ids))
         except Exception:
             self.result.emit([])
+
+
+class _VerifyMissingThread(QThread):
+    result = Signal(object)  # dict | None — page of currently-missing images
+
+    def __init__(self, fetcher: Callable, parent=None):
+        super().__init__(parent)
+        self._fetcher = fetcher
+
+    def run(self) -> None:
+        try:
+            self.result.emit(self._fetcher())
+        except Exception:
+            self.result.emit(None)
