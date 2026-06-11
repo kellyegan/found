@@ -38,6 +38,14 @@ Item {
         root._searchOpen = false
     }
 
+    function _selectSuggestion(id, name) {
+        hideTimer.stop()
+        root.addRequested(id, name)
+        if (root.searchState) root.searchState.clear()
+        addInput.text = ""
+        root._searchOpen = false
+    }
+
     Timer {
         id: hideTimer
         interval: 200
@@ -202,13 +210,7 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            hideTimer.stop()
-                            root.addRequested(modelData.id, modelData.name)
-                            if (root.searchState) root.searchState.clear()
-                            addInput.text = ""
-                            root._searchOpen = false
-                        }
+                        onClicked: root._selectSuggestion(modelData.id, modelData.name)
                     }
                 }
             }
