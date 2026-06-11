@@ -191,6 +191,25 @@ def test_tag_exclude_appears_in_query_params(qapp):
     assert "tag" not in fsm.queryParams
 
 
+def test_set_tag_filter_with_name_uses_name_in_query_params(qapp):
+    fsm = FilterStateManager()
+    fsm.setTagFilter("tag-1", "include", "nature")
+    assert fsm.queryParams.get("tag") == "nature"
+
+
+def test_set_tag_filter_exclude_with_name_uses_name_in_query_params(qapp):
+    fsm = FilterStateManager()
+    fsm.setTagFilter("tag-1", "exclude", "nature")
+    assert fsm.queryParams.get("exclude_tag") == "nature"
+
+
+def test_set_tag_filter_off_clears_tag_name(qapp):
+    fsm = FilterStateManager()
+    fsm.setTagFilter("tag-1", "include", "nature")
+    fsm.setTagFilter("tag-1", "off")
+    assert "tag" not in fsm.queryParams
+
+
 def test_set_tag_filter_emits_filters_changed(qapp):
     fsm = FilterStateManager()
     received = []

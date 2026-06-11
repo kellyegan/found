@@ -88,6 +88,18 @@ def test_load_transitions_to_empty_when_no_images(qapp):
     assert vm.loadingState == "Empty"
 
 
+def test_load_transitions_to_no_results_when_filtered_and_no_images(qapp):
+    fsm = FilterStateManager()
+    fsm.setTagFilter("tag-1", "include", "nature")
+    vm = LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100, **kw: _page(items=[]),
+        filter_state=fsm,
+    )
+    vm.load()
+    wait_for_state(vm, "NoResults")
+    assert vm.loadingState == "NoResults"
+
+
 def test_load_transitions_to_ready_when_images_exist(qapp):
     vm = _make_vm(fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS))
     vm.load()

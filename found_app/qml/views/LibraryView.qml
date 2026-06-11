@@ -26,6 +26,8 @@ Item {
         rightPanelOpen: root.rightPanelOpen
         emptyStateText: "NO IMAGES YET"
         emptyStateSubtext: "DRAG AND DROP HERE TO ADD"
+        noResultsText: "NO IMAGES FOUND"
+        noResultsSubtext: "TRY A DIFFERENT SEARCH OR FILTER"
         removeContextLabel: "the library"
 
         onLoadMoreRequested: root.loadMoreRequested()
