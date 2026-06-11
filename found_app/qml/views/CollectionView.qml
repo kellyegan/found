@@ -12,6 +12,7 @@ Item {
 
     signal loadMoreRequested()
     signal removeImagesRequested(var imageIds, bool alsoFromLibrary)
+    signal viewportVerifyRequested(var imageIds)
 
     function scrollToActiveImage() { pane.scrollToActiveImage() }
 
@@ -30,5 +31,6 @@ Item {
         onRemoveImagesRequested: function(imageIds, alsoFromLibrary) {
             root.removeImagesRequested(imageIds, alsoFromLibrary)
         }
+        onViewportVerifyRequested: function(imageIds) { root.viewportVerifyRequested(imageIds) }
     }
 }

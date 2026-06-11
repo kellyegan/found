@@ -142,8 +142,9 @@ class ImageService:
             self.repo.update(image)
         return thumb_path
 
-    def batch_verify(self, image_ids: List[UUID]) -> None:
+    def batch_verify(self, image_ids: List[UUID]) -> List[Tuple[UUID, FileStatus]]:
         """Verify file existence and refresh metadata for multiple images."""
+        results: List[Tuple[UUID, FileStatus]] = []
         for image_id in image_ids:
             image = self.repo.get_by_id(image_id)
             if not image:
@@ -162,6 +163,8 @@ class ImageService:
                 except (UnsupportedFileTypeError, OSError):
                     image.file_status = FileStatus.inaccessible
             self.repo.update(image)
+            results.append((image.id, image.file_status))
+        return results
 
     def verify_file(self, image_id: UUID) -> Optional[Image]:
         image = self.repo.get_by_id(image_id)

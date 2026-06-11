@@ -412,6 +412,242 @@ def test_verify_image_emits_image_status_changed(qapp):
     assert received == [("aaaa-0001", "missing")]
 
 
+def test_verify_image_ignores_concurrent_duplicate_calls(qapp):
+    import time
+
+    calls = []
+
+    def verifier(image_id):
+        calls.append(image_id)
+        time.sleep(0.1)
+        return "missing"
+
+    vm = _make_vm_with_verifier(verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    vm.imageStatusChanged.connect(lambda *_: loop.quit())
+    QTimer.singleShot(2000, loop.quit)
+    vm.verifyImage("aaaa-0001")
+    vm.verifyImage("aaaa-0001")
+    loop.exec()
+
+    assert calls == ["aaaa-0001"]
+
+
+# ---------------------------------------------------------------------------
+# verifyBatch
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_batch_verifier(batch_verifier=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        batch_verifier=batch_verifier,
+    )
+
+
+def _wait_for_image_status_changed(vm, count=1, timeout_ms=2000):
+    received = []
+    loop = QEventLoop()
+
+    def on_changed(image_id, status):
+        received.append((image_id, status))
+        if len(received) >= count:
+            loop.quit()
+
+    vm.imageStatusChanged.connect(on_changed)
+    QTimer.singleShot(timeout_ms, loop.quit)
+    loop.exec()
+    return received
+
+
+def test_verify_batch_calls_batch_verifier_with_ids(qapp):
+    calls = []
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001", "bbbb-0002"])
+    _wait_for_image_status_changed(vm, count=2)
+
+    assert calls == [["aaaa-0001", "bbbb-0002"]]
+
+
+def test_verify_batch_emits_image_status_changed_per_result(qapp):
+    def batch_verifier(image_ids):
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001", "bbbb-0002"])
+    received = _wait_for_image_status_changed(vm, count=2)
+
+    assert sorted(received) == [("aaaa-0001", "missing"), ("bbbb-0002", "missing")]
+
+
+def test_verify_batch_updates_grid_model_status(qapp):
+    def batch_verifier(image_ids):
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001"])
+    _wait_for_image_status_changed(vm, count=1)
+
+    assert vm.missingCount == 1
+
+
+def test_verify_batch_no_op_when_no_verifier(qapp):
+    vm = _make_vm_with_batch_verifier(batch_verifier=None)
+    vm.load()
+    wait_for_state(vm, "Ready")
+    vm.verifyBatch(["aaaa-0001"])  # must not raise
+    assert vm.missingCount == 0
+
+
+def test_verify_batch_no_op_with_empty_list(qapp):
+    calls = []
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        return []
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch([])
+
+    assert calls == []
+
+
+def test_verify_batch_ignores_concurrent_duplicate_calls(qapp):
+    import time
+
+    calls = []
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        time.sleep(0.1)
+        return [{"id": iid, "file_status": "missing"} for iid in image_ids]
+
+    vm = _make_vm_with_batch_verifier(batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyBatch(["aaaa-0001"])
+    vm.verifyBatch(["aaaa-0001"])
+    _wait_for_image_status_changed(vm, count=1)
+
+    assert calls == [["aaaa-0001"]]
+
+
+# ---------------------------------------------------------------------------
+# verifyMissing
+# ---------------------------------------------------------------------------
+
+
+def _make_vm_with_missing_fetcher(missing_id_fetcher=None, batch_verifier=None):
+    return LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: _page(items=SAMPLE_ITEMS),
+        missing_id_fetcher=missing_id_fetcher,
+        batch_verifier=batch_verifier,
+    )
+
+
+def test_verify_missing_calls_batch_verifier_with_fetched_ids(qapp):
+    batch_calls = []
+
+    def missing_id_fetcher():
+        return _page(items=[{"id": "aaaa-0001"}, {"id": "bbbb-0002"}])
+
+    def batch_verifier(image_ids):
+        batch_calls.append(image_ids)
+        return [{"id": iid, "file_status": "available"} for iid in image_ids]
+
+    vm = _make_vm_with_missing_fetcher(missing_id_fetcher, batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyMissing()
+    _wait_for_image_status_changed(vm, count=2)
+
+    assert batch_calls == [["aaaa-0001", "bbbb-0002"]]
+
+
+def test_verify_missing_no_op_when_no_fetcher(qapp):
+    calls = []
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        return []
+
+    vm = _make_vm_with_missing_fetcher(missing_id_fetcher=None, batch_verifier=batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyMissing()  # must not raise
+
+    assert calls == []
+
+
+def test_verify_missing_no_op_when_fetcher_returns_no_items(qapp):
+    calls = []
+
+    def missing_id_fetcher():
+        return _page(items=[])
+
+    def batch_verifier(image_ids):
+        calls.append(image_ids)
+        return []
+
+    vm = _make_vm_with_missing_fetcher(missing_id_fetcher, batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    loop = QEventLoop()
+    QTimer.singleShot(200, loop.quit)
+    vm.verifyMissing()
+    loop.exec()
+
+    assert calls == []
+
+
+def test_verify_missing_ignores_concurrent_duplicate_calls(qapp):
+    import time
+
+    fetch_calls = []
+
+    def missing_id_fetcher():
+        fetch_calls.append(1)
+        time.sleep(0.1)
+        return _page(items=[{"id": "aaaa-0001"}])
+
+    def batch_verifier(image_ids):
+        return [{"id": iid, "file_status": "available"} for iid in image_ids]
+
+    vm = _make_vm_with_missing_fetcher(missing_id_fetcher, batch_verifier)
+    vm.load()
+    wait_for_state(vm, "Ready")
+
+    vm.verifyMissing()
+    vm.verifyMissing()
+    _wait_for_image_status_changed(vm, count=1)
+
+    assert fetch_calls == [1]
+
+
 # ---------------------------------------------------------------------------
 # removeImages
 # ---------------------------------------------------------------------------

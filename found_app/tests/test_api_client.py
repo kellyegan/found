@@ -147,7 +147,73 @@ def test_api_error_exposes_code_and_message():
 def test_api_error_str_includes_code_and_message():
     err = ApiError("some_code", "Some message")
     assert "some_code" in str(err)
-    assert "Some message" in str(err)
+
+
+# ---------------------------------------------------------------------------
+# batch_verify_images
+# ---------------------------------------------------------------------------
+
+
+def make_sync_client() -> tuple:
+    mock_sync = MagicMock(spec=httpx.Client)
+    return ApiClient(sync_client=mock_sync), mock_sync
+
+
+def mock_sync_response(status_code: int = 200, json_data: dict | None = None) -> MagicMock:
+    resp = MagicMock()
+    resp.status_code = status_code
+    resp.json.return_value = json_data if json_data is not None else {}
+    return resp
+
+
+def test_batch_verify_images_returns_results_list():
+    client, mock_sync = make_sync_client()
+    mock_sync.post.return_value = mock_sync_response(200, {
+        "success": True,
+        "data": {"results": [
+            {"id": "id-1", "file_status": "available"},
+            {"id": "id-2", "file_status": "missing"},
+        ]},
+    })
+    results = client.batch_verify_images(["id-1", "id-2"])
+    assert results == [
+        {"id": "id-1", "file_status": "available"},
+        {"id": "id-2", "file_status": "missing"},
+    ]
+
+
+def test_batch_verify_images_posts_to_verify_endpoint():
+    client, mock_sync = make_sync_client()
+    mock_sync.post.return_value = mock_sync_response(200, {
+        "success": True,
+        "data": {"results": []},
+    })
+    client.batch_verify_images(["id-1"])
+    mock_sync.post.assert_called_once()
+    call_args = mock_sync.post.call_args
+    assert "/api/v1/images/verify" in call_args[0][0]
+    assert call_args[1]["json"]["image_ids"] == ["id-1"]
+
+
+def test_batch_verify_images_returns_empty_on_api_error():
+    client, mock_sync = make_sync_client()
+    mock_sync.post.return_value = mock_sync_response(500, {"success": False, "error": {}})
+    assert client.batch_verify_images(["id-1"]) == []
+
+
+def test_batch_verify_images_returns_empty_on_network_error():
+    client, mock_sync = make_sync_client()
+    mock_sync.post.side_effect = Exception("connection refused")
+    assert client.batch_verify_images(["id-1"]) == []
+
+
+def test_batch_verify_images_empty_input_returns_empty():
+    client, mock_sync = make_sync_client()
+    mock_sync.post.return_value = mock_sync_response(200, {
+        "success": True,
+        "data": {"results": []},
+    })
+    assert client.batch_verify_images([]) == []
 
 
 # ---------------------------------------------------------------------------

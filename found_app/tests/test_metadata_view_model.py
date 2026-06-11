@@ -337,6 +337,35 @@ def test_multi_selection_clears_metadata(qapp):
     assert vm.imageId == ""
 
 
+# ---------------------------------------------------------------------------
+# updateFileStatus
+# ---------------------------------------------------------------------------
+
+def test_update_file_status_available_clears_is_missing(qapp):
+    vm = _vm(fetcher=lambda image_id: MISSING_IMAGE)
+    _load(vm)
+    assert vm.isMissing is True
+    vm.updateFileStatus("available")
+    assert vm.isMissing is False
+
+
+def test_update_file_status_missing_sets_is_missing(qapp):
+    vm = _vm()
+    _load(vm)
+    assert vm.isMissing is False
+    vm.updateFileStatus("missing")
+    assert vm.isMissing is True
+
+
+def test_update_file_status_emits_metadata_changed(qapp):
+    vm = _vm(fetcher=lambda image_id: MISSING_IMAGE)
+    _load(vm)
+    received = []
+    vm.metadataChanged.connect(lambda: received.append(1))
+    vm.updateFileStatus("available")
+    assert len(received) == 1
+
+
 def test_switching_selection_loads_new_image(qapp):
     images = {
         "img-001": {**SAMPLE_IMAGE, "id": "img-001", "filename": "first.jpg"},

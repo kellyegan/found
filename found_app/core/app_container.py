@@ -44,6 +44,8 @@ class AppContainer:
             page_fetcher=self._api_client.fetch_images_page,
             filter_state=self._filter_state,
             image_verifier=self._api_client.verify_image,
+            batch_verifier=self._api_client.batch_verify_images,
+            missing_id_fetcher=lambda: self._api_client.fetch_images_page(file_status="missing", limit=500),
             bulk_deleter=self._api_client.bulk_delete_images,
             path_patcher=self._api_client.patch_path,
             prefix_relocator=self._api_client.relocate_by_prefix,

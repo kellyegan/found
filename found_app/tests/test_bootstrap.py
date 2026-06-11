@@ -117,3 +117,11 @@ def test_library_state_has_image_fetcher_wired(container):
 
 def test_library_state_has_preview_relocator_wired(container):
     assert container._library_state._preview_relocator is not None
+
+
+def test_library_state_has_batch_verifier_wired(container):
+    assert container._library_state._batch_verifier is not None
+
+
+def test_library_state_has_missing_id_fetcher_wired(container):
+    assert container._library_state._missing_id_fetcher is not None

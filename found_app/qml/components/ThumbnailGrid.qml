@@ -14,6 +14,29 @@ Item {
     signal loadMoreRequested()
     signal removeRequested(string imageId, string filename)
     signal locateRequested(string imageId)
+    signal viewportVerifyRequested(var imageIds)
+
+    property var _pendingMissingIds: []
+
+    function _queueMissingVerify(imageId) {
+        if (!imageId || root._pendingMissingIds.indexOf(imageId) !== -1) return
+        root._pendingMissingIds.push(imageId)
+        missingVerifyTimer.restart()
+    }
+
+    // Debounce viewport-entry verification so a fast scroll through many
+    // missing tiles results in one batched check, not one per tile.
+    Timer {
+        id: missingVerifyTimer
+        interval: 600
+        repeat: false
+        onTriggered: {
+            if (root._pendingMissingIds.length > 0) {
+                root.viewportVerifyRequested(root._pendingMissingIds)
+                root._pendingMissingIds = []
+            }
+        }
+    }
 
     function scrollToX(x) {
         grid.contentX = x
@@ -120,6 +143,12 @@ Item {
                 root.removeRequested(id, model.filename ?? "")
             }
             onLocateRequested: function(id) { root.locateRequested(id) }
+
+            Component.onCompleted: {
+                if ((model.fileStatus ?? "available") === "missing") {
+                    root._queueMissingVerify(model.imageId ?? "")
+                }
+            }
         }
 
         // Tap on any empty area (margins, space past last row) clears selection.

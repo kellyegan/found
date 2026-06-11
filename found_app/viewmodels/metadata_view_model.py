@@ -86,6 +86,11 @@ class MetadataViewModel(QObject):
         thread.finished.connect(thread.deleteLater)
         thread.start()
 
+    @Slot(str)
+    def updateFileStatus(self, status: str) -> None:
+        self._is_missing = status == "missing"
+        self.metadataChanged.emit()
+
     @Slot()
     def clear(self) -> None:
         self._reset_fields()

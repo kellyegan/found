@@ -12,6 +12,7 @@ Item {
     signal loadMoreRequested()
     signal removeImagesRequested(var imageIds)
     signal locateRequested(string imageId)
+    signal viewportVerifyRequested(var imageIds)
 
     function scrollToX(x) { pane.scrollToX(x) }
     function scrollToActiveImage() { pane.scrollToActiveImage() }
@@ -30,6 +31,7 @@ Item {
         onLoadMoreRequested: root.loadMoreRequested()
         onRemoveImagesRequested: function(imageIds, _) { root.removeImagesRequested(imageIds) }
         onLocateRequested: function(imageId) { root.locateRequested(imageId) }
+        onViewportVerifyRequested: function(imageIds) { root.viewportVerifyRequested(imageIds) }
         onScrollXChanged: function(x) { NavigationManager.updateScrollX(x) }
     }
 }

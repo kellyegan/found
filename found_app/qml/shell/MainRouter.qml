@@ -5,6 +5,7 @@ import "../components"
 
 Item {
     id: root
+    objectName: "mainRouter"
     anchors.fill: parent
 
     property string appState: "Launching"
@@ -186,6 +187,7 @@ Item {
             onLoadMoreRequested: LibraryState.load_more()
             onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
             onLocateRequested: function(imageId) { LibraryState.requestLocate(imageId) }
+            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
         }
 
         // Central navigation handler — persists per-view panel states and restores
@@ -312,6 +314,7 @@ Item {
                     alsoFromLibrary
                 )
             }
+            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
         }
 
         // Image view (Slice 5)
@@ -618,11 +621,42 @@ Item {
         }
     }
 
-    // Propagate image status changes from library verification to the active collection grid.
+    // Propagate image status changes from library verification to the active collection grid,
+    // and refresh the metadata panel's missing-file banner if it's showing the same image.
     Connections {
         target: LibraryState
         function onImageStatusChanged(imageId, status) {
             CollectionsState.collectionGridModel.updateItemStatus(imageId, status)
+            if (imageId === MetadataState.imageId) {
+                MetadataState.updateFileStatus(status)
+            }
+        }
+    }
+
+    // Re-check a missing image's file when its metadata loads in the image view —
+    // the file may have reappeared since the grid was last loaded.
+    Connections {
+        target: MetadataState
+        function onMetadataChanged() {
+            if (MetadataState.isMissing && NavigationManager.currentView === "image") {
+                LibraryState.verifyImage(MetadataState.imageId)
+            }
+        }
+    }
+
+    // Periodically re-check images marked missing, in case their files have
+    // reappeared (e.g. a removable drive was reconnected).
+    Timer {
+        id: missingPollTimer
+        objectName: "missingPollTimer"
+        interval: 120000
+        repeat: true
+        triggeredOnStart: true
+        running: root.appState === "Ready"
+        onTriggered: {
+            if (LibraryState.missingCount > 0) {
+                LibraryState.verifyMissing()
+            }
         }
     }
 }
