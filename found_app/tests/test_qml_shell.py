@@ -1113,6 +1113,22 @@ def test_image_grid_pane_empty_state_text_is_writable(engine):
     assert obj.property("emptyStateText") == "Nothing here"
 
 
+def test_image_grid_pane_no_results_text_defaults_to_no_images_found(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("noResultsText") == "NO IMAGES FOUND"
+
+
+def test_image_grid_pane_no_results_text_is_writable(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    obj.setProperty("noResultsText", "Nothing matches")
+    assert obj.property("noResultsText") == "Nothing matches"
+
+
+def test_image_grid_pane_no_results_subtext_defaults_to_empty(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    assert obj.property("noResultsSubtext") == ""
+
+
 def test_image_grid_pane_remove_context_label_defaults_to_library(engine):
     obj = load_component(engine, "components/ImageGridPane.qml")
     assert obj.property("removeContextLabel") == "the library"

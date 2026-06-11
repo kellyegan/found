@@ -10,6 +10,8 @@ Item {
     property bool rightPanelOpen: false
     property string emptyStateText: "No images"
     property string emptyStateSubtext: ""
+    property string noResultsText: "NO IMAGES FOUND"
+    property string noResultsSubtext: ""
     property string removeContextLabel: "the library"
     property string removeCheckboxLabel: ""
 
@@ -121,12 +123,14 @@ Item {
 
     Column {
         anchors.centerIn: parent
-        visible: root.loadingState === "Empty"
+        visible: root.loadingState === "Empty" || root.loadingState === "NoResults"
         spacing: Theme.spacingSm
+
+        readonly property bool isNoResults: root.loadingState === "NoResults"
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: root.emptyStateText
+            text: parent.isNoResults ? root.noResultsText : root.emptyStateText
             font.pixelSize: Theme.fontSizeLg
             font.weight: Font.DemiBold
             font.family: Theme.fontFamily
@@ -135,8 +139,9 @@ Item {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            visible: root.emptyStateSubtext !== ""
-            text: root.emptyStateSubtext
+            readonly property string subtext: parent.isNoResults ? root.noResultsSubtext : root.emptyStateSubtext
+            visible: subtext !== ""
+            text: subtext
             font.pixelSize: Theme.fontSizeMd
             font.family: Theme.fontFamily
             color: Theme.textMuted

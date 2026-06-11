@@ -10,6 +10,7 @@ from found_app.models.thumbnail_grid_model import ThumbnailGridModel
 class LibraryLoadingState(Enum):
     Loading = auto()
     Empty = auto()
+    NoResults = auto()
     Ready = auto()
     Error = auto()
 
@@ -293,7 +294,12 @@ class LibraryViewModel(QObject):
         self._grid_model.appendPage(items, cursor, has_more)
 
         if is_initial:
-            new_state = LibraryLoadingState.Empty if not items else LibraryLoadingState.Ready
+            if items:
+                new_state = LibraryLoadingState.Ready
+            elif self._filter_state is not None and self._filter_state.hasActiveFilters:
+                new_state = LibraryLoadingState.NoResults
+            else:
+                new_state = LibraryLoadingState.Empty
             self._set_state(new_state)
 
     def shutdown(self) -> None:
