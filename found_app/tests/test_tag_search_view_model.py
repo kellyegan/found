@@ -221,6 +221,13 @@ def test_select_tag_calls_filter_state_set_tag_filter(qapp):
     assert filter_state.tagFilters == {"tag-1": "include"}
 
 
+def test_select_tag_passes_tag_name_to_filter_state(qapp):
+    filter_state = FilterStateManager()
+    vm = _vm(filter_state=filter_state)
+    vm.selectTag("tag-2", "nature")
+    assert filter_state.queryParams.get("tag") == "nature"
+
+
 def test_select_tag_mode_is_include(qapp):
     filter_state = FilterStateManager()
     vm = _vm(filter_state=filter_state)

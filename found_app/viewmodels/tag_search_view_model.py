@@ -79,7 +79,7 @@ class TagSearchViewModel(QObject):
         self._tag_names[tag_id] = tag_name
         self.tagNamesChanged.emit()
         if self._filter_state is not None:
-            self._filter_state.setTagFilter(tag_id, "include")
+            self._filter_state.setTagFilter(tag_id, "include", tag_name)
         self.clear()
 
     # ------------------------------------------------------------------

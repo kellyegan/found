@@ -10,6 +10,7 @@ class FilterStateManager(QObject):
         super().__init__(parent)
         self._category_filters: dict[str, str] = {}  # id -> "include" | "exclude"
         self._tag_filters: dict[str, str] = {}        # id -> "include" | "exclude"
+        self._tag_names: dict[str, str] = {}           # id -> name, used for query params
         self._show_missing_only: bool = False
         self._import_job: str | None = None
 
@@ -49,10 +50,11 @@ class FilterStateManager(QObject):
             elif mode == "exclude":
                 params["exclude_category"] = cat_id
         for tag_id, mode in self._tag_filters.items():
+            tag_value = self._tag_names.get(tag_id, tag_id)
             if mode == "include":
-                params["tag"] = tag_id
+                params["tag"] = tag_value
             elif mode == "exclude":
-                params["exclude_tag"] = tag_id
+                params["exclude_tag"] = tag_value
         if self._show_missing_only:
             params["file_status"] = "missing"
         if self._import_job:
@@ -92,11 +94,15 @@ class FilterStateManager(QObject):
     # ------------------------------------------------------------------
 
     @Slot(str, str)
-    def setTagFilter(self, tag_id: str, mode: str) -> None:
+    @Slot(str, str, str)
+    def setTagFilter(self, tag_id: str, mode: str, tag_name: str = "") -> None:
         if mode == "off":
             self._tag_filters.pop(tag_id, None)
+            self._tag_names.pop(tag_id, None)
         else:
             self._tag_filters[tag_id] = mode
+            if tag_name:
+                self._tag_names[tag_id] = tag_name
         self.filtersChanged.emit()
 
     @Slot(str)
