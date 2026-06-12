@@ -1332,6 +1332,33 @@ def test_thumbnail_tile_still_loads_with_drag_support(engine):
 
 
 # ---------------------------------------------------------------------------
+# CategoryChip
+# ---------------------------------------------------------------------------
+
+
+def test_category_chip_qml_exists():
+    assert (QML_DIR / "components/CategoryChip.qml").exists()
+
+
+def test_category_chip_loads(engine):
+    load_component(engine, "components/CategoryChip.qml")
+
+
+def test_category_chip_off_state_color_uses_theme_border(theme_qml_engine):
+    from found_app.theme.palettes import FOUND_LIGHT
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    original_palette = dict(active_theme._palette)
+    active_theme.setPalette(FOUND_LIGHT)
+    try:
+        obj = load_component(theme_qml_engine, "components/CategoryChip.qml")
+        assert obj.property("color").name() == FOUND_LIGHT["border"]
+    finally:
+        active_theme.setPalette(original_palette)
+
+
+# ---------------------------------------------------------------------------
 # CategoriesBar
 # ---------------------------------------------------------------------------
 
