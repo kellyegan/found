@@ -21,8 +21,14 @@ HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$")
 
 COLOR_PROPS = ["background", "surface", "text", "textMuted", "accent", "border"]
 FONT_SIZE_PROPS = ["fontSizeSm", "fontSizeMd", "fontSizeLg", "fontSizeXl"]
+TYPOGRAPHY_PROPS = ["fontFamily"] + FONT_SIZE_PROPS
 SPACING_PROPS = ["spacingXs", "spacingSm", "spacingMd", "spacingLg", "spacingXl"]
 LAYOUT_PROPS = ["overlayWidth"]
+SPACING_LAYOUT_PROPS = SPACING_PROPS + LAYOUT_PROPS + [
+    "horizontalMargin",
+    "horizontalTextMargin",
+    "horizontalTextPadding",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -36,6 +42,16 @@ def test_color_property_is_valid_hex(qapp, prop):
     value = getattr(theme, prop)
     assert isinstance(value, str), f"{prop} should be a string"
     assert HEX_COLOR.match(value), f"{prop} value {value!r} is not a valid hex color"
+
+
+@pytest.mark.parametrize("prop", COLOR_PROPS)
+def test_color_property_reflects_palette_change(qapp, prop):
+    theme = ThemeManager()
+    new_value = "#123456"
+
+    theme._palette[prop] = new_value
+
+    assert getattr(theme, prop) == new_value
 
 
 # ---------------------------------------------------------------------------
@@ -60,6 +76,16 @@ def test_font_size_property_is_positive_int(qapp, prop):
 def test_font_sizes_are_strictly_increasing(qapp):
     theme = ThemeManager()
     assert theme.fontSizeSm < theme.fontSizeMd < theme.fontSizeLg < theme.fontSizeXl
+
+
+@pytest.mark.parametrize("prop", TYPOGRAPHY_PROPS)
+def test_typography_property_reflects_palette_change(qapp, prop):
+    theme = ThemeManager()
+    new_value = "Comic Sans" if prop == "fontFamily" else 999
+
+    theme._palette[prop] = new_value
+
+    assert getattr(theme, prop) == new_value
 
 
 # ---------------------------------------------------------------------------
@@ -104,9 +130,34 @@ def test_overlay_width_matches_sidebar_and_metadata_panel(qapp):
     assert theme.overlayWidth == 260
 
 
+@pytest.mark.parametrize("prop", SPACING_LAYOUT_PROPS)
+def test_spacing_layout_property_reflects_palette_change(qapp, prop):
+    theme = ThemeManager()
+    new_value = 999
+
+    theme._palette[prop] = new_value
+
+    assert getattr(theme, prop) == new_value
+
+
 # ---------------------------------------------------------------------------
 # QML integration
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Reactive palette
+# ---------------------------------------------------------------------------
+
+
+def test_palette_changed_signal_emits(qapp):
+    theme = ThemeManager()
+    received = []
+    theme.paletteChanged.connect(lambda: received.append(True))
+
+    theme.paletteChanged.emit()
+
+    assert received == [True]
 
 
 def test_theme_properties_accessible_in_qml(qapp, tmp_path):
