@@ -7,7 +7,7 @@ Covers:
   independent copy, not a shared reference)
 """
 
-from found_app.theme.palettes import FOUND_DARK, FOUND_LIGHT
+from found_app.theme.palettes import FOUND_DARK, FOUND_LIGHT, THEMES
 from found_app.theme.theme import ThemeManager
 
 
@@ -22,6 +22,11 @@ def test_found_light_has_same_keys_as_found_dark_and_differs_in_color():
     assert set(FOUND_LIGHT.keys()) == set(FOUND_DARK.keys())
     assert FOUND_LIGHT["background"] != FOUND_DARK["background"]
     assert FOUND_LIGHT["text"] != FOUND_DARK["text"]
+
+
+def test_themes_registry_groups_found_palettes():
+    assert THEMES["Found"]["dark"] is FOUND_DARK
+    assert THEMES["Found"]["light"] is FOUND_LIGHT
 
 
 def test_found_light_typography_and_spacing_match_found_dark():

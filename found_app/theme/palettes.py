@@ -45,3 +45,8 @@ FOUND_LIGHT = {
     "spacingLg": 24,
     "spacingXl": 40,
 }
+
+# Named theme families, each grouping a light and dark palette variant.
+THEMES = {
+    "Found": {"light": FOUND_LIGHT, "dark": FOUND_DARK},
+}
