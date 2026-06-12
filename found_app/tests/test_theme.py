@@ -179,6 +179,19 @@ def test_set_theme_name_persists_and_restores(qapp, tmp_path):
     assert restored.themeName == "Found"
 
 
+def test_mode_defaults_to_system(qapp):
+    theme = ThemeManager()
+    assert theme.mode == "system"
+
+
+def test_set_mode_persists_and_restores(qapp, tmp_path):
+    theme = ThemeManager(settings=_app_settings(tmp_path))
+    theme.setMode("dark")
+
+    restored = ThemeManager(settings=_app_settings(tmp_path))
+    assert restored.mode == "dark"
+
+
 def test_set_palette_swaps_active_palette_and_notifies(qapp):
     theme = ThemeManager()
     received = []

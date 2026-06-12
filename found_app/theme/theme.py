@@ -15,6 +15,9 @@ class ThemeManager(QObject):
         self._theme_name = (
             self._settings.get("theme/name", "Found") if self._settings else "Found"
         )
+        self._mode = (
+            self._settings.get("theme/mode", "system") if self._settings else "system"
+        )
 
     @Property(str, notify=paletteChanged)
     def themeName(self) -> str:
@@ -25,6 +28,16 @@ class ThemeManager(QObject):
         self._theme_name = name
         if self._settings:
             self._settings.set("theme/name", name)
+
+    @Property(str, notify=paletteChanged)
+    def mode(self) -> str:
+        return self._mode
+
+    @Slot(str)
+    def setMode(self, mode: str) -> None:
+        self._mode = mode
+        if self._settings:
+            self._settings.set("theme/mode", mode)
 
     def setPalette(self, palette: dict) -> None:
         self._palette = dict(palette)
