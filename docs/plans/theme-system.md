@@ -224,7 +224,11 @@ literals) to use tokens and primitives.
 - [ ] Convert `TitleBar.qml`: replace hardcoded literals (including
   `#ff8800`/`#ff4444`/`#cc6666` — decide whether these map to
   `Theme.warningColor` or warrant a new semantic `errorColor` token added
-  back in Section 2's palette); remove from lint allowlist.
+  back in Section 2's palette). While deciding, also rename `warningColor`
+  to `warning` to match the naming pattern of the other color tokens
+  (`background`, `surface`, `text`, `accent`, `border`) — update
+  `theme.py`, `palettes.py`, and the 3 existing QML usages; remove from
+  lint allowlist.
 - [ ] Run full suite.
 
 ### Feature 5.7 — `theme/05-rollout-filtering`
