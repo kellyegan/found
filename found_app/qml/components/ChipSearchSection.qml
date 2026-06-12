@@ -1,4 +1,5 @@
 import QtQuick
+import Found.Theme 1.0
 
 // Generic search-input + chip-list section used for Tags and Categories.
 // Pass searchState as the relevant context object (TagEditorSearchState or

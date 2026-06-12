@@ -125,7 +125,7 @@ QML files off the `Theme` context property.
   `TitleBar.qml`) to `import Found.Theme`, removing reliance on the context
   property.
   Test: existing shell QML tests stay green after the import change.
-- [ ] Migrate filtering/chip components (`CategoriesBar.qml`,
+- [x] Migrate filtering/chip components (`CategoriesBar.qml`,
   `CategoryChip.qml`, `ChipSearchSection.qml`, `FilterChip.qml`,
   `FilterDropdown.qml`, `TagSearchField.qml`, `MetaRow.qml`) to
   `import Found.Theme`.
