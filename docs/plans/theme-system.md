@@ -85,27 +85,27 @@ used to persist the active theme name and mode.
 
 ### Feature 3.1 — `theme/03-settings-persistence`
 
-- [ ] Add `AppSettings`, a thin wrapper around `QSettings`, in
+- [x] Add `AppSettings`, a thin wrapper around `QSettings`, in
   `found_app/core/app_settings.py`.
   Test: `set(key, value)` then `get(key)` round-trips, including across a
   new `AppSettings` instance pointed at the same backing store (use
   `QSettings.IniFormat` with a temp file in tests).
-- [ ] `ThemeManager` accepts an `AppSettings` instance and persists the
+- [x] `ThemeManager` accepts an `AppSettings` instance and persists the
   selected theme name via `setThemeName(name)` / `themeName`.
   Test: setting the theme name and constructing a new `ThemeManager` with
   the same `AppSettings` restores it.
-- [ ] `ThemeManager` persists the active mode (`light` / `dark` / `system`)
+- [x] `ThemeManager` persists the active mode (`light` / `dark` / `system`)
   via `setMode(mode)` / `mode`, same round-trip test pattern.
-- [ ] Add `darkdetect` to `found_app/requirements.txt`; on startup, when
+- [x] Add `darkdetect` to `found_app/requirements.txt`; on startup, when
   `mode == "system"`, resolve to the light or dark palette via
   `darkdetect.theme()`.
   Test: with `darkdetect.theme()` mocked to return `"Light"`/`"Dark"`,
   `ThemeManager` resolves to `FOUND_LIGHT`/`FOUND_DARK` respectively.
-- [ ] Wire `AppSettings` construction into `AppContainer` and pass it to
+- [x] Wire `AppSettings` construction into `AppContainer` and pass it to
   `ThemeManager`.
   Test: `AppContainer`-level integration test confirms the wired
   `ThemeManager` is settings-backed.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ---
 
