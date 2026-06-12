@@ -14,6 +14,7 @@ import re
 import pytest
 from PySide6.QtCore import QUrl
 
+from found_app.theme.palettes import FOUND_LIGHT
 from found_app.theme.theme import ThemeManager
 
 
@@ -157,6 +158,17 @@ def test_palette_changed_signal_emits(qapp):
 
     theme.paletteChanged.emit()
 
+    assert received == [True]
+
+
+def test_set_palette_swaps_active_palette_and_notifies(qapp):
+    theme = ThemeManager()
+    received = []
+    theme.paletteChanged.connect(lambda: received.append(True))
+
+    theme.setPalette(FOUND_LIGHT)
+
+    assert theme.background == FOUND_LIGHT["background"]
     assert received == [True]
 
 
