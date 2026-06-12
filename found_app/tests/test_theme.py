@@ -223,6 +223,34 @@ def test_set_palette_swaps_active_palette_and_notifies(qapp):
     assert received == [True]
 
 
+def test_theme_registered_as_qml_singleton(qapp, tmp_path):
+    from PySide6.QtQml import QQmlEngine, QQmlComponent
+    from found_app.theme.theme import register_theme_singleton
+
+    theme = ThemeManager()
+    active_theme = register_theme_singleton(theme)
+
+    qml_file = tmp_path / "test_singleton.qml"
+    qml_file.write_text(
+        """
+        import QtQuick
+        import Found.Theme 1.0
+        Item {
+            property string bg: Theme.background
+        }
+        """
+    )
+
+    engine = QQmlEngine()
+    component = QQmlComponent(engine, QUrl.fromLocalFile(str(qml_file)))
+    errors = [e.toString() for e in component.errors()]
+    assert not errors, f"QML errors: {errors}"
+
+    obj = component.create()
+    assert obj is not None
+    assert obj.property("bg") == active_theme.background
+
+
 def test_theme_properties_accessible_in_qml(qapp, tmp_path):
     from PySide6.QtQml import QQmlApplicationEngine
 

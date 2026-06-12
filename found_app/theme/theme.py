@@ -1,5 +1,6 @@
 import darkdetect
 from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtQml import qmlRegisterSingletonInstance
 
 from found_app.theme.palettes import THEMES
 
@@ -155,3 +156,21 @@ class ThemeManager(QObject):
     @Property(int, notify=paletteChanged)
     def spacingXl(self) -> int:
         return self._palette["spacingXl"]
+
+
+_registered_theme: ThemeManager | None = None
+
+
+def register_theme_singleton(theme: ThemeManager) -> ThemeManager:
+    """Expose a `ThemeManager` to QML as the `Found.Theme` 1.0 `Theme` singleton.
+
+    Registration is process-wide and one-time: QML's singleton type registry
+    does not support swapping the instance behind an already-registered
+    type, so repeated calls are no-ops and return the instance that was
+    registered first.
+    """
+    global _registered_theme
+    if _registered_theme is None:
+        qmlRegisterSingletonInstance(ThemeManager, "Found.Theme", 1, 0, "Theme", theme)
+        _registered_theme = theme
+    return _registered_theme

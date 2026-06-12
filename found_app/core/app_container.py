@@ -20,7 +20,7 @@ from found_app.services.platform_service import PlatformService
 from found_app.services.selection import SelectionManager
 from found_app.viewmodels.tag_editor_view_model import TagEditorViewModel
 from found_app.viewmodels.tag_search_view_model import TagSearchViewModel
-from found_app.theme.theme import ThemeManager
+from found_app.theme.theme import ThemeManager, register_theme_singleton
 from found_app.version import get_app_metadata
 
 
@@ -30,6 +30,7 @@ class AppContainer:
     def __init__(self, settings: AppSettings | None = None):
         self._settings = settings or AppSettings(QSettings())
         self._theme = ThemeManager(settings=self._settings)
+        register_theme_singleton(self._theme)
         self._app_state = AppStateManager()
         self._process_manager = BackendProcessManager()
         self._connection_monitor = BackendConnectionManager(
