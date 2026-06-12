@@ -38,7 +38,12 @@ Item {
         }
     }
 
+    // Writing contentX even when unchanged leaves Flickable's internal
+    // drag-tracking in a stuck state, so further drags silently no-op until
+    // a real contentX change (e.g. a wheel scroll) resets it. Skip the
+    // no-op write so returning to an unscrolled grid doesn't break dragging.
     function scrollToX(x) {
+        if (x === grid.contentX) return
         grid.contentX = x
     }
 

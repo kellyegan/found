@@ -165,7 +165,7 @@ Item {
         leftPanelOpen: root.leftPanelOpen
         rightPanelOpen: root.rightPanelOpen
         onLoadMoreRequested: root.loadMoreRequested()
-        onScrollXChanged: function(x) { root.scrollXChanged(x) }
+        onScrollXChanged: { root.scrollXChanged(thumbnailGrid.scrollX) }
         onLocateRequested: function(imageId) { root.locateRequested(imageId) }
         onViewportVerifyRequested: function(imageIds) { root.viewportVerifyRequested(imageIds) }
         onRemoveRequested: function(imageId, filename) {
