@@ -223,8 +223,8 @@ def test_set_palette_swaps_active_palette_and_notifies(qapp):
     assert received == [True]
 
 
-def test_theme_registered_as_qml_singleton(qapp, tmp_path):
-    from PySide6.QtQml import QQmlEngine, QQmlComponent
+def test_theme_registered_as_qml_singleton(qapp, theme_qml_engine, tmp_path):
+    from PySide6.QtQml import QQmlComponent
     from found_app.theme.theme import register_theme_singleton
 
     theme = ThemeManager()
@@ -241,8 +241,12 @@ def test_theme_registered_as_qml_singleton(qapp, tmp_path):
         """
     )
 
-    engine = QQmlEngine()
-    component = QQmlComponent(engine, QUrl.fromLocalFile(str(qml_file)))
+    # qmlRegisterSingletonInstance binds the singleton to whichever engine
+    # first reads one of its properties; reuse the engine that conftest's
+    # qapp fixture already bound it to (see theme_qml_engine) — a fresh
+    # QQmlEngine here would get a null singleton with a "must only be
+    # accessed from one engine" warning.
+    component = QQmlComponent(theme_qml_engine, QUrl.fromLocalFile(str(qml_file)))
     errors = [e.toString() for e in component.errors()]
     assert not errors, f"QML errors: {errors}"
 

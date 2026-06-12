@@ -116,12 +116,12 @@ QML files off the `Theme` context property.
 
 ### Feature 4.1 — `theme/04-qml-singleton`
 
-- [ ] Register the `ThemeManager` instance as a QML singleton (e.g.
+- [x] Register the `ThemeManager` instance as a QML singleton (e.g.
   `qmlRegisterSingletonInstance("Found.Theme", 1, 0, "Theme", theme)`),
   alongside the existing context property.
   Test: a QML test imports `Found.Theme` and reads `Theme.background`,
   matching `ThemeManager.background`.
-- [ ] Migrate `shell/` QML (`AppWindow.qml`, `MainRouter.qml`,
+- [x] Migrate `shell/` QML (`AppWindow.qml`, `MainRouter.qml`,
   `TitleBar.qml`) to `import Found.Theme`, removing reliance on the context
   property.
   Test: existing shell QML tests stay green after the import change.
