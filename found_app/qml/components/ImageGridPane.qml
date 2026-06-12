@@ -28,6 +28,11 @@ Item {
     // and keyboard shortcuts on the grid behind it must be blocked.
     readonly property bool _dialogOpen: root._removeIds.length > 0
 
+    // Window.activeFocusItem is an attached property that requires its
+    // attachee to derive from Item — read it here (root is an Item) rather
+    // than inside the Shortcuts below (non-Item QQuickShortcut objects).
+    readonly property bool _focusIsTextInput: Window.activeFocusItem instanceof TextInput
+
     function _pluralize(count, noun) {
         return count + " " + noun + (count === 1 ? "" : "s")
     }
@@ -70,7 +75,7 @@ Item {
 
     Shortcut {
         sequence: "Space"
-        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !root._focusIsTextInput
         onActivated: {
             if (SelectionManager.primaryId !== "")
                 SelectionManager.requestOpen(SelectionManager.primaryId)
@@ -79,31 +84,31 @@ Item {
 
     Shortcut {
         sequence: "Up"
-        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !root._focusIsTextInput
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("up")
     }
 
     Shortcut {
         sequence: "Down"
-        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !root._focusIsTextInput
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("down")
     }
 
     Shortcut {
         sequence: "Left"
-        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !root._focusIsTextInput
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("left")
     }
 
     Shortcut {
         sequence: "Right"
-        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !root._focusIsTextInput
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("right")
     }
 
     Shortcut {
         sequences: [StandardKey.Delete, "Backspace"]
-        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !root._focusIsTextInput
         onActivated: {
             var ids = SelectionManager.selectedIds
             if (ids.length === 0) return

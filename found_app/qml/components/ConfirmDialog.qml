@@ -62,34 +62,40 @@ Item {
                 wrapMode: Text.WordWrap
             }
 
-            Row {
-                spacing: 8
+            Item {
+                width: parent.width
+                height: checkboxRow.implicitHeight
                 visible: root.checkboxLabel !== ""
 
-                Rectangle {
-                    width: 16
-                    height: 16
-                    radius: 3
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: root.checkboxChecked ? Theme.accent : "transparent"
-                    border.color: root.checkboxChecked ? Theme.accent : "#666666"
-                    border.width: 1
+                Row {
+                    id: checkboxRow
+                    spacing: 8
+
+                    Rectangle {
+                        width: 16
+                        height: 16
+                        radius: 3
+                        y: (parent.height - height) / 2
+                        color: root.checkboxChecked ? Theme.accent : "transparent"
+                        border.color: root.checkboxChecked ? Theme.accent : "#666666"
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: root.checkboxChecked
+                            text: "✓"
+                            color: "#111111"
+                            font.pixelSize: 11
+                        }
+                    }
 
                     Text {
-                        anchors.centerIn: parent
-                        visible: root.checkboxChecked
-                        text: "✓"
-                        color: "#111111"
-                        font.pixelSize: 11
+                        text: root.checkboxLabel
+                        color: "#aaaaaa"
+                        font.pixelSize: 12
+                        font.family: Theme.fontFamily
+                        y: (parent.height - height) / 2
                     }
-                }
-
-                Text {
-                    text: root.checkboxLabel
-                    color: "#aaaaaa"
-                    font.pixelSize: 12
-                    font.family: Theme.fontFamily
-                    anchors.verticalCenter: parent.verticalCenter
                 }
 
                 MouseArea {
