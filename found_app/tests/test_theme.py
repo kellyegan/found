@@ -38,6 +38,16 @@ def test_color_property_is_valid_hex(qapp, prop):
     assert HEX_COLOR.match(value), f"{prop} value {value!r} is not a valid hex color"
 
 
+@pytest.mark.parametrize("prop", COLOR_PROPS)
+def test_color_property_reflects_palette_change(qapp, prop):
+    theme = ThemeManager()
+    new_value = "#123456"
+
+    theme._palette[prop] = new_value
+
+    assert getattr(theme, prop) == new_value
+
+
 # ---------------------------------------------------------------------------
 # Typography properties
 # ---------------------------------------------------------------------------

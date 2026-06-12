@@ -8,38 +8,46 @@ class ThemeManager(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._palette = {
+            "background": "#000000",
+            "surface": "#1a1a1a",
+            "text": "#e8e8e8",
+            "textMuted": "#777777",
+            "accent": "#eeeeff",
+            "border": "#2a2a2a",
+        }
 
     # ------------------------------------------------------------------
     # Colors
     # ------------------------------------------------------------------
 
-    @Property(str, constant=True)
+    @Property(str, notify=paletteChanged)
     def background(self) -> str:
-        return "#000000"
+        return self._palette["background"]
 
-    @Property(str, constant=True)
+    @Property(str, notify=paletteChanged)
     def surface(self) -> str:
-        return "#1a1a1a"
+        return self._palette["surface"]
 
-    @Property(str, constant=True)
+    @Property(str, notify=paletteChanged)
     def text(self) -> str:
-        return "#e8e8e8"
+        return self._palette["text"]
 
-    @Property(str, constant=True)
+    @Property(str, notify=paletteChanged)
     def textMuted(self) -> str:
-        return "#777777"
-    
+        return self._palette["textMuted"]
+
     @Property(str, constant=True)
     def warningColor(self) -> str:
-        return "#ff4444" 
+        return "#ff4444"
 
-    @Property(str, constant=True)
+    @Property(str, notify=paletteChanged)
     def accent(self) -> str:
-        return "#eeeeff"
+        return self._palette["accent"]
 
-    @Property(str, constant=True)
+    @Property(str, notify=paletteChanged)
     def border(self) -> str:
-        return "#2a2a2a"
+        return self._palette["border"]
 
     # ------------------------------------------------------------------
     # Typography
