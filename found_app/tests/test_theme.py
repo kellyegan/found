@@ -15,7 +15,7 @@ import pytest
 from PySide6.QtCore import QSettings, QUrl
 
 from found_app.core.app_settings import AppSettings
-from found_app.theme.palettes import FOUND_LIGHT
+from found_app.theme.palettes import FOUND_DARK, FOUND_LIGHT
 from found_app.theme.theme import ThemeManager
 
 
@@ -190,6 +190,26 @@ def test_set_mode_persists_and_restores(qapp, tmp_path):
 
     restored = ThemeManager(settings=_app_settings(tmp_path))
     assert restored.mode == "dark"
+
+
+def test_system_mode_resolves_to_light_palette_via_darkdetect(qapp, monkeypatch):
+    import found_app.theme.theme as theme_module
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Light")
+
+    theme = ThemeManager()
+
+    assert theme.background == FOUND_LIGHT["background"]
+
+
+def test_system_mode_resolves_to_dark_palette_via_darkdetect(qapp, monkeypatch):
+    import found_app.theme.theme as theme_module
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Dark")
+
+    theme = ThemeManager()
+
+    assert theme.background == FOUND_DARK["background"]
 
 
 def test_set_palette_swaps_active_palette_and_notifies(qapp):

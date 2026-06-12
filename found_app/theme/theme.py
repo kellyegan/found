@@ -1,6 +1,7 @@
+import darkdetect
 from PySide6.QtCore import QObject, Property, Signal, Slot
 
-from found_app.theme.palettes import FOUND_DARK
+from found_app.theme.palettes import THEMES
 
 
 class ThemeManager(QObject):
@@ -11,13 +12,23 @@ class ThemeManager(QObject):
     def __init__(self, parent=None, settings=None):
         super().__init__(parent)
         self._settings = settings
-        self._palette = dict(FOUND_DARK)
         self._theme_name = (
             self._settings.get("theme/name", "Found") if self._settings else "Found"
         )
         self._mode = (
             self._settings.get("theme/mode", "system") if self._settings else "system"
         )
+        self._apply_palette()
+
+    def _resolve_variant(self) -> str:
+        if self._mode in ("light", "dark"):
+            return self._mode
+        return "light" if darkdetect.theme() == "Light" else "dark"
+
+    def _apply_palette(self) -> None:
+        theme_family = THEMES.get(self._theme_name, THEMES["Found"])
+        variant = self._resolve_variant()
+        self.setPalette(theme_family[variant])
 
     @Property(str, notify=paletteChanged)
     def themeName(self) -> str:
@@ -28,6 +39,7 @@ class ThemeManager(QObject):
         self._theme_name = name
         if self._settings:
             self._settings.set("theme/name", name)
+        self._apply_palette()
 
     @Property(str, notify=paletteChanged)
     def mode(self) -> str:
@@ -38,6 +50,7 @@ class ThemeManager(QObject):
         self._mode = mode
         if self._settings:
             self._settings.set("theme/mode", mode)
+        self._apply_palette()
 
     def setPalette(self, palette: dict) -> None:
         self._palette = dict(palette)
