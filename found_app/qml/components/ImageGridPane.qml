@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Window
+import Found.Theme 1.0
 
 Item {
     id: root

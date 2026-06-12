@@ -133,7 +133,7 @@ QML files off the `Theme` context property.
   `MetadataSidePanel.qml`, `ConfirmDialog.qml`, `HoverTooltip.qml`,
   `EdgeTab.qml`, `ImportPanel.qml`, `CollectionEditorSection.qml`,
   `CollectionItem.qml`) to `import Found.Theme`.
-- [ ] Migrate grid/thumbnail components (`ImageGridPane.qml`,
+- [x] Migrate grid/thumbnail components (`ImageGridPane.qml`,
   `ThumbnailGrid.qml`, `ThumbnailTile.qml`) and `views/` (`ImageView.qml`,
   `SplashScreen.qml`, `LibraryView.qml`, `CollectionView.qml`) to
   `import Found.Theme`.
