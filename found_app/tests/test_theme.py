@@ -12,10 +12,15 @@ Covers:
 
 import re
 import pytest
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QSettings, QUrl
 
+from found_app.core.app_settings import AppSettings
 from found_app.theme.palettes import FOUND_LIGHT
 from found_app.theme.theme import ThemeManager
+
+
+def _app_settings(tmp_path, name="settings.ini"):
+    return AppSettings(QSettings(str(tmp_path / name), QSettings.Format.IniFormat))
 
 
 HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$")
@@ -159,6 +164,19 @@ def test_palette_changed_signal_emits(qapp):
     theme.paletteChanged.emit()
 
     assert received == [True]
+
+
+def test_theme_name_defaults_to_found(qapp):
+    theme = ThemeManager()
+    assert theme.themeName == "Found"
+
+
+def test_set_theme_name_persists_and_restores(qapp, tmp_path):
+    theme = ThemeManager(settings=_app_settings(tmp_path))
+    theme.setThemeName("Found")
+
+    restored = ThemeManager(settings=_app_settings(tmp_path))
+    assert restored.themeName == "Found"
 
 
 def test_set_palette_swaps_active_palette_and_notifies(qapp):

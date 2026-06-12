@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Property, Signal
+from PySide6.QtCore import QObject, Property, Signal, Slot
 
 from found_app.theme.palettes import FOUND_DARK
 
@@ -8,9 +8,23 @@ class ThemeManager(QObject):
 
     paletteChanged = Signal()
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, settings=None):
         super().__init__(parent)
+        self._settings = settings
         self._palette = dict(FOUND_DARK)
+        self._theme_name = (
+            self._settings.get("theme/name", "Found") if self._settings else "Found"
+        )
+
+    @Property(str, notify=paletteChanged)
+    def themeName(self) -> str:
+        return self._theme_name
+
+    @Slot(str)
+    def setThemeName(self, name: str) -> None:
+        self._theme_name = name
+        if self._settings:
+            self._settings.set("theme/name", name)
 
     def setPalette(self, palette: dict) -> None:
         self._palette = dict(palette)
