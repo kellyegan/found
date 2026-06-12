@@ -137,7 +137,7 @@ QML files off the `Theme` context property.
   `ThumbnailGrid.qml`, `ThumbnailTile.qml`) and `views/` (`ImageView.qml`,
   `SplashScreen.qml`, `LibraryView.qml`, `CollectionView.qml`) to
   `import Found.Theme`.
-- [ ] Remove the legacy `ctx.setContextProperty("Theme", ...)` registration
+- [x] Remove the legacy `ctx.setContextProperty("Theme", ...)` registration
   from `app_container.py` now that nothing references it.
   Test: full QML test suite stays green with the context property removed.
 - [ ] Fix the dangling `Theme.surface2` reference in `CategoryChip.qml`

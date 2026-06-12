@@ -147,7 +147,6 @@ class AppContainer:
         app_metadata = get_app_metadata()
         ctx = engine.rootContext()
         engine.addImageProvider("thumbnails", self.thumbnail_provider)
-        ctx.setContextProperty("Theme", self._theme)
         ctx.setContextProperty("foundVersion", app_metadata["version"])
         ctx.setContextProperty("foundLicense", app_metadata["license"])
         ctx.setContextProperty("AppState", self._app_state)

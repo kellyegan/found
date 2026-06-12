@@ -68,7 +68,6 @@ def test_wire_engine_registers_all_context_properties(container, qapp):
     container.wire_engine(engine)
     ctx = engine.rootContext()
     expected_keys = [
-        "Theme",
         "AppState",
         "BackendConnection",
         "LibraryState",
