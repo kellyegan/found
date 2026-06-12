@@ -143,7 +143,7 @@ QML files off the `Theme` context property.
 - [x] Fix the dangling `Theme.surface2` reference in `CategoryChip.qml`
   (no such property exists on `ThemeManager`) — replace with the correct
   existing token.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ---
 
