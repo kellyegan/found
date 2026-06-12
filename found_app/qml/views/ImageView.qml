@@ -44,6 +44,11 @@ Item {
     // shortcuts and the viewport's own gestures must be blocked.
     readonly property bool _dialogOpen: root._removeId !== ""
 
+    // Window.activeFocusItem is an attached property that requires its
+    // attachee to derive from Item — read it here (root is an Item) rather
+    // than inside the Shortcut below (a non-Item QQuickShortcut).
+    readonly property bool _focusIsTextInput: Window.activeFocusItem instanceof TextInput
+
     property real zoomLevel: 1.0
     property real panOffsetX: 0.0
     property real panOffsetY: 0.0
@@ -97,7 +102,7 @@ Item {
     // the metadata sidebar's tag/category editors).
     Shortcut {
         sequences: [StandardKey.Delete, "Backspace"]
-        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !root._focusIsTextInput
         onActivated: {
             if (root.imageId === "") return
             root._removeId = root.imageId
