@@ -1,4 +1,5 @@
 import QtQuick
+import Found.Theme 1.0
 
 Rectangle {
     id: root
@@ -18,7 +19,7 @@ Rectangle {
         if (isDropTarget)                    return "#2a3a4a"
         if (filterState === "include")       return "#2a5a2a"
         if (filterState === "exclude")       return "#5a2a2a"
-        return Theme.surface2 ?? "#2a2a2a"
+        return Theme.border
     }
 
     border.color: {

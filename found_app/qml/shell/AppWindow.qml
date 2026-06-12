@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Window
+import Found.Theme 1.0
 
 ApplicationWindow {
     id: root

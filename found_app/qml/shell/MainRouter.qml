@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Dialogs
+import Found.Theme 1.0
 import "../views"
 import "../components"
 
