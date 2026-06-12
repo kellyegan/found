@@ -1014,6 +1014,45 @@ def test_image_view_collection_id_is_writable(engine):
 
 
 # ---------------------------------------------------------------------------
+# ImageView — remove dialog blocks the viewport behind it
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_viewport_enabled_by_default(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    viewport = obj.findChild(QObject, "viewport")
+    assert viewport.property("enabled") is True
+
+
+def test_image_view_viewport_disabled_when_remove_dialog_open(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    viewport = obj.findChild(QObject, "viewport")
+    obj.setProperty("_removeId", "img-1")
+    assert viewport.property("enabled") is False
+
+
+def test_image_view_viewport_reenabled_after_dialog_closes(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    viewport = obj.findChild(QObject, "viewport")
+    obj.setProperty("_removeId", "img-1")
+    obj.setProperty("_removeId", "")
+    assert viewport.property("enabled") is True
+
+
+def test_image_view_shortcuts_disabled_when_remove_dialog_open(engine):
+    obj = load_component(engine, "views/ImageView.qml")
+    shortcuts = [
+        c for c in obj.findChildren(QObject)
+        if c.metaObject().className() == "QQuickShortcut"
+    ]
+    assert len(shortcuts) > 0
+    assert all(s.property("enabled") is True for s in shortcuts)
+
+    obj.setProperty("_removeId", "img-1")
+    assert all(s.property("enabled") is False for s in shortcuts)
+
+
+# ---------------------------------------------------------------------------
 # CollectionItem
 # ---------------------------------------------------------------------------
 
@@ -1165,6 +1204,45 @@ def test_image_grid_pane_has_locate_requested_signal(engine):
     received = []
     obj.locateRequested.connect(lambda image_id: received.append(image_id))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# ImageGridPane — remove dialog blocks the grid behind it
+# ---------------------------------------------------------------------------
+
+
+def test_image_grid_pane_thumbnail_grid_enabled_by_default(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    grid = obj.findChild(QObject, "thumbnailGrid")
+    assert grid.property("enabled") is True
+
+
+def test_image_grid_pane_thumbnail_grid_disabled_when_remove_dialog_open(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    grid = obj.findChild(QObject, "thumbnailGrid")
+    obj.setProperty("_removeIds", ["img-1"])
+    assert grid.property("enabled") is False
+
+
+def test_image_grid_pane_thumbnail_grid_reenabled_after_dialog_closes(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    grid = obj.findChild(QObject, "thumbnailGrid")
+    obj.setProperty("_removeIds", ["img-1"])
+    obj.setProperty("_removeIds", [])
+    assert grid.property("enabled") is True
+
+
+def test_image_grid_pane_shortcuts_disabled_when_remove_dialog_open(engine):
+    obj = load_component(engine, "components/ImageGridPane.qml")
+    shortcuts = [
+        c for c in obj.findChildren(QObject)
+        if c.metaObject().className() == "QQuickShortcut"
+    ]
+    assert len(shortcuts) > 0
+    assert all(s.property("enabled") is True for s in shortcuts)
+
+    obj.setProperty("_removeIds", ["img-1"])
+    assert all(s.property("enabled") is False for s in shortcuts)
 
 
 # ---------------------------------------------------------------------------

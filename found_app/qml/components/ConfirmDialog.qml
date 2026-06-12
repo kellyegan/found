@@ -16,7 +16,7 @@ Item {
 
     visible: root.open
 
-    // Backdrop — absorbs clicks and dismisses on click-away
+    // Backdrop — absorbs clicks so content beneath isn't interactive
     Rectangle {
         anchors.fill: parent
         color: "#000000"
@@ -24,7 +24,6 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: root.cancelled()
         }
     }
 
@@ -41,6 +40,13 @@ Item {
         Keys.onEscapePressed: root.cancelled()
         Keys.onReturnPressed: root.confirmed()
         Keys.onEnterPressed: root.confirmed()
+
+        // Absorb clicks on the sheet itself so they don't fall through to the
+        // backdrop. Button/checkbox MouseAreas inside contentCol are declared
+        // after this and so take priority.
+        MouseArea {
+            anchors.fill: parent
+        }
 
         Column {
             id: contentCol

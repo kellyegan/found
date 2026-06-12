@@ -40,6 +40,10 @@ Item {
     property string _removeId: ""
     property string _removeMessage: ""
 
+    // While the remove-confirmation dialog is open, zoom/pan/navigation
+    // shortcuts and the viewport's own gestures must be blocked.
+    readonly property bool _dialogOpen: root._removeId !== ""
+
     property real zoomLevel: 1.0
     property real panOffsetX: 0.0
     property real panOffsetY: 0.0
@@ -67,21 +71,21 @@ Item {
     // All shortcuts scoped to this view via enabled: root.visible
 
     // Arrow key navigation
-    Shortcut { sequence: "Right";   enabled: root.visible; onActivated: if (root.hasNext) NavigationManager.goNext() }
-    Shortcut { sequence: "Left";    enabled: root.visible; onActivated: if (root.hasPrev) NavigationManager.goPrev() }
+    Shortcut { sequence: "Right";   enabled: root.visible && !root._dialogOpen; onActivated: if (root.hasNext) NavigationManager.goNext() }
+    Shortcut { sequence: "Left";    enabled: root.visible && !root._dialogOpen; onActivated: if (root.hasPrev) NavigationManager.goPrev() }
 
     // Space — toggle back to the grid (same key that opened image view)
-    Shortcut { sequence: "Space";   enabled: root.visible; onActivated: NavigationManager.goBack() }
+    Shortcut { sequence: "Space";   enabled: root.visible && !root._dialogOpen; onActivated: NavigationManager.goBack() }
 
     // Immersive / fullscreen
     Shortcut {
         sequence: "F"
-        enabled: root.visible
+        enabled: root.visible && !root._dialogOpen
         onActivated: NavigationManager.toggleImmersive()
     }
     Shortcut {
         sequence: "Escape"
-        enabled: root.visible
+        enabled: root.visible && !root._dialogOpen
         onActivated: {
             if (NavigationManager.immersiveMode) NavigationManager.setImmersive(false)
             else NavigationManager.goBack()
@@ -93,7 +97,7 @@ Item {
     // the metadata sidebar's tag/category editors).
     Shortcut {
         sequences: [StandardKey.Delete, "Backspace"]
-        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
         onActivated: {
             if (root.imageId === "") return
             root._removeId = root.imageId
@@ -105,21 +109,23 @@ Item {
     }
 
     // Keyboard zoom — steps without cursor anchoring
-    Shortcut { sequence: "="; enabled: root.visible; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
-    Shortcut { sequence: "+"; enabled: root.visible; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
-    Shortcut { sequence: "-"; enabled: root.visible; onActivated: { root.zoomLevel = Math.max(root._minZoom, root.zoomLevel / 1.25); root._clampPan() } }
-    Shortcut { sequence: "0"; enabled: root.visible; onActivated: root.resetView() }
+    Shortcut { sequence: "="; enabled: root.visible && !root._dialogOpen; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
+    Shortcut { sequence: "+"; enabled: root.visible && !root._dialogOpen; onActivated: { root.zoomLevel = Math.min(root._maxZoom, root.zoomLevel * 1.25); root._clampPan() } }
+    Shortcut { sequence: "-"; enabled: root.visible && !root._dialogOpen; onActivated: { root.zoomLevel = Math.max(root._minZoom, root.zoomLevel / 1.25); root._clampPan() } }
+    Shortcut { sequence: "0"; enabled: root.visible && !root._dialogOpen; onActivated: root.resetView() }
 
     // Background fills the full root area so the bottom margin strip matches the viewport.
     Rectangle { anchors.fill: parent; color: "#111111" }
 
     Rectangle {
         id: viewport
+        objectName: "viewport"
         anchors.fill: parent
         anchors.bottomMargin: NavigationManager.immersiveMode ? 0 : 48
         anchors.rightMargin: root.rightPanelWidth
         color: "#111111"
         clip: true
+        enabled: !root._dialogOpen
 
         // Image is sized and positioned directly — no transforms.
         // width  = viewport × zoom  → scaling is just making the element bigger.

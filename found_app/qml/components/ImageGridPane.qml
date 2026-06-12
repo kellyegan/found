@@ -24,6 +24,10 @@ Item {
     property var _removeIds: []
     property string _removeMessage: ""
 
+    // While the remove-confirmation dialog is open, selection, dragging,
+    // and keyboard shortcuts on the grid behind it must be blocked.
+    readonly property bool _dialogOpen: root._removeIds.length > 0
+
     function _pluralize(count, noun) {
         return count + " " + noun + (count === 1 ? "" : "s")
     }
@@ -51,13 +55,13 @@ Item {
 
     Shortcut {
         sequence: "Escape"
-        enabled: root.visible
+        enabled: root.visible && !root._dialogOpen
         onActivated: SelectionManager.clear()
     }
 
     Shortcut {
         sequence: StandardKey.SelectAll
-        enabled: root.visible
+        enabled: root.visible && !root._dialogOpen
         onActivated: {
             if (root.loadingState === "Ready" && root.gridModel)
                 SelectionManager.selectAll(root.gridModel.allIds)
@@ -66,7 +70,7 @@ Item {
 
     Shortcut {
         sequence: "Space"
-        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
         onActivated: {
             if (SelectionManager.primaryId !== "")
                 SelectionManager.requestOpen(SelectionManager.primaryId)
@@ -75,31 +79,31 @@ Item {
 
     Shortcut {
         sequence: "Up"
-        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("up")
     }
 
     Shortcut {
         sequence: "Down"
-        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("down")
     }
 
     Shortcut {
         sequence: "Left"
-        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("left")
     }
 
     Shortcut {
         sequence: "Right"
-        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
         onActivated: if (root.loadingState === "Ready") thumbnailGrid.navigateActive("right")
     }
 
     Shortcut {
         sequences: [StandardKey.Delete, "Backspace"]
-        enabled: root.visible && !(Window.activeFocusItem instanceof TextInput)
+        enabled: root.visible && !root._dialogOpen && !(Window.activeFocusItem instanceof TextInput)
         onActivated: {
             var ids = SelectionManager.selectedIds
             if (ids.length === 0) return
@@ -159,8 +163,10 @@ Item {
 
     ThumbnailGrid {
         id: thumbnailGrid
+        objectName: "thumbnailGrid"
         anchors { top: parent.top; left: parent.left; right: parent.right; bottom: parent.bottom }
         visible: root.loadingState === "Ready"
+        enabled: !root._dialogOpen
         model: root.gridModel
         leftPanelOpen: root.leftPanelOpen
         rightPanelOpen: root.rightPanelOpen
