@@ -1,8 +1,10 @@
-from PySide6.QtCore import QObject, Property
+from PySide6.QtCore import QObject, Property, Signal
 
 
 class ThemeManager(QObject):
     """Exposes design tokens as Qt properties for use as a QML context property."""
+
+    paletteChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)

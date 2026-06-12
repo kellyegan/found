@@ -109,6 +109,21 @@ def test_overlay_width_matches_sidebar_and_metadata_panel(qapp):
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Reactive palette
+# ---------------------------------------------------------------------------
+
+
+def test_palette_changed_signal_emits(qapp):
+    theme = ThemeManager()
+    received = []
+    theme.paletteChanged.connect(lambda: received.append(True))
+
+    theme.paletteChanged.emit()
+
+    assert received == [True]
+
+
 def test_theme_properties_accessible_in_qml(qapp, tmp_path):
     from PySide6.QtQml import QQmlApplicationEngine
 
