@@ -129,7 +129,7 @@ QML files off the `Theme` context property.
   `CategoryChip.qml`, `ChipSearchSection.qml`, `FilterChip.qml`,
   `FilterDropdown.qml`, `TagSearchField.qml`, `MetaRow.qml`) to
   `import Found.Theme`.
-- [ ] Migrate panels/dialogs (`SidePanel.qml`, `CollectionsSidePanel.qml`,
+- [x] Migrate panels/dialogs (`SidePanel.qml`, `CollectionsSidePanel.qml`,
   `MetadataSidePanel.qml`, `ConfirmDialog.qml`, `HoverTooltip.qml`,
   `EdgeTab.qml`, `ImportPanel.qml`, `CollectionEditorSection.qml`,
   `CollectionItem.qml`) to `import Found.Theme`.
