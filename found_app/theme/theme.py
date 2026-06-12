@@ -15,6 +15,11 @@ class ThemeManager(QObject):
             "textMuted": "#777777",
             "accent": "#eeeeff",
             "border": "#2a2a2a",
+            "fontFamily": "Inter",
+            "fontSizeSm": 12,
+            "fontSizeMd": 16,
+            "fontSizeLg": 24,
+            "fontSizeXl": 48,
         }
 
     # ------------------------------------------------------------------
@@ -53,25 +58,25 @@ class ThemeManager(QObject):
     # Typography
     # ------------------------------------------------------------------
 
-    @Property(str, constant=True)
+    @Property(str, notify=paletteChanged)
     def fontFamily(self) -> str:
-        return "Inter"
+        return self._palette["fontFamily"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def fontSizeSm(self) -> int:
-        return 12
+        return self._palette["fontSizeSm"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def fontSizeMd(self) -> int:
-        return 16
+        return self._palette["fontSizeMd"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def fontSizeLg(self) -> int:
-        return 24
+        return self._palette["fontSizeLg"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def fontSizeXl(self) -> int:
-        return 48
+        return self._palette["fontSizeXl"]
 
     # ------------------------------------------------------------------
     # Layout
