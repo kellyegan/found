@@ -12,6 +12,10 @@ class ThemeManager(QObject):
         super().__init__(parent)
         self._palette = dict(FOUND_DARK)
 
+    def setPalette(self, palette: dict) -> None:
+        self._palette = dict(palette)
+        self.paletteChanged.emit()
+
     # ------------------------------------------------------------------
     # Colors
     # ------------------------------------------------------------------
