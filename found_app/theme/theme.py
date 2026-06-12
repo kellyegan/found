@@ -20,6 +20,15 @@ class ThemeManager(QObject):
             "fontSizeMd": 16,
             "fontSizeLg": 24,
             "fontSizeXl": 48,
+            "overlayWidth": 260,
+            "horizontalTextMargin": 30,
+            "horizontalTextPadding": 12,
+            "horizontalMargin": 18,
+            "spacingXs": 4,
+            "spacingSm": 8,
+            "spacingMd": 16,
+            "spacingLg": 24,
+            "spacingXl": 40,
         }
 
     # ------------------------------------------------------------------
@@ -82,41 +91,42 @@ class ThemeManager(QObject):
     # Layout
     # ------------------------------------------------------------------
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def overlayWidth(self) -> int:
-        return 260
+        return self._palette["overlayWidth"]
 
     # ------------------------------------------------------------------
     # Spacing
     # ------------------------------------------------------------------
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def horizontalTextMargin(self) -> int:
-        return 30
-    
+        return self._palette["horizontalTextMargin"]
+
+    @Property(int, notify=paletteChanged)
     def horizontalTextPadding(self) -> int:
-        return 12
+        return self._palette["horizontalTextPadding"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def horizontalMargin(self) -> int:
-        return 18
+        return self._palette["horizontalMargin"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def spacingXs(self) -> int:
-        return 4
+        return self._palette["spacingXs"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def spacingSm(self) -> int:
-        return 8
+        return self._palette["spacingSm"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def spacingMd(self) -> int:
-        return 16
+        return self._palette["spacingMd"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def spacingLg(self) -> int:
-        return 24
+        return self._palette["spacingLg"]
 
-    @Property(int, constant=True)
+    @Property(int, notify=paletteChanged)
     def spacingXl(self) -> int:
-        return 40
+        return self._palette["spacingXl"]

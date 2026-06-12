@@ -24,6 +24,11 @@ FONT_SIZE_PROPS = ["fontSizeSm", "fontSizeMd", "fontSizeLg", "fontSizeXl"]
 TYPOGRAPHY_PROPS = ["fontFamily"] + FONT_SIZE_PROPS
 SPACING_PROPS = ["spacingXs", "spacingSm", "spacingMd", "spacingLg", "spacingXl"]
 LAYOUT_PROPS = ["overlayWidth"]
+SPACING_LAYOUT_PROPS = SPACING_PROPS + LAYOUT_PROPS + [
+    "horizontalMargin",
+    "horizontalTextMargin",
+    "horizontalTextPadding",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -123,6 +128,16 @@ def test_layout_property_is_positive_int(qapp, prop):
 def test_overlay_width_matches_sidebar_and_metadata_panel(qapp):
     theme = ThemeManager()
     assert theme.overlayWidth == 260
+
+
+@pytest.mark.parametrize("prop", SPACING_LAYOUT_PROPS)
+def test_spacing_layout_property_reflects_palette_change(qapp, prop):
+    theme = ThemeManager()
+    new_value = 999
+
+    theme._palette[prop] = new_value
+
+    assert getattr(theme, prop) == new_value
 
 
 # ---------------------------------------------------------------------------
