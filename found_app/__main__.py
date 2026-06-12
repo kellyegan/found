@@ -16,6 +16,8 @@ def _load_bundled_fonts() -> None:
 
 def main():
     app = QGuiApplication(sys.argv)
+    app.setOrganizationName("Found")
+    app.setApplicationName("Found")
     _load_bundled_fonts()
 
     # Local desktop app — users import and view their own files, which can be

@@ -1,7 +1,10 @@
 """Tests for AppContainer (core/app_container.py)."""
 
 import pytest
+from PySide6.QtCore import QSettings
 from PySide6.QtQml import QQmlEngine
+
+from found_app.core.app_settings import AppSettings
 
 
 @pytest.fixture
@@ -23,6 +26,19 @@ def test_app_container_can_be_instantiated(qapp):
     from found_app.core.app_container import AppContainer
     container = AppContainer()
     assert container is not None
+
+
+def test_app_container_theme_uses_provided_app_settings(qapp, tmp_path):
+    from found_app.core.app_container import AppContainer
+
+    settings_file = tmp_path / "settings.ini"
+    settings = AppSettings(QSettings(str(settings_file), QSettings.Format.IniFormat))
+    container = AppContainer(settings=settings)
+
+    container._theme.setThemeName("Found")
+
+    restored = AppSettings(QSettings(str(settings_file), QSettings.Format.IniFormat))
+    assert restored.get("theme/name") == "Found"
 
 
 # ---------------------------------------------------------------------------

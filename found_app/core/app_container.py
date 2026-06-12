@@ -1,7 +1,8 @@
-from PySide6.QtCore import QThreadPool
+from PySide6.QtCore import QSettings, QThreadPool
 
 from found_app.core.api_client import ApiClient
 from found_app.core.app_controller import AppController
+from found_app.core.app_settings import AppSettings
 from found_app.core.app_state import AppStateManager
 from found_app.core.connection_monitor import BackendConnectionManager
 from found_app.core.process_manager import BackendProcessManager
@@ -26,8 +27,9 @@ from found_app.version import get_app_metadata
 class AppContainer:
     """Owns all ViewModel instantiation, signal wiring, and lifecycle."""
 
-    def __init__(self):
-        self._theme = ThemeManager()
+    def __init__(self, settings: AppSettings | None = None):
+        self._settings = settings or AppSettings(QSettings())
+        self._theme = ThemeManager(settings=self._settings)
         self._app_state = AppStateManager()
         self._process_manager = BackendProcessManager()
         self._connection_monitor = BackendConnectionManager(
