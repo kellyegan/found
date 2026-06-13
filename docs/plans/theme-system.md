@@ -181,12 +181,12 @@ literals) to use tokens and primitives.
 
 ### Feature 5.2 — `theme/05-app-button-primitive`
 
-- [ ] Add `AppButton.qml` (container + `AppText`) with default and hover
+- [x] Add `AppButton.qml` (container + `AppText`) with default and hover
       states styled from `Theme.surface`/`Theme.accent`/`Theme.border`.
       Test: hover state changes background to the expected token value.
-- [ ] Add pressed and disabled states.
+- [x] Add pressed and disabled states.
       Test: each state maps to its expected token.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ### Feature 5.3 — `theme/05-app-textfield-primitive`
 
