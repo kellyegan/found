@@ -3,11 +3,12 @@
 Covers:
 - AppButton.qml exists and loads cleanly
 - Default state uses Theme.surface; hover state uses Theme.accent
+- Pressed state uses Theme.border; disabled state mutes the label
 """
 
 import pytest
 from pathlib import Path
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QObject, QUrl
 from PySide6.QtGui import QColor
 from PySide6.QtQml import QQmlComponent
 
@@ -54,3 +55,16 @@ def test_hover_state_uses_accent(qapp, theme_qml_engine, theme):
     obj = load_component(theme_qml_engine, "primitives/AppButton.qml", hovered=True)
 
     assert obj.property("color") == QColor(theme.accent)
+
+
+def test_pressed_state_uses_border(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppButton.qml", pressed=True)
+
+    assert obj.property("color") == QColor(theme.border)
+
+
+def test_disabled_state_mutes_label(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppButton.qml", enabled=False)
+
+    label = obj.findChild(QObject, "label")
+    assert label.property("color") == QColor(theme.textMuted)
