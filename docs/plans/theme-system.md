@@ -171,13 +171,13 @@ literals) to use tokens and primitives.
 
 ### Feature 5.1 — `theme/05-app-text-primitive`
 
-- [ ] Add `AppText.qml`: a `Text` wrapper defaulting to
+- [x] Add `AppText.qml`: a `Text` wrapper defaulting to
       `Theme.fontFamily`/`Theme.fontSizeMd`/`Theme.text`.
       Test: default instance exposes those values.
-- [ ] Add `muted`, `heading`, and `label` variants mapping to
+- [x] Add `muted`, `heading`, and `label` variants mapping to
       `Theme.textMuted`/`fontSizeSm`/`fontSizeLg` as appropriate.
       Test: each variant resolves to the expected token.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ### Feature 5.2 — `theme/05-app-button-primitive`
 
