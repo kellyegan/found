@@ -1,7 +1,8 @@
 import QtQuick
 import Found.Theme 1.0
+import "../primitives"
 
-Rectangle {
+Chip {
     id: root
 
     property string categoryId: ""
@@ -13,22 +14,8 @@ Rectangle {
 
     width: chipLabel.implicitWidth + 24
     height: parent ? parent.height : 32
-    radius: height / 2
 
-    color: {
-        if (isDropTarget)                    return "#2a3a4a"
-        if (filterState === "include")       return "#2a5a2a"
-        if (filterState === "exclude")       return "#5a2a2a"
-        return Theme.border
-    }
-
-    border.color: {
-        if (isDropTarget)                    return "#4488cc"
-        if (filterState === "include")       return "#44aa44"
-        if (filterState === "exclude")       return "#aa4444"
-        return "#444444"
-    }
-    border.width: 1
+    chipState: root.isDropTarget ? "drag-hover" : root.filterState
 
     Behavior on color { ColorAnimation { duration: 80 } }
 

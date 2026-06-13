@@ -200,14 +200,14 @@ literals) to use tokens and primitives.
 
 ### Feature 5.4 — `theme/05-chip-primitive`
 
-- [ ] Add a base `Chip.qml` supporting `off`/`include`/`exclude`/`mixed`/
+- [x] Add a base `Chip.qml` supporting `off`/`include`/`exclude`/`mixed`/
       `drag-hover` states via theme tokens.
       Test: each state resolves to its expected color token.
-- [ ] Refactor `CategoryChip.qml` to build on `Chip`.
+- [x] Refactor `CategoryChip.qml` to build on `Chip`.
       Test: existing `CategoryChip` behavioral tests stay green.
-- [ ] Refactor `FilterChip.qml` to build on `Chip`.
+- [x] Refactor `FilterChip.qml` to build on `Chip`.
       Test: existing `FilterChip` behavioral tests stay green.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ### Feature 5.5 — `theme/05-surface-primitive`
 

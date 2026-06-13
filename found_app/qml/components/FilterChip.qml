@@ -1,5 +1,6 @@
 import QtQuick
 import Found.Theme 1.0
+import "../primitives"
 
 Item {
     id: root
@@ -12,12 +13,9 @@ Item {
     implicitWidth: chipRow.implicitWidth + 20
     implicitHeight: 26
 
-    Rectangle {
+    Chip {
         anchors.fill: parent
-        radius: height / 2
-        color: root.filterMode === "exclude" ? "#2a1515" : "#152030"
-        border.color: root.filterMode === "exclude" ? "#884444" : "#446688"
-        border.width: 1
+        chipState: root.filterMode === "exclude" ? "exclude" : "include"
 
         Row {
             id: chipRow
@@ -27,7 +25,7 @@ Item {
             Text {
                 text: root.filterMode === "exclude" ? "−" : "+"
                 font.pixelSize: 10
-                color: root.filterMode === "exclude" ? "#cc6666" : "#6699cc"
+                color: Theme.text
                 anchors.verticalCenter: parent.verticalCenter
             }
 
