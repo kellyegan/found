@@ -3,6 +3,7 @@
 Covers:
 - AppText.qml exists and loads cleanly
 - Default instance uses Theme.fontFamily / Theme.fontSizeMd / Theme.text
+- muted/heading/label variants resolve to the expected tokens
 """
 
 import pytest
@@ -51,3 +52,23 @@ def test_default_uses_theme_tokens(qapp, theme_qml_engine, theme):
     assert font.family() == theme.fontFamily
     assert font.pixelSize() == theme.fontSizeMd
     assert obj.property("color") == QColor(theme.text)
+
+
+def test_muted_variant_uses_text_muted_color(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppText.qml", variant="muted")
+
+    assert obj.property("color") == QColor(theme.textMuted)
+
+
+def test_heading_variant_uses_font_size_lg(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppText.qml", variant="heading")
+    font = obj.property("font")
+
+    assert font.pixelSize() == theme.fontSizeLg
+
+
+def test_label_variant_uses_font_size_sm(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppText.qml", variant="label")
+    font = obj.property("font")
+
+    assert font.pixelSize() == theme.fontSizeSm
