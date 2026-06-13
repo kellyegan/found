@@ -190,13 +190,13 @@ literals) to use tokens and primitives.
 
 ### Feature 5.3 — `theme/05-app-textfield-primitive`
 
-- [ ] Add `AppTextField.qml` styled from `Theme.surface`/`Theme.border`/
+- [x] Add `AppTextField.qml` styled from `Theme.surface`/`Theme.border`/
       `Theme.text`.
       Test: default styling matches expected tokens.
-- [ ] Add focus state (border → `Theme.accent`) and error/warning state
+- [x] Add focus state (border → `Theme.accent`) and error/warning state
       (border/text → `Theme.warningColor`).
       Test: each state maps to its expected token.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ### Feature 5.4 — `theme/05-chip-primitive`
 
