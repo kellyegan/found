@@ -3,6 +3,8 @@
 Covers:
 - AppTextField.qml exists and loads cleanly
 - Default styling uses Theme.surface / Theme.border / Theme.text
+- Focus state uses Theme.accent for the border
+- Error/warning state uses Theme.warningColor for border and text
 """
 
 import pytest
@@ -52,3 +54,17 @@ def test_default_styling_matches_tokens(qapp, theme_qml_engine, theme):
 
     input_item = obj.findChild(QObject, "input")
     assert input_item.property("color") == QColor(theme.text)
+
+
+def test_focused_state_uses_accent_border(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppTextField.qml", focused=True)
+
+    assert obj.property("borderColor") == QColor(theme.accent)
+
+
+def test_error_state_uses_warning_color_for_border_and_text(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppTextField.qml", error=True)
+
+    input_item = obj.findChild(QObject, "input")
+    assert obj.property("borderColor") == QColor(theme.warningColor)
+    assert input_item.property("color") == QColor(theme.warningColor)

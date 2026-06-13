@@ -6,6 +6,8 @@ Rectangle {
 
     property alias text: input.text
     property string placeholderText: ""
+    property bool focused: false
+    property bool error: false
     property alias borderColor: root.border.color
 
     implicitWidth: 160
@@ -13,7 +15,11 @@ Rectangle {
     radius: 4
     color: Theme.surface
     border.width: 1
-    border.color: Theme.border
+    border.color: {
+        if (root.error) return Theme.warningColor
+        if (root.focused) return Theme.accent
+        return Theme.border
+    }
 
     TextInput {
         id: input
@@ -25,10 +31,11 @@ Rectangle {
             leftMargin: Theme.spacingSm
             rightMargin: Theme.spacingSm
         }
-        color: Theme.text
+        color: root.error ? Theme.warningColor : Theme.text
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeMd
         clip: true
+        onActiveFocusChanged: root.focused = activeFocus
 
         AppText {
             anchors.fill: parent
