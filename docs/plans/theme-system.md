@@ -155,7 +155,7 @@ literals) to use tokens and primitives.
 
 ### Feature 5.0 — `theme/05-token-lint-test`
 
-- [ ] Add a test that scans `found_app/qml/**/*.qml` for hardcoded hex color
+- [x] Add a test that scans `found_app/qml/**/*.qml` for hardcoded hex color
       literals and `pixelSize:` integer literals, failing if any are found
       outside an explicit allowlist. Seed the allowlist with the 21 known files
       (`CategoriesBar.qml`, `CategoryChip.qml`, `ChipSearchSection.qml`,
@@ -167,7 +167,7 @@ literals) to use tokens and primitives.
       `MainRouter.qml`, `TitleBar.qml`, `ImageView.qml`, `SplashScreen.qml`) so
       the test passes initially. Each rollout commit below removes one file from
       the allowlist.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ### Feature 5.1 — `theme/05-app-text-primitive`
 
