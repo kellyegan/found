@@ -211,11 +211,11 @@ literals) to use tokens and primitives.
 
 ### Feature 5.5 — `theme/05-surface-primitive`
 
-- [ ] Add `Surface.qml`: a `Rectangle` wrapper using `Theme.surface`,
+- [x] Add `Surface.qml`: a `Rectangle` wrapper using `Theme.surface`,
       `Theme.border`, and a spacing token for padding/radius — the base for
       panels and cards.
       Test: default instance exposes expected color/spacing tokens.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ### Feature 5.6 — `theme/05-rollout-shell`
 
