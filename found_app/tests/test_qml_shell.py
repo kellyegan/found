@@ -18,7 +18,7 @@ Covers:
 import pytest
 from pathlib import Path
 from PySide6.QtCore import QEventLoop, QMetaObject, QObject, QTimer, QUrl
-from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine, QJSValue
+from PySide6.QtQml import QQmlEngine, QQmlComponent, QQmlApplicationEngine, QQmlExpression, QJSValue
 from PySide6.QtQuick import QQuickWindow
 
 import found_app
@@ -1960,3 +1960,75 @@ def test_title_bar_backend_connected_is_writable(engine):
     obj = load_component(engine, "shell/TitleBar.qml")
     obj.setProperty("backendConnected", False)
     assert obj.property("backendConnected") is False
+
+
+# ---------------------------------------------------------------------------
+# TitleBar — theme tokens (Feature 5.6)
+# ---------------------------------------------------------------------------
+
+
+def test_title_bar_disconnected_indicator_uses_theme_warning(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "shell/TitleBar.qml")
+    obj.setProperty("backendConnected", False)
+
+    dot = obj.findChild(QObject, "disconnectedDot")
+    text = obj.findChild(QObject, "disconnectedText")
+    assert dot is not None
+    assert text is not None
+    assert dot.property("color") == QColor(active_theme.warning)
+    assert text.property("color") == QColor(active_theme.warning)
+
+
+def test_title_bar_missing_indicator_uses_theme_error(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "shell/TitleBar.qml")
+    obj.setProperty("missingCount", 3)
+
+    icon = obj.findChild(QObject, "missingIcon")
+    text = obj.findChild(QObject, "missingText")
+    assert icon is not None
+    assert text is not None
+    assert icon.property("color") == QColor(active_theme.error)
+    assert text.property("color") == QColor(active_theme.error)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_title_bar_filter_icon_uses_theme_font_size_md(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "shell/TitleBar.qml")
+
+    icon = obj.findChild(QObject, "filterIcon")
+    assert icon is not None
+    assert icon.property("font").pixelSize() == active_theme.fontSizeMd
+
+
+def test_title_bar_read_only_filter_pills_use_chip_states(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "shell/TitleBar.qml")
+    obj.setProperty("searchReadOnly", True)
+    obj.setProperty("activeFilters", [
+        {"name": "nature", "mode": "include"},
+        {"name": "urban", "mode": "exclude"},
+    ])
+
+    # Repeater-instantiated delegates aren't reachable via findChildren, so
+    # query the live items through the QML context instead.
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(
+        ctx, None,
+        "[0, 1].map(i => filterRepeater.itemAt(i).children[0].chipState)",
+    )
+    result, _ = expr.evaluate()
+    states = sorted(result.toVariant())
+    assert states == ["exclude", "include"]
