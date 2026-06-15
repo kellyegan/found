@@ -20,7 +20,6 @@ PIXEL_SIZE_RE = re.compile(r"pixelSize:\s*\d+")
 # Each Section 5 rollout commit converts one file to theme tokens/primitives
 # and removes it from this list.
 ALLOWED_FILES = {
-    "components/CategoryChip.qml",
     "components/ChipSearchSection.qml",
     "components/CollectionEditorSection.qml",
     "components/CollectionItem.qml",
