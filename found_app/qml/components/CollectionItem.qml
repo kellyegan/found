@@ -13,7 +13,7 @@ Rectangle {
     signal removeRequested(string collectionId, string collectionName)
 
     implicitHeight: 36
-    color: isDropTarget ? "#2a3a2a" : (hoverArea.containsMouse ? "#252525" : "transparent")
+    color: isDropTarget ? Qt.tint(Theme.surface, Qt.rgba(0, 1, 0, 0.15)) : (hoverArea.containsMouse ? Theme.surface : "transparent")
     radius: 4
 
     Behavior on color { ColorAnimation { duration: 100 } }
@@ -39,13 +39,14 @@ Rectangle {
     }
 
     Text {
+        objectName: "collectionNameText"
         anchors {
             left: parent.left; leftMargin: 12
             right: removeBtn.left; rightMargin: Theme.spacingMd
             verticalCenter: parent.verticalCenter
         }
         text: root.collectionName
-        color: root.isDropTarget ? "#88cc88" : "#cccccc"
+        color: root.isDropTarget ? Theme.success : Theme.text
         font.pixelSize: Theme.fontSizeMd
         font.weight: Font.DemiBold
         font.capitalization: Font.AllUppercase
@@ -54,18 +55,20 @@ Rectangle {
 
     Rectangle {
         id: removeBtn
+        objectName: "removeBtn"
         anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
         width: 20
         height: 20
         radius: 4
         visible: hoverArea.containsMouse || removeArea.containsMouse
-        color: removeArea.containsMouse ? "#4a2a2a" : "transparent"
+        color: removeArea.containsMouse ? Qt.tint(Theme.surface, Qt.rgba(1, 0, 0, 0.2)) : "transparent"
 
         Text {
+            objectName: "removeIconText"
             anchors.centerIn: parent
             text: "×"
-            font.pixelSize: 15
-            color: removeArea.containsMouse ? "#ff8888" : "#888888"
+            font.pixelSize: Theme.fontSizeMd
+            color: removeArea.containsMouse ? Theme.warning : Theme.textMuted
         }
 
         MouseArea {
@@ -78,10 +81,13 @@ Rectangle {
 
     // Drop target highlight border
     Rectangle {
+        id: dropBorder
+        objectName: "dropBorder"
+        property alias borderColor: dropBorder.border.color
         anchors.fill: parent
         radius: parent.radius
         color: "transparent"
-        border.color: "#44aa44"
+        border.color: Theme.success
         border.width: root.isDropTarget ? 1 : 0
         visible: root.isDropTarget
     }

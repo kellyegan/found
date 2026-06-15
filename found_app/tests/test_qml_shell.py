@@ -2937,3 +2937,52 @@ def test_collection_editor_section_chip_uses_theme_tokens(theme_qml_engine):
     assert remove is not None
     assert remove.property("color") == QColor(active_theme.textMuted)
     assert remove.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# CollectionItem — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_collection_item_label_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionItem.qml")
+
+    label = obj.findChild(QObject, "collectionNameText")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.text)
+    assert label.property("font").pixelSize() == active_theme.fontSizeMd
+
+    obj.setProperty("isDropTarget", True)
+    assert label.property("color") == QColor(active_theme.success)
+
+
+def test_collection_item_remove_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionItem.qml")
+
+    remove_icon = obj.findChild(QObject, "removeIconText")
+    assert remove_icon is not None
+    assert remove_icon.property("font").pixelSize() == active_theme.fontSizeMd
+    assert remove_icon.property("color") == QColor(active_theme.textMuted)
+
+
+def test_collection_item_drop_border_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionItem.qml")
+
+    drop_border = obj.findChild(QObject, "dropBorder")
+    assert drop_border is not None
+    assert drop_border.property("borderColor") == QColor(active_theme.success)
+    assert drop_border.property("visible") is False
+
+    obj.setProperty("isDropTarget", True)
+    assert drop_border.property("visible") is True
