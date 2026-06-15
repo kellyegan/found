@@ -54,6 +54,10 @@ class ThemeManager(QObject):
         if current != self._system_variant:
             self._apply_palette()
 
+    @Slot(result=list)
+    def availableThemes(self) -> list[str]:
+        return list(THEMES.keys())
+
     @Property(str, notify=paletteChanged)
     def themeName(self) -> str:
         return self._theme_name

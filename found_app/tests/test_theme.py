@@ -179,6 +179,14 @@ def test_set_theme_name_persists_and_restores(qapp, tmp_path):
     assert restored.themeName == "Found"
 
 
+def test_available_themes_lists_themes_registry_keys(qapp):
+    from found_app.theme.palettes import THEMES
+
+    theme = ThemeManager()
+
+    assert theme.availableThemes() == list(THEMES.keys())
+
+
 def test_mode_defaults_to_system(qapp):
     theme = ThemeManager()
     assert theme.mode == "system"
