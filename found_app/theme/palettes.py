@@ -52,7 +52,60 @@ FOUND_LIGHT = {
     "spacingXl": 40,
 }
 
+SEPIA_DARK = {
+    "background": "#2b2018",
+    "surface": "#3a2e22",
+    "text": "#ecdfc8",
+    "textMuted": "#9c8b73",
+    "accent": "#d9a566",
+    "border": "#4a3c2c",
+    "warning": "#ff8844",
+    "error": "#ff6655",
+    "success": "#88cc88",
+    "fontFamily": "Inter",
+    "fontSizeSm": 12,
+    "fontSizeMd": 16,
+    "fontSizeLg": 24,
+    "fontSizeXl": 48,
+    "overlayWidth": 260,
+    "horizontalTextMargin": 30,
+    "horizontalTextPadding": 12,
+    "horizontalMargin": 18,
+    "spacingXs": 4,
+    "spacingSm": 8,
+    "spacingMd": 16,
+    "spacingLg": 24,
+    "spacingXl": 40,
+}
+
+SEPIA_LIGHT = {
+    "background": "#f4ecd8",
+    "surface": "#fbf3e7",
+    "text": "#3b2f23",
+    "textMuted": "#8a7a66",
+    "accent": "#a0522d",
+    "border": "#e0d3b8",
+    "warning": "#cc6622",
+    "error": "#cc4444",
+    "success": "#4a7c3f",
+    "fontFamily": "Inter",
+    "fontSizeSm": 12,
+    "fontSizeMd": 16,
+    "fontSizeLg": 24,
+    "fontSizeXl": 48,
+    "overlayWidth": 260,
+    "horizontalTextMargin": 30,
+    "horizontalTextPadding": 12,
+    "horizontalMargin": 18,
+    "spacingXs": 4,
+    "spacingSm": 8,
+    "spacingMd": 16,
+    "spacingLg": 24,
+    "spacingXl": 40,
+}
+
 # Named theme families, each grouping a light and dark palette variant.
 THEMES = {
     "Found": {"light": FOUND_LIGHT, "dark": FOUND_DARK},
+    "Sepia": {"light": SEPIA_LIGHT, "dark": SEPIA_DARK},
 }

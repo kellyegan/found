@@ -51,3 +51,14 @@ def test_found_light_typography_and_spacing_match_found_dark():
     ]
     for key in shared_keys:
         assert FOUND_LIGHT[key] == FOUND_DARK[key], key
+
+
+def test_themes_registry_includes_sepia_with_required_keys():
+    assert "Sepia" in THEMES
+    sepia = THEMES["Sepia"]
+    assert set(sepia.keys()) == {"light", "dark"}
+
+    required_keys = set(FOUND_DARK.keys())
+    assert set(sepia["light"].keys()) == required_keys
+    assert set(sepia["dark"].keys()) == required_keys
+    assert sepia["light"]["background"] != sepia["dark"]["background"]
