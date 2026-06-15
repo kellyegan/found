@@ -2486,3 +2486,106 @@ def test_metadata_sidebar_missing_banner_uses_theme_error(theme_qml_engine):
     assert banner_text is not None
     assert banner_text.property("color") == QColor(active_theme.error)
     assert banner_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# ConfirmDialog — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_confirm_dialog_backdrop_uses_theme_background(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    backdrop = obj.findChild(QObject, "backdrop")
+    assert backdrop is not None
+    assert backdrop.property("color") == QColor(active_theme.background)
+
+
+def test_confirm_dialog_sheet_uses_theme_surface(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    sheet = obj.findChild(QObject, "sheet")
+    assert sheet is not None
+    assert sheet.property("color") == QColor(active_theme.surface)
+
+
+def test_confirm_dialog_message_uses_theme_text_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    message = obj.findChild(QObject, "messageText")
+    assert message is not None
+    assert message.property("color") == QColor(active_theme.text)
+    assert message.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_confirm_dialog_checkbox_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+    obj.setProperty("checkboxLabel", "Also remove from library")
+
+    checkbox = obj.findChild(QObject, "checkboxBox")
+    assert checkbox is not None
+    assert checkbox.property("borderColor") == QColor(active_theme.textMuted)
+
+    checkbox_label = obj.findChild(QObject, "checkboxLabelText")
+    assert checkbox_label is not None
+    assert checkbox_label.property("color") == QColor(active_theme.textMuted)
+    assert checkbox_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+    obj.setProperty("checkboxChecked", True)
+    assert checkbox.property("borderColor") == QColor(active_theme.accent)
+
+    checkmark = obj.findChild(QObject, "checkmarkText")
+    assert checkmark is not None
+    assert checkmark.property("color") == QColor(active_theme.background)
+    assert checkmark.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_confirm_dialog_cancel_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    cancel_btn = obj.findChild(QObject, "cancelBtn")
+    assert cancel_btn is not None
+    assert cancel_btn.property("borderColor") == QColor(active_theme.border)
+    assert cancel_btn.property("color") == QColor("transparent")
+
+    cancel_label = obj.findChild(QObject, "cancelLabelText")
+    assert cancel_label is not None
+    assert cancel_label.property("color") == QColor(active_theme.textMuted)
+    assert cancel_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_confirm_dialog_confirm_button_uses_theme_warning(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    confirm_btn = obj.findChild(QObject, "confirmBtn")
+    assert confirm_btn is not None
+    assert confirm_btn.property("borderColor") == QColor(active_theme.warning)
+
+    confirm_label = obj.findChild(QObject, "confirmLabelText")
+    assert confirm_label is not None
+    assert confirm_label.property("color") == QColor(active_theme.warning)
+    assert confirm_label.property("font").pixelSize() == active_theme.fontSizeSm
