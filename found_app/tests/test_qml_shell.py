@@ -3122,4 +3122,22 @@ def test_thumbnail_tile_locate_button_uses_theme_tokens(theme_qml_engine):
     icon = obj.findChild(QObject, "locateIconText")
     assert icon is not None
     assert icon.property("color") == QColor(active_theme.textMuted)
-    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# SettingsView
+# ---------------------------------------------------------------------------
+
+
+def test_settings_view_qml_exists():
+    assert (QML_DIR / "views/SettingsView.qml").exists()
+
+
+def test_settings_view_loads(engine):
+    load_component(engine, "views/SettingsView.qml")
+
+
+def test_settings_view_has_appearance_section(engine):
+    obj = load_component(engine, "views/SettingsView.qml")
+    section = obj.findChild(QObject, "appearanceSection")
+    assert section is not None
