@@ -233,14 +233,14 @@ literals) to use tokens and primitives.
 
 ### Feature 5.7 — `theme/05-rollout-filtering`
 
-- [ ] Convert `CategoriesBar.qml`; remove from lint allowlist.
-- [ ] Convert `CategoryChip.qml`; remove from lint allowlist.
-- [ ] Convert `ChipSearchSection.qml`; remove from lint allowlist.
-- [ ] Convert `FilterChip.qml`; remove from lint allowlist.
-- [ ] Convert `FilterDropdown.qml`; remove from lint allowlist.
-- [ ] Convert `TagSearchField.qml`; remove from lint allowlist.
-- [ ] Convert `MetaRow.qml`; remove from lint allowlist.
-- [ ] Run full suite.
+- [x] Convert `CategoriesBar.qml`; remove from lint allowlist.
+- [x] Convert `CategoryChip.qml`; remove from lint allowlist.
+- [x] Convert `ChipSearchSection.qml`; remove from lint allowlist.
+- [x] Convert `FilterChip.qml`; remove from lint allowlist.
+- [x] Convert `FilterDropdown.qml`; remove from lint allowlist.
+- [x] Convert `TagSearchField.qml`; remove from lint allowlist.
+- [x] Convert `MetaRow.qml`; remove from lint allowlist.
+- [x] Run full suite.
 
 ### Feature 5.8 — `theme/05-rollout-panels`
 
