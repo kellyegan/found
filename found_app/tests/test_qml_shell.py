@@ -236,6 +236,31 @@ def test_main_router_relocation_result_dialog_closed_by_default(engine):
     assert obj.property("relocationResultDialogOpen") is False
 
 
+def test_main_router_routes_to_settings_view(qapp):
+    from found_app.core.app_state import AppState
+
+    library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: None)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+    root = engine.rootObjects()[0]
+
+    app_state = engine.rootContext().contextProperty("AppState")
+    app_state.transition_to(AppState.BackendStarting)
+    app_state.transition_to(AppState.Ready)
+
+    main_router = root.findChild(QObject, "mainRouter")
+    main_router.setProperty("splashDismissed", True)
+
+    navigation.push("settings")
+
+    settings_view = root.findChild(QObject, "settingsView")
+    assert settings_view is not None
+    assert settings_view.property("visible") is True
+
+
 # ---------------------------------------------------------------------------
 # MainRouter drag-and-drop overlay — theme tokens (Feature 5.6)
 # ---------------------------------------------------------------------------
@@ -1982,6 +2007,19 @@ def test_title_bar_has_filter_toggle_requested_signal(engine):
     received = []
     obj.filterToggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
+
+
+def test_title_bar_has_settings_requested_signal(engine):
+    obj = load_component(engine, "shell/TitleBar.qml")
+    received = []
+    obj.settingsRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_title_bar_settings_icon_visible(engine):
+    obj = load_component(engine, "shell/TitleBar.qml")
+    icon = obj.findChild(QObject, "settingsIcon")
+    assert icon is not None
 
 
 # ---------------------------------------------------------------------------
