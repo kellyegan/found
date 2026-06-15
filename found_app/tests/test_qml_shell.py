@@ -2335,3 +2335,29 @@ def test_meta_row_clickable_value_uses_theme_accent(theme_qml_engine):
 
     value = obj.findChild(QObject, "valueText")
     assert value.property("color") == QColor(active_theme.accent)
+
+
+# ---------------------------------------------------------------------------
+# SidePanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_side_panel_qml_exists():
+    assert (QML_DIR / "components/SidePanel.qml").exists()
+
+
+def test_side_panel_loads(engine):
+    load_component(engine, "components/SidePanel.qml")
+
+
+def test_side_panel_divider_uses_theme_border(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/SidePanel.qml")
+    obj.setProperty("title", "Title")
+
+    divider = obj.findChild(QObject, "divider")
+    assert divider is not None
+    assert divider.property("color") == QColor(active_theme.border)

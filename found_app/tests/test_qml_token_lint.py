@@ -28,7 +28,6 @@ ALLOWED_FILES = {
     "components/HoverTooltip.qml",
     "components/ImportPanel.qml",
     "components/MetadataSidePanel.qml",
-    "components/SidePanel.qml",
     "components/ThumbnailTile.qml",
     "views/ImageView.qml",
     "views/SplashScreen.qml",
