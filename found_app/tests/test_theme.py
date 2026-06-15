@@ -212,6 +212,37 @@ def test_system_mode_resolves_to_dark_palette_via_darkdetect(qapp, monkeypatch):
     assert theme.background == FOUND_DARK["background"]
 
 
+def test_system_mode_poll_detects_os_theme_change(qapp, monkeypatch):
+    import found_app.theme.theme as theme_module
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Light")
+    theme = ThemeManager()
+    assert theme.background == FOUND_LIGHT["background"]
+
+    received = []
+    theme.paletteChanged.connect(lambda: received.append(True))
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Dark")
+    theme._poll_system_theme()
+
+    assert received == [True]
+    assert theme.background == FOUND_DARK["background"]
+
+
+def test_system_mode_poll_does_nothing_when_os_theme_unchanged(qapp, monkeypatch):
+    import found_app.theme.theme as theme_module
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Light")
+    theme = ThemeManager()
+
+    received = []
+    theme.paletteChanged.connect(lambda: received.append(True))
+
+    theme._poll_system_theme()
+
+    assert received == []
+
+
 def test_set_palette_swaps_active_palette_and_notifies(qapp):
     theme = ThemeManager()
     received = []
