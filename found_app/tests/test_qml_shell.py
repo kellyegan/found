@@ -192,6 +192,21 @@ def test_splash_screen_has_dismissed_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# SplashScreen — theme tokens (Feature 5.10)
+# ---------------------------------------------------------------------------
+
+
+def test_splash_screen_title_text_pixel_size_uses_theme_token(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "views/SplashScreen.qml")
+    title_text = obj.findChild(QObject, "titleText")
+    assert title_text is not None
+    assert title_text.property("font").pixelSize() == active_theme.fontSizeXl * 8
+
+
+# ---------------------------------------------------------------------------
 # MainRouter
 # ---------------------------------------------------------------------------
 

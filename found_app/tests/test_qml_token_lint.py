@@ -21,7 +21,6 @@ PIXEL_SIZE_RE = re.compile(r"pixelSize:\s*\d+")
 # and removes it from this list.
 ALLOWED_FILES = {
     "views/ImageView.qml",
-    "views/SplashScreen.qml",
 }
 
 
