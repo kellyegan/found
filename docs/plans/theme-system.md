@@ -276,16 +276,16 @@ running.
 
 ### Feature 6.1 — `theme/06-os-live-switching`
 
-- [ ] Add a `QTimer`-based poll of `darkdetect.theme()` while
+- [x] Add a `QTimer`-based poll of `darkdetect.theme()` while
       `mode == "system"`.
       Test: with `darkdetect.theme()` mocked to change between polls,
       `ThemeManager` emits `paletteChanged` and resolves the new palette.
-- [ ] Start/stop the poll timer in response to `setMode()` changes (only
+- [x] Start/stop the poll timer in response to `setMode()` changes (only
       active in `system` mode).
       Test: timer is running iff mode is `system`.
-- [ ] Manually verify (via the `run` skill): toggle OS appearance while the
+- [x] Manually verify (via the `run` skill): toggle OS appearance while the
       app is running in "system" mode and confirm the UI updates live.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ---
 
