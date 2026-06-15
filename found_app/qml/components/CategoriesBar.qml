@@ -21,17 +21,19 @@ Item {
     // ── Toggle tab — sits at the top of the bar ──────────────────────────────
     Rectangle {
         id: toggleTab
+        objectName: "toggleTab"
         width: 72
         height: root._tabHeight
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top }
-        color: "#1a1a1a"
+        color: Theme.border
         radius: 3
 
         Text {
+            objectName: "toggleArrow"
             anchors.centerIn: parent
             text: root.open ? "▼" : "▲"
-            font.pixelSize: 8
-            color: "#666666"
+            font.pixelSize: Theme.fontSizeSm
+            color: Theme.textMuted
         }
 
         MouseArea {
@@ -60,14 +62,15 @@ Item {
             width: 28
             height: 28
             radius: 14
-            color: addBtnArea.containsMouse ? "#333333" : "transparent"
+            color: addBtnArea.containsMouse ? Theme.border : "transparent"
             z: 2
 
             Text {
+                objectName: "addBtnIcon"
                 anchors.centerIn: parent
                 text: "+"
-                font.pixelSize: 18
-                color: "#888888"
+                font.pixelSize: Theme.fontSizeMd
+                color: Theme.textMuted
             }
 
             MouseArea {
@@ -135,7 +138,7 @@ Item {
         Rectangle {
             id: createOverlay
             anchors.fill: parent
-            color: "#cc1a1a1a"
+            color: Qt.rgba(0, 0, 0, 0.8)
             visible: false
             z: 3
 
@@ -151,17 +154,20 @@ Item {
 
             Rectangle {
                 id: inputContainer
+                objectName: "inputContainer"
                 anchors.centerIn: parent
+                property alias borderColor: inputContainer.border.color
                 width: Math.min(320, parent.width - 32)
                 height: 32
                 radius: 16
-                color: "#2a2a2a"
-                border.color: "#555555"
+                color: Theme.surface
+                border.color: Theme.border
                 border.width: 1
                 z: 1
 
                 TextInput {
                     id: newCategoryInput
+                    objectName: "newCategoryInput"
                     anchors {
                         left: parent.left; leftMargin: 14
                         right: submitBtn.left; rightMargin: 6
@@ -175,7 +181,7 @@ Item {
                     Text {
                         anchors.fill: parent
                         text: "New category name…"
-                        color: "#555555"
+                        color: Theme.textMuted
                         font.pixelSize: Theme.fontSizeSm
                         font.family: Theme.fontFamily
                         visible: newCategoryInput.text.length === 0
@@ -204,13 +210,14 @@ Item {
                     height: 24
                     radius: 12
                     color: submitBtnArea.containsMouse && newCategoryInput.text.trim().length > 0
-                           ? "#3a5a3a" : "transparent"
+                           ? Theme.border : "transparent"
 
                     Text {
+                        objectName: "submitIcon"
                         anchors.centerIn: parent
                         text: "↵"
-                        font.pixelSize: 12
-                        color: newCategoryInput.text.trim().length > 0 ? "#88cc88" : "#555555"
+                        font.pixelSize: Theme.fontSizeSm
+                        color: newCategoryInput.text.trim().length > 0 ? Theme.success : Theme.textMuted
                     }
 
                     MouseArea {

@@ -1434,6 +1434,81 @@ def test_categories_bar_has_filter_toggled_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# CategoriesBar — theme tokens (Feature 5.7)
+# ---------------------------------------------------------------------------
+
+
+def test_categories_bar_toggle_tab_uses_theme_border(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    tab = obj.findChild(QObject, "toggleTab")
+    assert tab is not None
+    assert tab.property("color") == QColor(active_theme.border)
+
+
+def test_categories_bar_toggle_arrow_uses_theme_text_muted(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    arrow = obj.findChild(QObject, "toggleArrow")
+    assert arrow is not None
+    assert arrow.property("color") == QColor(active_theme.textMuted)
+    assert arrow.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_categories_bar_add_button_icon_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    icon = obj.findChild(QObject, "addBtnIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeMd
+
+
+def test_categories_bar_input_container_uses_theme_surface_and_border(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    container = obj.findChild(QObject, "inputContainer")
+    assert container is not None
+    assert container.property("color") == QColor(active_theme.surface)
+    assert container.property("borderColor") == QColor(active_theme.border)
+
+
+def test_categories_bar_submit_icon_uses_theme_success_when_active(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    input_field = obj.findChild(QObject, "newCategoryInput")
+    icon = obj.findChild(QObject, "submitIcon")
+    assert input_field is not None
+    assert icon is not None
+
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+    assert icon.property("color") == QColor(active_theme.textMuted)
+
+    input_field.setProperty("text", "Nature")
+    assert icon.property("color") == QColor(active_theme.success)
+
+
+# ---------------------------------------------------------------------------
 # ImportPanel — Slice 9 Commit 2
 # ---------------------------------------------------------------------------
 
