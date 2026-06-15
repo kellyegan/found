@@ -144,11 +144,14 @@ Item {
                 GroupHeader { text: "Missing Images" }
 
                 Rectangle {
+                    id: missingToggle
+                    objectName: "missingToggle"
+                    property alias borderColor: missingToggle.border.color
                     width: parent.width
                     height: 28
                     radius: 14
-                    color: root.showMissingOnly ? "#2a1515" : "transparent"
-                    border.color: root.showMissingOnly ? "#884444" : Theme.border
+                    color: root.showMissingOnly ? Qt.tint(Theme.surface, Qt.rgba(1, 0, 0, 0.15)) : "transparent"
+                    border.color: root.showMissingOnly ? Theme.error : Theme.border
                     border.width: 1
 
                     Text {

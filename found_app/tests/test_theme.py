@@ -25,7 +25,7 @@ def _app_settings(tmp_path, name="settings.ini"):
 
 HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$")
 
-COLOR_PROPS = ["background", "surface", "text", "textMuted", "accent", "border", "warning", "error"]
+COLOR_PROPS = ["background", "surface", "text", "textMuted", "accent", "border", "warning", "error", "success"]
 FONT_SIZE_PROPS = ["fontSizeSm", "fontSizeMd", "fontSizeLg", "fontSizeXl"]
 TYPOGRAPHY_PROPS = ["fontFamily"] + FONT_SIZE_PROPS
 SPACING_PROPS = ["spacingXs", "spacingSm", "spacingMd", "spacingLg", "spacingXl"]

@@ -71,7 +71,7 @@ Item {
         spacing: 0
 
         // Section separator
-        Rectangle { width: parent.width; height: 1; color: "#2a2a2a" }
+        Rectangle { objectName: "sectionSeparator"; width: parent.width; height: 1; color: Theme.border }
 
         // Section label row
         Item {
@@ -79,13 +79,14 @@ Item {
             height: 32
 
             Text {
+                objectName: "sectionLabel"
                 anchors { left: parent.left; verticalCenter: parent.verticalCenter }
                 text: root.sectionLabel
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeSm
                 font.family: Theme.fontFamily
                 font.capitalization: Font.AllUppercase
                 font.letterSpacing: 0.8
-                color: "#666666"
+                color: Theme.textMuted
             }
         }
 
@@ -95,19 +96,23 @@ Item {
             height: 32
 
             Rectangle {
+                id: searchInputBg
+                objectName: "searchInputBg"
+                property alias borderColor: searchInputBg.border.color
                 anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
                 height: 26
                 radius: 13
-                color: addInput.activeFocus ? "#242424" : "transparent"
-                border.color: addInput.activeFocus ? "#555555" : "#333333"
+                color: Theme.surface
+                border.color: addInput.activeFocus ? Theme.accent : Theme.border
                 border.width: 1
 
                 Text {
                     id: addIcon
+                    objectName: "addIcon"
                     anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
                     text: "+"
-                    font.pixelSize: 14
-                    color: "#555555"
+                    font.pixelSize: Theme.fontSizeSm
+                    color: Theme.textMuted
                 }
 
                 Rectangle {
@@ -115,9 +120,9 @@ Item {
                     visible: addInput.text.trim().length > 0
                     anchors { right: parent.right; rightMargin: 3; verticalCenter: parent.verticalCenter }
                     width: 20; height: 20; radius: 10
-                    color: submitArea.containsMouse ? "#3a5a3a" : "transparent"
+                    color: submitArea.containsMouse ? Theme.border : "transparent"
 
-                    Text { anchors.centerIn: parent; text: "↵"; font.pixelSize: 10; color: "#88cc88" }
+                    Text { objectName: "submitIcon"; anchors.centerIn: parent; text: "↵"; font.pixelSize: Theme.fontSizeSm; color: Theme.success }
 
                     MouseArea {
                         id: submitArea
@@ -130,6 +135,7 @@ Item {
 
                 TextInput {
                     id: addInput
+                    objectName: "addInput"
                     anchors {
                         left: addIcon.right; leftMargin: 4
                         right: submitBtn.left; rightMargin: 2
@@ -137,7 +143,7 @@ Item {
                     }
                     activeFocusOnTab: false
                     color: Theme.text
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSm
                     font.family: Theme.fontFamily
                     clip: true
 
@@ -145,8 +151,8 @@ Item {
                         anchors.fill: parent
                         visible: addInput.text.length === 0
                         text: root.placeholder
-                        color: "#555555"
-                        font.pixelSize: 11
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeSm
                         font.family: Theme.fontFamily
                     }
 
@@ -182,8 +188,8 @@ Item {
             width: secCol.width
             height: visible ? Math.min(suggList.contentHeight + 8, 160) : 0
             radius: 4
-            color: "#242424"
-            border.color: "#3a3a3a"
+            color: Theme.surface
+            border.color: Theme.border
             border.width: 1
             clip: true
 
@@ -198,12 +204,12 @@ Item {
                     width: suggList.width
                     height: 26
 
-                    Rectangle { anchors.fill: parent; color: suggArea.containsMouse ? "#2a2a2a" : "transparent"; radius: 3 }
+                    Rectangle { anchors.fill: parent; color: suggArea.containsMouse ? Theme.border : "transparent"; radius: 3 }
 
                     Text {
                         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                         text: modelData.name ?? ""
-                        color: Theme.text; font.pixelSize: 11; font.family: Theme.fontFamily
+                        color: Theme.text; font.pixelSize: Theme.fontSizeSm; font.family: Theme.fontFamily
                     }
 
                     MouseArea {
@@ -223,7 +229,7 @@ Item {
             width: parent.width
             topPadding: 4; bottomPadding: 4
             text: root.multiSelectLabel
-            color: "#666666"; font.pixelSize: 11; font.family: Theme.fontFamily; wrapMode: Text.WordWrap
+            color: Theme.textMuted; font.pixelSize: Theme.fontSizeSm; font.family: Theme.fontFamily; wrapMode: Text.WordWrap
         }
 
         // Current item chips — single selection mode only
@@ -236,18 +242,18 @@ Item {
                 delegate: Rectangle {
                     required property var modelData
                     width: chipLabel.implicitWidth + 28; height: 22; radius: 11
-                    color: "#232323"; border.color: "#3a3a3a"; border.width: 1
+                    color: Theme.surface; border.color: Theme.border; border.width: 1
 
                     Text {
                         id: chipLabel
                         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                        text: modelData.name ?? ""; font.pixelSize: 11; font.family: Theme.fontFamily; color: "#aaaaaa"
+                        text: modelData.name ?? ""; font.pixelSize: Theme.fontSizeSm; font.family: Theme.fontFamily; color: Theme.text
                     }
 
                     Text {
                         anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
-                        text: "×"; font.pixelSize: 12
-                        color: chipRemoveArea.containsMouse ? "#ffffff" : "#666666"
+                        text: "×"; font.pixelSize: Theme.fontSizeSm
+                        color: chipRemoveArea.containsMouse ? Theme.text : Theme.textMuted
 
                         MouseArea {
                             id: chipRemoveArea

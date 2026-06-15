@@ -1387,6 +1387,93 @@ def test_category_chip_off_state_color_uses_theme_border(theme_qml_engine):
 
 
 # ---------------------------------------------------------------------------
+# ChipSearchSection — theme tokens (Feature 5.7)
+# ---------------------------------------------------------------------------
+
+
+def test_chip_search_section_qml_exists():
+    assert (QML_DIR / "components/ChipSearchSection.qml").exists()
+
+
+def test_chip_search_section_loads(engine):
+    load_component(engine, "components/ChipSearchSection.qml")
+
+
+def test_chip_search_section_separator_and_label_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ChipSearchSection.qml")
+    obj.setProperty("sectionLabel", "Tags")
+
+    separator = obj.findChild(QObject, "sectionSeparator")
+    label = obj.findChild(QObject, "sectionLabel")
+    assert separator is not None
+    assert label is not None
+    assert separator.property("color") == QColor(active_theme.border)
+    assert label.property("color") == QColor(active_theme.textMuted)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_chip_search_section_input_uses_theme_surface_and_border(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ChipSearchSection.qml")
+
+    input_bg = obj.findChild(QObject, "searchInputBg")
+    assert input_bg is not None
+    assert input_bg.property("color") == QColor(active_theme.surface)
+    assert input_bg.property("borderColor") == QColor(active_theme.border)
+
+
+def test_chip_search_section_input_border_uses_theme_accent_when_focused(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ChipSearchSection.qml")
+
+    window = QQuickWindow()
+    obj.setParentItem(window.contentItem())
+    window.resize(300, 100)
+    window.show()
+
+    input_bg = obj.findChild(QObject, "searchInputBg")
+    add_input = obj.findChild(QObject, "addInput")
+    add_input.forceActiveFocus()
+    assert input_bg.property("borderColor") == QColor(active_theme.accent)
+
+
+def test_chip_search_section_add_icon_uses_theme_text_muted(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ChipSearchSection.qml")
+
+    icon = obj.findChild(QObject, "addIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_chip_search_section_submit_icon_uses_theme_success(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ChipSearchSection.qml")
+
+    icon = obj.findChild(QObject, "submitIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.success)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
 # CategoriesBar
 # ---------------------------------------------------------------------------
 
@@ -1431,6 +1518,81 @@ def test_categories_bar_has_filter_toggled_signal(engine):
     received = []
     obj.filterToggled.connect(lambda cat_id: received.append(cat_id))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# CategoriesBar — theme tokens (Feature 5.7)
+# ---------------------------------------------------------------------------
+
+
+def test_categories_bar_toggle_tab_uses_theme_border(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    tab = obj.findChild(QObject, "toggleTab")
+    assert tab is not None
+    assert tab.property("color") == QColor(active_theme.border)
+
+
+def test_categories_bar_toggle_arrow_uses_theme_text_muted(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    arrow = obj.findChild(QObject, "toggleArrow")
+    assert arrow is not None
+    assert arrow.property("color") == QColor(active_theme.textMuted)
+    assert arrow.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_categories_bar_add_button_icon_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    icon = obj.findChild(QObject, "addBtnIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeMd
+
+
+def test_categories_bar_input_container_uses_theme_surface_and_border(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    container = obj.findChild(QObject, "inputContainer")
+    assert container is not None
+    assert container.property("color") == QColor(active_theme.surface)
+    assert container.property("borderColor") == QColor(active_theme.border)
+
+
+def test_categories_bar_submit_icon_uses_theme_success_when_active(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
+
+    input_field = obj.findChild(QObject, "newCategoryInput")
+    icon = obj.findChild(QObject, "submitIcon")
+    assert input_field is not None
+    assert icon is not None
+
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+    assert icon.property("color") == QColor(active_theme.textMuted)
+
+    input_field.setProperty("text", "Nature")
+    assert icon.property("color") == QColor(active_theme.success)
 
 
 # ---------------------------------------------------------------------------
@@ -1598,6 +1760,20 @@ def test_filter_chip_has_remove_requested_signal(engine):
     assert isinstance(received, list)
 
 
+def test_filter_chip_icons_use_theme_font_size_sm(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/FilterChip.qml")
+
+    mode_icon = obj.findChild(QObject, "modeIcon")
+    remove_icon = obj.findChild(QObject, "removeIcon")
+    assert mode_icon is not None
+    assert remove_icon is not None
+    assert mode_icon.property("font").pixelSize() == active_theme.fontSizeSm
+    assert remove_icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
 # ---------------------------------------------------------------------------
 # FilterDropdown — Commit 7
 # ---------------------------------------------------------------------------
@@ -1695,6 +1871,21 @@ def test_filter_dropdown_any_filter_active_when_import_job_active(engine):
 def test_filter_dropdown_implicit_height_is_positive(engine):
     obj = load_component(engine, "components/FilterDropdown.qml")
     assert obj.property("implicitHeight") > 0
+
+
+def test_filter_dropdown_missing_toggle_border_uses_theme_error_when_active(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/FilterDropdown.qml")
+
+    toggle = obj.findChild(QObject, "missingToggle")
+    assert toggle is not None
+    assert toggle.property("borderColor") == QColor(active_theme.border)
+
+    obj.setProperty("showMissingOnly", True)
+    assert toggle.property("borderColor") == QColor(active_theme.error)
 
 
 # ---------------------------------------------------------------------------
@@ -1844,6 +2035,65 @@ def test_tag_search_field_qml_exists():
 
 def test_tag_search_field_loads(engine):
     load_component(engine, "components/TagSearchField.qml")
+
+
+def test_tag_search_field_input_bg_uses_theme_border_when_unfocused(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    input_bg = obj.findChild(QObject, "inputBg")
+    assert input_bg is not None
+    assert input_bg.property("color") == QColor("transparent")
+    assert input_bg.property("borderColor") == QColor(active_theme.border)
+
+
+def test_tag_search_field_input_bg_uses_theme_surface_and_accent_when_focused(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    window = QQuickWindow()
+    obj.setParentItem(window.contentItem())
+    window.resize(300, 100)
+    window.show()
+
+    input_field = obj.findChild(QObject, "inputField")
+    input_field.forceActiveFocus()
+
+    input_bg = obj.findChild(QObject, "inputBg")
+    assert input_bg.property("color") == QColor(active_theme.surface)
+    assert input_bg.property("borderColor") == QColor(active_theme.accent)
+
+
+def test_tag_search_field_search_icon_uses_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    icon = obj.findChild(QObject, "searchIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_tag_search_field_submit_icon_uses_theme_success(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    icon = obj.findChild(QObject, "submitIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.success)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
 
 
 # ---------------------------------------------------------------------------
@@ -2032,3 +2282,56 @@ def test_title_bar_read_only_filter_pills_use_chip_states(theme_qml_engine):
     result, _ = expr.evaluate()
     states = sorted(result.toVariant())
     assert states == ["exclude", "include"]
+
+
+# ---------------------------------------------------------------------------
+# MetaRow — theme tokens (Feature 5.7)
+# ---------------------------------------------------------------------------
+
+
+def test_meta_row_qml_exists():
+    assert (QML_DIR / "components/MetaRow.qml").exists()
+
+
+def test_meta_row_loads(engine):
+    load_component(engine, "components/MetaRow.qml")
+
+
+def test_meta_row_label_uses_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetaRow.qml")
+
+    label = obj.findChild(QObject, "labelText")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.textMuted)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_meta_row_value_uses_theme_text_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetaRow.qml")
+    obj.setProperty("value", "/some/path.jpg")
+
+    value = obj.findChild(QObject, "valueText")
+    assert value is not None
+    assert value.property("color") == QColor(active_theme.text)
+    assert value.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_meta_row_clickable_value_uses_theme_accent(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetaRow.qml")
+    obj.setProperty("value", "example.com")
+    obj.setProperty("linkUrl", "https://example.com")
+
+    value = obj.findChild(QObject, "valueText")
+    assert value.property("color") == QColor(active_theme.accent)

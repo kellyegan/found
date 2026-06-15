@@ -37,17 +37,20 @@ Item {
     // ── Input field ──────────────────────────────────────────────────────────
     Rectangle {
         id: inputBg
+        objectName: "inputBg"
+        property alias borderColor: inputBg.border.color
         anchors.fill: parent
-        color: inputField.activeFocus ? "#242424" : "transparent"
-        border.color: inputField.activeFocus ? "#555555" : "#333333"
+        color: inputField.activeFocus ? Theme.surface : "transparent"
+        border.color: inputField.activeFocus ? Theme.accent : Theme.border
         border.width: 1
         radius: 4
 
         Text {
             id: searchIcon
+            objectName: "searchIcon"
             anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
             text: "⌕"
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeSm
             color: Theme.textMuted
         }
 
@@ -59,13 +62,14 @@ Item {
             width: 22
             height: 22
             radius: 11
-            color: submitBtnArea.containsMouse ? "#3a5a3a" : "transparent"
+            color: submitBtnArea.containsMouse ? Theme.border : "transparent"
 
             Text {
+                objectName: "submitIcon"
                 anchors.centerIn: parent
                 text: "↵"
-                font.pixelSize: 11
-                color: "#88cc88"
+                font.pixelSize: Theme.fontSizeSm
+                color: Theme.success
             }
 
             MouseArea {
@@ -79,6 +83,7 @@ Item {
 
         TextInput {
             id: inputField
+            objectName: "inputField"
             anchors {
                 left: searchIcon.right; leftMargin: 4
                 right: submitBtn.left
@@ -94,7 +99,7 @@ Item {
                 anchors.fill: parent
                 visible: inputField.text.length === 0
                 text: "Search tags…"
-                color: "#555555"
+                color: Theme.textMuted
                 font.pixelSize: Theme.fontSizeSm
                 font.family: Theme.fontFamily
             }
@@ -162,7 +167,7 @@ Item {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: delegateArea.containsMouse ? "#2a2a2a" : "transparent"
+                    color: delegateArea.containsMouse ? Theme.border : "transparent"
                     radius: 3
                 }
 

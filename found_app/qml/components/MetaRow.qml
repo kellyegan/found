@@ -17,22 +17,24 @@ Item {
 
     Text {
         id: labelText
+        objectName: "labelText"
         anchors { left: parent.left; top: parent.top; topMargin: 4 }
         text: row.label
-        font.pixelSize: 10
+        font.pixelSize: Theme.fontSizeSm
         font.family: Theme.fontFamily
-        color: "#666666"
+        color: Theme.textMuted
         font.capitalization: Font.AllUppercase
         font.letterSpacing: 0.8
     }
 
     Text {
         id: valueText
+        objectName: "valueText"
         anchors { left: parent.left; right: parent.right; top: labelText.bottom; topMargin: 2 }
         text: row.value
-        font.pixelSize: 12
+        font.pixelSize: Theme.fontSizeSm
         font.family: Theme.fontFamily
-        color: row.clickable ? (linkArea.containsMouse ? "#ffffff" : "#7eb8f7") : "#cccccc"
+        color: row.clickable ? (linkArea.containsMouse ? Theme.text : Theme.accent) : Theme.text
         wrapMode: row.wrap ? Text.WrapAnywhere : Text.NoWrap
         maximumLineCount: row.wrap ? 0 : 1
         clip: !row.wrap

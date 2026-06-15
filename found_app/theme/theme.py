@@ -86,6 +86,10 @@ class ThemeManager(QObject):
         return self._palette["error"]
 
     @Property(str, notify=paletteChanged)
+    def success(self) -> str:
+        return self._palette["success"]
+
+    @Property(str, notify=paletteChanged)
     def accent(self) -> str:
         return self._palette["accent"]
 

@@ -23,8 +23,9 @@ Item {
             spacing: 4
 
             Text {
+                objectName: "modeIcon"
                 text: root.filterMode === "exclude" ? "−" : "+"
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeSm
                 color: Theme.text
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -43,9 +44,10 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
 
                 Text {
+                    objectName: "removeIcon"
                     anchors.centerIn: parent
                     text: "×"
-                    font.pixelSize: 11
+                    font.pixelSize: Theme.fontSizeSm
                     color: removeBtnArea.containsMouse ? Theme.text : Theme.textMuted
                 }
 
