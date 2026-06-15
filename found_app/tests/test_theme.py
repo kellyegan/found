@@ -257,6 +257,20 @@ def test_poll_timer_does_not_run_outside_system_mode(qapp, tmp_path):
     assert fresh._poll_timer.isActive() is False
 
 
+def test_poll_timer_start_stop_follows_set_mode(qapp):
+    theme = ThemeManager()  # mode defaults to "system"
+    assert theme._poll_timer.isActive() is True
+
+    theme.setMode("dark")
+    assert theme._poll_timer.isActive() is False
+
+    theme.setMode("light")
+    assert theme._poll_timer.isActive() is False
+
+    theme.setMode("system")
+    assert theme._poll_timer.isActive() is True
+
+
 def test_poll_timer_triggers_poll_on_timeout(qapp, monkeypatch):
     import found_app.theme.theme as theme_module
 

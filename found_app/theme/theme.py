@@ -75,6 +75,10 @@ class ThemeManager(QObject):
         if self._settings:
             self._settings.set("theme/mode", mode)
         self._apply_palette()
+        if self._mode == "system":
+            self._poll_timer.start()
+        else:
+            self._poll_timer.stop()
 
     def setPalette(self, palette: dict) -> None:
         self._palette = dict(palette)
