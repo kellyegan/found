@@ -2589,3 +2589,27 @@ def test_confirm_dialog_confirm_button_uses_theme_warning(theme_qml_engine):
     assert confirm_label is not None
     assert confirm_label.property("color") == QColor(active_theme.warning)
     assert confirm_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# HoverTooltip — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_hover_tooltip_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/HoverTooltip.qml")
+    obj.setProperty("text", "Tooltip")
+
+    bg = obj.findChild(QObject, "tooltipBg")
+    assert bg is not None
+    assert bg.property("color") == QColor(active_theme.surface)
+    assert bg.property("borderColor") == QColor(active_theme.border)
+
+    label = obj.findChild(QObject, "tooltipLabel")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.text)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm

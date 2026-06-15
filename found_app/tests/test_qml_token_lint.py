@@ -23,7 +23,6 @@ ALLOWED_FILES = {
     "components/CollectionEditorSection.qml",
     "components/CollectionItem.qml",
     "components/EdgeTab.qml",
-    "components/HoverTooltip.qml",
     "components/ImportPanel.qml",
     "components/ThumbnailTile.qml",
     "views/ImageView.qml",
