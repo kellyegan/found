@@ -1,5 +1,5 @@
 import darkdetect
-from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 from PySide6.QtQml import QQmlEngine, qmlRegisterSingletonInstance
 
 from found_app.theme.palettes import THEMES
@@ -10,6 +10,9 @@ class ThemeManager(QObject):
 
     paletteChanged = Signal()
 
+    # How often to re-check darkdetect.theme() while mode == "system".
+    SYSTEM_POLL_INTERVAL_MS = 2000
+
     def __init__(self, parent=None, settings=None):
         super().__init__(parent)
         self._settings = settings
@@ -19,17 +22,37 @@ class ThemeManager(QObject):
         self._mode = (
             self._settings.get("theme/mode", "system") if self._settings else "system"
         )
+        self._system_variant = None
         self._apply_palette()
+
+        self._poll_timer = QTimer(self)
+        self._poll_timer.setInterval(self.SYSTEM_POLL_INTERVAL_MS)
+        self._poll_timer.timeout.connect(self._poll_system_theme)
+        if self._mode == "system":
+            self._poll_timer.start()
 
     def _resolve_variant(self) -> str:
         if self._mode in ("light", "dark"):
             return self._mode
-        return "light" if darkdetect.theme() == "Light" else "dark"
+        self._system_variant = "light" if darkdetect.theme() == "Light" else "dark"
+        return self._system_variant
 
     def _apply_palette(self) -> None:
         theme_family = THEMES.get(self._theme_name, THEMES["Found"])
         variant = self._resolve_variant()
         self.setPalette(theme_family[variant])
+
+    def _poll_system_theme(self) -> None:
+        """Re-check the OS theme and re-apply the palette if it changed.
+
+        Only meaningful in "system" mode — the cached `_system_variant` is
+        only updated by `_resolve_variant` when `_mode == "system"`.
+        """
+        if self._mode != "system":
+            return
+        current = "light" if darkdetect.theme() == "Light" else "dark"
+        if current != self._system_variant:
+            self._apply_palette()
 
     @Property(str, notify=paletteChanged)
     def themeName(self) -> str:
@@ -52,6 +75,10 @@ class ThemeManager(QObject):
         if self._settings:
             self._settings.set("theme/mode", mode)
         self._apply_palette()
+        if self._mode == "system":
+            self._poll_timer.start()
+        else:
+            self._poll_timer.stop()
 
     def setPalette(self, palette: dict) -> None:
         self._palette = dict(palette)
