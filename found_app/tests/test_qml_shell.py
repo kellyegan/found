@@ -1873,6 +1873,21 @@ def test_filter_dropdown_implicit_height_is_positive(engine):
     assert obj.property("implicitHeight") > 0
 
 
+def test_filter_dropdown_missing_toggle_border_uses_theme_error_when_active(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/FilterDropdown.qml")
+
+    toggle = obj.findChild(QObject, "missingToggle")
+    assert toggle is not None
+    assert toggle.property("borderColor") == QColor(active_theme.border)
+
+    obj.setProperty("showMissingOnly", True)
+    assert toggle.property("borderColor") == QColor(active_theme.error)
+
+
 # ---------------------------------------------------------------------------
 # TitleBar search zone additions — Commit 7
 # ---------------------------------------------------------------------------

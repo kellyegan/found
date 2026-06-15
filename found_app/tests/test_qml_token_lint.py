@@ -25,7 +25,6 @@ ALLOWED_FILES = {
     "components/CollectionsSidePanel.qml",
     "components/ConfirmDialog.qml",
     "components/EdgeTab.qml",
-    "components/FilterDropdown.qml",
     "components/HoverTooltip.qml",
     "components/ImportPanel.qml",
     "components/MetadataSidePanel.qml",
