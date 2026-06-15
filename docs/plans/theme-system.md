@@ -219,9 +219,9 @@ literals) to use tokens and primitives.
 
 ### Feature 5.6 — `theme/05-rollout-shell`
 
-- [ ] Convert `MainRouter.qml`: replace hardcoded literals with
+- [x] Convert `MainRouter.qml`: replace hardcoded literals with
       `Theme.*`/primitives; remove from lint allowlist.
-- [ ] Convert `TitleBar.qml`: replace hardcoded literals (including
+- [x] Convert `TitleBar.qml`: replace hardcoded literals (including
       `#ff8800`/`#ff4444`/`#cc6666` — decide whether these map to
       `Theme.warningColor` or warrant a new semantic `errorColor` token added
       back in Section 2's palette). While deciding, also rename `warningColor`
@@ -229,7 +229,7 @@ literals) to use tokens and primitives.
       (`background`, `surface`, `text`, `accent`, `border`) — update
       `theme.py`, `palettes.py`, and the 3 existing QML usages; remove from
       lint allowlist.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ### Feature 5.7 — `theme/05-rollout-filtering`
 
