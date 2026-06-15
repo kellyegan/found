@@ -91,11 +91,13 @@ Item {
                     case "library":    return "Library"
                     case "collection": return NavigationManager.currentEntry.collection_name ?? "Collection"
                     case "image":      return ""
+                    case "settings":   return "Settings"
                     default:           return ""
                 }
             }
-            searchReadOnly: NavigationManager.currentView === "image"
+            searchReadOnly: NavigationManager.currentView === "image" || NavigationManager.currentView === "settings"
             activeFilters: {
+                if (NavigationManager.currentView === "settings") return []
                 var result = []
                 var catFilters = FilterState.categoryFilters
                 var cats = CategoriesState.categories
@@ -115,6 +117,7 @@ Item {
             }
             onGoBackRequested: NavigationManager.goBack()
             onFilterToggleRequested: readyContainer.filterDropdownOpen = !readyContainer.filterDropdownOpen
+            onSettingsRequested: NavigationManager.push("settings", {})
         }
 
         // Filter dropdown — anchored below TitleBar on the right, z above grid
@@ -350,6 +353,14 @@ Item {
                 else
                     LibraryState.removeImages([imageId])
             }
+        }
+
+        // Settings view
+        SettingsView {
+            id: settingsView
+            objectName: "settingsView"
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "settings"
         }
 
         // Sidebar overlay — rendered above content, below nav bar

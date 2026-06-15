@@ -296,20 +296,20 @@ exercise of live switching end-to-end.
 
 ### Feature 7.1 — `theme/07-settings-view`
 
-- [ ] Add `SettingsView.qml` with an "Appearance" section scaffold, built
+- [x] Add `SettingsView.qml` with an "Appearance" section scaffold, built
       from `AppText`/`Surface` primitives.
       Test: instantiating `SettingsView` exposes an Appearance section.
-- [ ] Add a theme picker bound to `THEMES`/`Theme.availableThemes()`,
+- [x] Add a theme picker bound to `THEMES`/`Theme.availableThemes()`,
       calling `Theme.setThemeName(...)` on selection.
       Test: selecting an entry calls `setThemeName` with the right name.
-- [ ] Add a mode picker (`light`/`dark`/`system`) calling `Theme.setMode(...)`.
+- [x] Add a mode picker (`light`/`dark`/`system`) calling `Theme.setMode(...)`.
       Test: selecting an entry calls `setMode` with the right value.
-- [ ] Add a navigation entry point to `SettingsView` (route in `MainRouter`
+- [x] Add a navigation entry point to `SettingsView` (route in `MainRouter`
   - trigger in `TitleBar`).
     Test: `MainRouter` can route to the Settings view.
-- [ ] Manually verify (via the `run` skill): open Settings, switch theme and
+- [x] Manually verify (via the `run` skill): open Settings, switch theme and
       mode, confirm the whole UI updates live.
-- [ ] Run full suite.
+- [x] Run full suite.
 
 ---
 

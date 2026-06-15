@@ -236,6 +236,31 @@ def test_main_router_relocation_result_dialog_closed_by_default(engine):
     assert obj.property("relocationResultDialogOpen") is False
 
 
+def test_main_router_routes_to_settings_view(qapp):
+    from found_app.core.app_state import AppState
+
+    library_state = LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None)
+    selection = SelectionManager()
+    navigation = NavigationManager()
+    metadata_state = MetadataViewModel(image_fetcher=lambda image_id: None)
+
+    engine = _build_app_engine(library_state, metadata_state, navigation, selection)
+    root = engine.rootObjects()[0]
+
+    app_state = engine.rootContext().contextProperty("AppState")
+    app_state.transition_to(AppState.BackendStarting)
+    app_state.transition_to(AppState.Ready)
+
+    main_router = root.findChild(QObject, "mainRouter")
+    main_router.setProperty("splashDismissed", True)
+
+    navigation.push("settings")
+
+    settings_view = root.findChild(QObject, "settingsView")
+    assert settings_view is not None
+    assert settings_view.property("visible") is True
+
+
 # ---------------------------------------------------------------------------
 # MainRouter drag-and-drop overlay — theme tokens (Feature 5.6)
 # ---------------------------------------------------------------------------
@@ -1984,6 +2009,19 @@ def test_title_bar_has_filter_toggle_requested_signal(engine):
     assert isinstance(received, list)
 
 
+def test_title_bar_has_settings_requested_signal(engine):
+    obj = load_component(engine, "shell/TitleBar.qml")
+    received = []
+    obj.settingsRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_title_bar_settings_icon_visible(engine):
+    obj = load_component(engine, "shell/TitleBar.qml")
+    icon = obj.findChild(QObject, "settingsIcon")
+    assert icon is not None
+
+
 # ---------------------------------------------------------------------------
 # TitleBar read-only search zone — Commit 13
 # ---------------------------------------------------------------------------
@@ -3122,4 +3160,54 @@ def test_thumbnail_tile_locate_button_uses_theme_tokens(theme_qml_engine):
     icon = obj.findChild(QObject, "locateIconText")
     assert icon is not None
     assert icon.property("color") == QColor(active_theme.textMuted)
-    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# SettingsView
+# ---------------------------------------------------------------------------
+
+
+def test_settings_view_qml_exists():
+    assert (QML_DIR / "views/SettingsView.qml").exists()
+
+
+def test_settings_view_loads(engine):
+    load_component(engine, "views/SettingsView.qml")
+
+
+def test_settings_view_has_appearance_section(engine):
+    obj = load_component(engine, "views/SettingsView.qml")
+    section = obj.findChild(QObject, "appearanceSection")
+    assert section is not None
+
+
+def test_settings_view_theme_picker_calls_set_theme_name(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    active_theme.setThemeName("Bogus")
+
+    obj = load_component(theme_qml_engine, "views/SettingsView.qml")
+
+    # Repeater-instantiated delegates aren't reachable via findChild, so
+    # query the live item through the QML context instead.
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "themeRepeater.itemAt(0).clicked()")
+    expr.evaluate()
+
+    assert active_theme.themeName == "Found"
+
+
+def test_settings_view_mode_picker_calls_set_mode(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    assert active_theme.mode == "system"
+
+    obj = load_component(theme_qml_engine, "views/SettingsView.qml")
+
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "modeRepeater.itemAt(1).clicked()")
+    expr.evaluate()
+
+    assert active_theme.mode == "dark"

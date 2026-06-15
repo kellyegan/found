@@ -19,6 +19,7 @@ Item {
 
     signal goBackRequested()
     signal filterToggleRequested()
+    signal settingsRequested()
 
     // ── Title zone (left) ────────────────────────────────────────────────────
     Item {
@@ -201,7 +202,7 @@ Item {
             visible: !root.searchReadOnly
             width: 36
             height: parent.height
-            anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+            anchors { right: settingsIconBtn.left; verticalCenter: parent.verticalCenter }
 
             Text {
                 objectName: "filterIcon"
@@ -223,7 +224,7 @@ Item {
             visible: root.searchReadOnly
             anchors {
                 left: parent.left; leftMargin: 8
-                right: parent.right; rightMargin: 8
+                right: settingsIconBtn.left; rightMargin: 4
                 verticalCenter: parent.verticalCenter
             }
             spacing: 4
@@ -268,6 +269,28 @@ Item {
                         }
                     }
                 }
+            }
+        }
+
+        // Settings entry point — always visible
+        Item {
+            id: settingsIconBtn
+            width: 36
+            height: parent.height
+            anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
+
+            Text {
+                objectName: "settingsIcon"
+                anchors.centerIn: parent
+                text: "⚙"
+                font.pixelSize: Theme.fontSizeMd
+                color: Theme.textMuted
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.settingsRequested()
             }
         }
     }
