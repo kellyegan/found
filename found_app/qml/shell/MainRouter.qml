@@ -117,7 +117,7 @@ Item {
             }
             onGoBackRequested: NavigationManager.goBack()
             onFilterToggleRequested: readyContainer.filterDropdownOpen = !readyContainer.filterDropdownOpen
-            onSettingsRequested: NavigationManager.push("settings")
+            onSettingsRequested: NavigationManager.push("settings", {})
         }
 
         // Filter dropdown — anchored below TitleBar on the right, z above grid
