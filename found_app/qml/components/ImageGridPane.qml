@@ -164,7 +164,7 @@ Item {
         text: "Failed to load."
         font.pixelSize: Theme.fontSizeMd
         font.family: Theme.fontFamily
-        color: Theme.warningColor
+        color: Theme.warning
     }
 
     ThumbnailGrid {

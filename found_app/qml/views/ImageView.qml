@@ -177,7 +177,7 @@ Item {
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "!"
-                color: Theme.warningColor
+                color: Theme.warning
                 font.pixelSize: 48
                 font.weight: Font.Bold
             }

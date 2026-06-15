@@ -78,7 +78,7 @@ Item {
             text: root.isReady ? "Click to continue" : root.statusText
             font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
-            color: root.hasError ? Theme.warningColor : Theme.textMuted
+            color: root.hasError ? Theme.warning : Theme.textMuted
             visible: root.isReady || root.statusText.length > 0
         }
 
