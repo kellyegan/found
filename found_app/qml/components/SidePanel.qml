@@ -88,9 +88,10 @@ Item {
 
         Rectangle {
             id: divider
+            objectName: "divider"
             anchors { top: header.bottom; left: parent.left; right: parent.right }
             height: root.title !== "" ? 1 : 0
-            color: "#2a2a2a"
+            color: Theme.border
         }
 
         // Content slot — children of the extending component land here

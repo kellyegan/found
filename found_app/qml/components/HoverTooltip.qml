@@ -10,18 +10,22 @@ Item {
     height: label.implicitHeight + 8
 
     Rectangle {
+        id: tooltipBg
+        objectName: "tooltipBg"
+        property alias borderColor: tooltipBg.border.color
         anchors.fill: parent
-        color: "#2a2a2a"
-        border.color: "#444444"
+        color: Theme.surface
+        border.color: Theme.border
         border.width: 1
         radius: 4
 
         Text {
             id: label
+            objectName: "tooltipLabel"
             anchors.centerIn: parent
             text: root.text
-            color: "#cccccc"
-            font.pixelSize: 11
+            color: Theme.text
+            font.pixelSize: Theme.fontSizeSm
             font.family: Theme.fontFamily
         }
     }

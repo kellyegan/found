@@ -2335,3 +2335,654 @@ def test_meta_row_clickable_value_uses_theme_accent(theme_qml_engine):
 
     value = obj.findChild(QObject, "valueText")
     assert value.property("color") == QColor(active_theme.accent)
+
+
+# ---------------------------------------------------------------------------
+# SidePanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_side_panel_qml_exists():
+    assert (QML_DIR / "components/SidePanel.qml").exists()
+
+
+def test_side_panel_loads(engine):
+    load_component(engine, "components/SidePanel.qml")
+
+
+def test_side_panel_divider_uses_theme_border(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/SidePanel.qml")
+    obj.setProperty("title", "Title")
+
+    divider = obj.findChild(QObject, "divider")
+    assert divider is not None
+    assert divider.property("color") == QColor(active_theme.border)
+
+
+# ---------------------------------------------------------------------------
+# CollectionsSidePanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_collections_sidebar_input_box_uses_theme_surface(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    input_box = obj.findChild(QObject, "newCollectionInputBox")
+    assert input_box is not None
+    assert input_box.property("color") == QColor(active_theme.surface)
+
+
+def test_collections_sidebar_input_text_uses_theme_text(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    input_field = obj.findChild(QObject, "newCollectionInput")
+    assert input_field is not None
+    assert input_field.property("color") == QColor(active_theme.text)
+
+
+def test_collections_sidebar_add_icon_uses_theme_text_muted(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    icon = obj.findChild(QObject, "addIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+
+
+def test_collections_sidebar_submit_icon_uses_theme_success(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    icon = obj.findChild(QObject, "submitIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.success)
+
+
+def test_collections_sidebar_input_box_border_uses_theme_border_and_accent(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    input_box = obj.findChild(QObject, "newCollectionInputBox")
+    assert input_box is not None
+    assert input_box.property("borderColor") == QColor(active_theme.border)
+
+    window = QQuickWindow()
+    obj.setParentItem(window.contentItem())
+    window.resize(300, 400)
+    window.show()
+
+    input_field = obj.findChild(QObject, "newCollectionInput")
+    input_field.forceActiveFocus()
+    assert input_box.property("borderColor") == QColor(active_theme.accent)
+
+
+def test_collections_sidebar_empty_label_uses_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    empty_label = obj.findChild(QObject, "emptyLabel")
+    assert empty_label is not None
+    assert empty_label.property("color") == QColor(active_theme.textMuted)
+    assert empty_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# MetadataSidePanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_metadata_sidebar_error_text_uses_theme_warning_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetadataSidePanel.qml")
+    obj.setProperty("metaLoadingState", "Error")
+
+    error_text = obj.findChild(QObject, "metaErrorText")
+    assert error_text is not None
+    assert error_text.property("color") == QColor(active_theme.warning)
+    assert error_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_metadata_sidebar_missing_banner_uses_theme_error(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetadataSidePanel.qml")
+    obj.setProperty("metaLoadingState", "Ready")
+    obj.setProperty("metaIsMissing", True)
+
+    banner = obj.findChild(QObject, "missingBanner")
+    assert banner is not None
+    assert banner.property("borderColor") == QColor(active_theme.error)
+
+    banner_text = obj.findChild(QObject, "missingBannerText")
+    assert banner_text is not None
+    assert banner_text.property("color") == QColor(active_theme.error)
+    assert banner_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# ConfirmDialog — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_confirm_dialog_backdrop_uses_theme_background(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    backdrop = obj.findChild(QObject, "backdrop")
+    assert backdrop is not None
+    assert backdrop.property("color") == QColor(active_theme.background)
+
+
+def test_confirm_dialog_sheet_uses_theme_surface(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    sheet = obj.findChild(QObject, "sheet")
+    assert sheet is not None
+    assert sheet.property("color") == QColor(active_theme.surface)
+
+
+def test_confirm_dialog_message_uses_theme_text_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    message = obj.findChild(QObject, "messageText")
+    assert message is not None
+    assert message.property("color") == QColor(active_theme.text)
+    assert message.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_confirm_dialog_checkbox_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+    obj.setProperty("checkboxLabel", "Also remove from library")
+
+    checkbox = obj.findChild(QObject, "checkboxBox")
+    assert checkbox is not None
+    assert checkbox.property("borderColor") == QColor(active_theme.textMuted)
+
+    checkbox_label = obj.findChild(QObject, "checkboxLabelText")
+    assert checkbox_label is not None
+    assert checkbox_label.property("color") == QColor(active_theme.textMuted)
+    assert checkbox_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+    obj.setProperty("checkboxChecked", True)
+    assert checkbox.property("borderColor") == QColor(active_theme.accent)
+
+    checkmark = obj.findChild(QObject, "checkmarkText")
+    assert checkmark is not None
+    assert checkmark.property("color") == QColor(active_theme.background)
+    assert checkmark.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_confirm_dialog_cancel_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    cancel_btn = obj.findChild(QObject, "cancelBtn")
+    assert cancel_btn is not None
+    assert cancel_btn.property("borderColor") == QColor(active_theme.border)
+    assert cancel_btn.property("color") == QColor("transparent")
+
+    cancel_label = obj.findChild(QObject, "cancelLabelText")
+    assert cancel_label is not None
+    assert cancel_label.property("color") == QColor(active_theme.textMuted)
+    assert cancel_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_confirm_dialog_confirm_button_uses_theme_warning(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ConfirmDialog.qml")
+
+    confirm_btn = obj.findChild(QObject, "confirmBtn")
+    assert confirm_btn is not None
+    assert confirm_btn.property("borderColor") == QColor(active_theme.warning)
+
+    confirm_label = obj.findChild(QObject, "confirmLabelText")
+    assert confirm_label is not None
+    assert confirm_label.property("color") == QColor(active_theme.warning)
+    assert confirm_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# HoverTooltip — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_hover_tooltip_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/HoverTooltip.qml")
+    obj.setProperty("text", "Tooltip")
+
+    bg = obj.findChild(QObject, "tooltipBg")
+    assert bg is not None
+    assert bg.property("color") == QColor(active_theme.surface)
+    assert bg.property("borderColor") == QColor(active_theme.border)
+
+    label = obj.findChild(QObject, "tooltipLabel")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.text)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# EdgeTab — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_edge_tab_icon_and_arrow_use_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/EdgeTab.qml")
+    obj.setProperty("icon", "☰")
+
+    icon = obj.findChild(QObject, "edgeTabIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+    arrow = obj.findChild(QObject, "edgeTabArrow")
+    assert arrow is not None
+    assert arrow.property("color") == QColor(active_theme.textMuted)
+    assert arrow.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# ImportPanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_import_panel_backdrop_and_sheet_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Scanning")
+
+    backdrop = obj.findChild(QObject, "backdrop")
+    assert backdrop is not None
+    assert backdrop.property("color") == QColor(active_theme.background)
+
+    sheet = obj.findChild(QObject, "sheet")
+    assert sheet is not None
+    assert sheet.property("color") == QColor(active_theme.surface)
+
+
+def test_import_panel_scanning_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Scanning")
+
+    scan_text = obj.findChild(QObject, "scanText")
+    assert scan_text is not None
+    assert scan_text.property("color") == QColor(active_theme.text)
+    assert scan_text.property("font").pixelSize() == active_theme.fontSizeMd
+
+    scan_track = obj.findChild(QObject, "scanTrack")
+    assert scan_track.property("color") == QColor(active_theme.border)
+
+    scan_bar = obj.findChild(QObject, "scanBar")
+    assert scan_bar.property("color") == QColor(active_theme.success)
+
+
+def test_import_panel_already_imported_and_pending_headers_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Previewing")
+    obj.setProperty("alreadyImportedFiles", [{"image_id": "abc"}])
+    obj.setProperty("pendingFiles", ["/tmp/photo.jpg"])
+
+    already_text = obj.findChild(QObject, "alreadyImportedText")
+    assert already_text is not None
+    assert already_text.property("color") == QColor(active_theme.textMuted)
+    assert already_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+    pending_text = obj.findChild(QObject, "pendingText")
+    assert pending_text is not None
+    assert pending_text.property("color") == QColor(active_theme.text)
+    assert pending_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_duplicates_section_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Previewing")
+    obj.setProperty("conflictFiles", [{
+        "path": "/new/photo.jpg",
+        "existing_path": "/old/photo.jpg",
+        "existing_image_id": "xyz",
+    }])
+
+    header = obj.findChild(QObject, "duplicatesHeaderText")
+    assert header is not None
+    assert header.property("color") == QColor(active_theme.error)
+
+    # Repeater-instantiated delegates aren't reachable via findChildren, so
+    # query the live item through the QML context instead.
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "conflictRepeater.itemAt(0)")
+    conflict_item, _ = expr.evaluate()
+
+    keep_radio = conflict_item.findChild(QObject, "keepRadio")
+    replace_radio = conflict_item.findChild(QObject, "replaceRadio")
+    keep_label = conflict_item.findChild(QObject, "keepLabel")
+    replace_label = conflict_item.findChild(QObject, "replaceLabel")
+    assert keep_radio is not None and replace_radio is not None
+    assert keep_label is not None and replace_label is not None
+
+    # "keep" is selected by default
+    assert keep_radio.property("color") == QColor(active_theme.error)
+    assert keep_radio.property("borderColor") == QColor(active_theme.error)
+    assert keep_label.property("color") == QColor(active_theme.text)
+
+    assert replace_radio.property("color") == QColor("transparent")
+    assert replace_radio.property("borderColor") == QColor(active_theme.border)
+    assert replace_label.property("color") == QColor(active_theme.textMuted)
+
+
+def test_import_panel_buttons_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Previewing")
+
+    cancel_btn = obj.findChild(QObject, "cancelBtn")
+    assert cancel_btn is not None
+    assert cancel_btn.property("color") == QColor("transparent")
+    assert cancel_btn.property("borderColor") == QColor(active_theme.border)
+
+    cancel_text = obj.findChild(QObject, "cancelBtnText")
+    assert cancel_text.property("color") == QColor(active_theme.textMuted)
+    assert cancel_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+    import_text = obj.findChild(QObject, "importBtnText")
+    assert import_text.property("color") == QColor(active_theme.success)
+    assert import_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_importing_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Importing")
+    obj.setProperty("progress", 0.5)
+
+    importing_text = obj.findChild(QObject, "importingText")
+    assert importing_text is not None
+    assert importing_text.property("color") == QColor(active_theme.text)
+    assert importing_text.property("font").pixelSize() == active_theme.fontSizeMd
+
+    importing_track = obj.findChild(QObject, "importingTrack")
+    assert importing_track.property("color") == QColor(active_theme.border)
+
+    importing_bar = obj.findChild(QObject, "importingBar")
+    assert importing_bar.property("color") == QColor(active_theme.success)
+
+    percent_text = obj.findChild(QObject, "importingPercentText")
+    assert percent_text.property("color") == QColor(active_theme.textMuted)
+    assert percent_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_complete_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Complete")
+    obj.setProperty("importedCount", 3)
+
+    title = obj.findChild(QObject, "completeTitle")
+    assert title is not None
+    assert title.property("color") == QColor(active_theme.success)
+    assert title.property("font").pixelSize() == active_theme.fontSizeMd
+
+    summary = obj.findChild(QObject, "completeSummaryText")
+    assert summary.property("color") == QColor(active_theme.textMuted)
+    assert summary.property("font").pixelSize() == active_theme.fontSizeSm
+
+    done_btn = obj.findChild(QObject, "doneBtn")
+    assert done_btn.property("color") == QColor(active_theme.surface)
+
+    done_text = obj.findChild(QObject, "doneBtnText")
+    assert done_text.property("color") == QColor(active_theme.text)
+    assert done_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_error_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Error")
+
+    title = obj.findChild(QObject, "errorTitle")
+    assert title is not None
+    assert title.property("color") == QColor(active_theme.warning)
+    assert title.property("font").pixelSize() == active_theme.fontSizeMd
+
+    subtext = obj.findChild(QObject, "errorSubtext")
+    assert subtext.property("color") == QColor(active_theme.textMuted)
+    assert subtext.property("font").pixelSize() == active_theme.fontSizeSm
+
+    close_btn = obj.findChild(QObject, "closeBtn")
+    assert close_btn.property("color") == QColor(active_theme.surface)
+
+    close_text = obj.findChild(QObject, "closeBtnText")
+    assert close_text.property("color") == QColor(active_theme.text)
+    assert close_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# CollectionEditorSection — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_collection_editor_section_divider_and_header_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+
+    divider = obj.findChild(QObject, "divider")
+    assert divider is not None
+    assert divider.property("color") == QColor(active_theme.border)
+
+    header = obj.findChild(QObject, "collectionsHeaderText")
+    assert header is not None
+    assert header.property("color") == QColor(active_theme.textMuted)
+    assert header.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_collection_editor_section_add_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+
+    row = obj.findChild(QObject, "addToCollectionRow")
+    assert row is not None
+    assert row.property("borderColor") == QColor(active_theme.border)
+
+    obj.setProperty("_dropdownOpen", True)
+    assert row.property("borderColor") == QColor(active_theme.textMuted)
+
+    icon = obj.findChild(QObject, "addIcon")
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+    label = obj.findChild(QObject, "addLabelText")
+    assert label.property("color") == QColor(active_theme.textMuted)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_collection_editor_section_dropdown_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+    obj.setProperty("_dropdownOpen", True)
+
+    box = obj.findChild(QObject, "dropdownBox")
+    assert box is not None
+    assert box.property("color") == QColor(active_theme.surface)
+    assert box.property("borderColor") == QColor(active_theme.border)
+
+
+def test_collection_editor_section_multi_select_note_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+
+    note = obj.findChild(QObject, "multiSelectText")
+    assert note is not None
+    assert note.property("color") == QColor(active_theme.textMuted)
+    assert note.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_collection_editor_section_chip_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+    obj.setProperty("selectionMode", "single")
+    obj.setProperty("collections", [{"id": "c1", "name": "Portraits"}])
+
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "chipRepeater.itemAt(0)")
+    chip, _ = expr.evaluate()
+    assert chip is not None
+
+    assert chip.property("color") == QColor(active_theme.surface)
+    assert chip.property("borderColor") == QColor(active_theme.border)
+
+    label = chip.findChild(QObject, "collectionChipLabel")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.text)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+    remove = chip.findChild(QObject, "collectionChipRemoveText")
+    assert remove is not None
+    assert remove.property("color") == QColor(active_theme.textMuted)
+    assert remove.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# CollectionItem — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_collection_item_label_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionItem.qml")
+
+    label = obj.findChild(QObject, "collectionNameText")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.text)
+    assert label.property("font").pixelSize() == active_theme.fontSizeMd
+
+    obj.setProperty("isDropTarget", True)
+    assert label.property("color") == QColor(active_theme.success)
+
+
+def test_collection_item_remove_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionItem.qml")
+
+    remove_icon = obj.findChild(QObject, "removeIconText")
+    assert remove_icon is not None
+    assert remove_icon.property("font").pixelSize() == active_theme.fontSizeMd
+    assert remove_icon.property("color") == QColor(active_theme.textMuted)
+
+
+def test_collection_item_drop_border_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionItem.qml")
+
+    drop_border = obj.findChild(QObject, "dropBorder")
+    assert drop_border is not None
+    assert drop_border.property("borderColor") == QColor(active_theme.success)
+    assert drop_border.property("visible") is False
+
+    obj.setProperty("isDropTarget", True)
+    assert drop_border.property("visible") is True

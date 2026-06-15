@@ -244,16 +244,16 @@ literals) to use tokens and primitives.
 
 ### Feature 5.8 — `theme/05-rollout-panels`
 
-- [ ] Convert `SidePanel.qml`; remove from lint allowlist.
-- [ ] Convert `CollectionsSidePanel.qml`; remove from lint allowlist.
-- [ ] Convert `MetadataSidePanel.qml`; remove from lint allowlist.
-- [ ] Convert `ConfirmDialog.qml`; remove from lint allowlist.
-- [ ] Convert `HoverTooltip.qml`; remove from lint allowlist.
-- [ ] Convert `EdgeTab.qml`; remove from lint allowlist.
-- [ ] Convert `ImportPanel.qml`; remove from lint allowlist.
-- [ ] Convert `CollectionEditorSection.qml`; remove from lint allowlist.
-- [ ] Convert `CollectionItem.qml`; remove from lint allowlist.
-- [ ] Run full suite.
+- [x] Convert `SidePanel.qml`; remove from lint allowlist.
+- [x] Convert `CollectionsSidePanel.qml`; remove from lint allowlist.
+- [x] Convert `MetadataSidePanel.qml`; remove from lint allowlist.
+- [x] Convert `ConfirmDialog.qml`; remove from lint allowlist.
+- [x] Convert `HoverTooltip.qml`; remove from lint allowlist.
+- [x] Convert `EdgeTab.qml`; remove from lint allowlist.
+- [x] Convert `ImportPanel.qml`; remove from lint allowlist.
+- [x] Convert `CollectionEditorSection.qml`; remove from lint allowlist.
+- [x] Convert `CollectionItem.qml`; remove from lint allowlist.
+- [x] Run full suite.
 
 ### Feature 5.9 — `theme/05-rollout-grids`
 

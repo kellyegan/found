@@ -19,8 +19,9 @@ Item {
 
     // Backdrop — absorbs clicks so content beneath isn't interactive
     Rectangle {
+        objectName: "backdrop"
         anchors.fill: parent
-        color: "#000000"
+        color: Theme.background
         opacity: 0.55
 
         MouseArea {
@@ -31,10 +32,11 @@ Item {
     // Centered modal sheet
     Rectangle {
         id: sheet
+        objectName: "sheet"
         anchors.centerIn: parent
         width: Math.min((root.parent ? root.parent.width : 420) - 80, 380)
         height: contentCol.implicitHeight + 48
-        color: "#1c1c1c"
+        color: Theme.surface
         radius: 10
 
         focus: root.open
@@ -55,10 +57,11 @@ Item {
             spacing: 18
 
             Text {
+                objectName: "messageText"
                 width: parent.width
                 text: root.message
-                color: "#cccccc"
-                font.pixelSize: 13
+                color: Theme.text
+                font.pixelSize: Theme.fontSizeSm
                 font.family: Theme.fontFamily
                 wrapMode: Text.WordWrap
             }
@@ -73,27 +76,32 @@ Item {
                     spacing: 8
 
                     Rectangle {
+                        id: checkboxBox
+                        objectName: "checkboxBox"
+                        property alias borderColor: checkboxBox.border.color
                         width: 16
                         height: 16
                         radius: 3
                         y: (parent.height - height) / 2
                         color: root.checkboxChecked ? Theme.accent : "transparent"
-                        border.color: root.checkboxChecked ? Theme.accent : "#666666"
+                        border.color: root.checkboxChecked ? Theme.accent : Theme.textMuted
                         border.width: 1
 
                         Text {
+                            objectName: "checkmarkText"
                             anchors.centerIn: parent
                             visible: root.checkboxChecked
                             text: "✓"
-                            color: "#111111"
-                            font.pixelSize: 11
+                            color: Theme.background
+                            font.pixelSize: Theme.fontSizeSm
                         }
                     }
 
                     Text {
+                        objectName: "checkboxLabelText"
                         text: root.checkboxLabel
-                        color: "#aaaaaa"
-                        font.pixelSize: 12
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeSm
                         font.family: Theme.fontFamily
                         y: (parent.height - height) / 2
                     }
@@ -110,19 +118,23 @@ Item {
                 spacing: 10
 
                 Rectangle {
+                    id: cancelBtn
+                    objectName: "cancelBtn"
+                    property alias borderColor: cancelBtn.border.color
                     width: 80
                     height: 32
                     radius: 4
-                    color: cancelArea.containsMouse ? "#2a2a2a" : "transparent"
-                    border.color: "#444444"
+                    color: cancelArea.containsMouse ? Theme.border : "transparent"
+                    border.color: Theme.border
                     border.width: 1
                     visible: root.showCancel
 
                     Text {
+                        objectName: "cancelLabelText"
                         anchors.centerIn: parent
                         text: root.cancelLabel
-                        color: "#888888"
-                        font.pixelSize: 13
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeSm
                         font.family: Theme.fontFamily
                     }
 
@@ -135,18 +147,22 @@ Item {
                 }
 
                 Rectangle {
+                    id: confirmBtn
+                    objectName: "confirmBtn"
+                    property alias borderColor: confirmBtn.border.color
                     width: 80
                     height: 32
                     radius: 4
-                    color: confirmArea.containsMouse ? "#7a2a2a" : "#5a1e1e"
-                    border.color: "#cc6666"
+                    color: Qt.tint(Theme.surface, Qt.rgba(1, 0, 0, confirmArea.containsMouse ? 0.35 : 0.25))
+                    border.color: Theme.warning
                     border.width: 1
 
                     Text {
+                        objectName: "confirmLabelText"
                         anchors.centerIn: parent
                         text: root.confirmLabel
-                        color: "#ffaaaa"
-                        font.pixelSize: 13
+                        color: Theme.warning
+                        font.pixelSize: Theme.fontSizeSm
                         font.family: Theme.fontFamily
                         font.weight: Font.Medium
                     }
