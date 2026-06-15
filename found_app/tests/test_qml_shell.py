@@ -2361,3 +2361,90 @@ def test_side_panel_divider_uses_theme_border(theme_qml_engine):
     divider = obj.findChild(QObject, "divider")
     assert divider is not None
     assert divider.property("color") == QColor(active_theme.border)
+
+
+# ---------------------------------------------------------------------------
+# CollectionsSidePanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_collections_sidebar_input_box_uses_theme_surface(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    input_box = obj.findChild(QObject, "newCollectionInputBox")
+    assert input_box is not None
+    assert input_box.property("color") == QColor(active_theme.surface)
+
+
+def test_collections_sidebar_input_text_uses_theme_text(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    input_field = obj.findChild(QObject, "newCollectionInput")
+    assert input_field is not None
+    assert input_field.property("color") == QColor(active_theme.text)
+
+
+def test_collections_sidebar_add_icon_uses_theme_text_muted(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    icon = obj.findChild(QObject, "addIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+
+
+def test_collections_sidebar_submit_icon_uses_theme_success(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    icon = obj.findChild(QObject, "submitIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.success)
+
+
+def test_collections_sidebar_input_box_border_uses_theme_border_and_accent(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    input_box = obj.findChild(QObject, "newCollectionInputBox")
+    assert input_box is not None
+    assert input_box.property("borderColor") == QColor(active_theme.border)
+
+    window = QQuickWindow()
+    obj.setParentItem(window.contentItem())
+    window.resize(300, 400)
+    window.show()
+
+    input_field = obj.findChild(QObject, "newCollectionInput")
+    input_field.forceActiveFocus()
+    assert input_box.property("borderColor") == QColor(active_theme.accent)
+
+
+def test_collections_sidebar_empty_label_uses_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
+
+    empty_label = obj.findChild(QObject, "emptyLabel")
+    assert empty_label is not None
+    assert empty_label.property("color") == QColor(active_theme.textMuted)
+    assert empty_label.property("font").pixelSize() == active_theme.fontSizeSm

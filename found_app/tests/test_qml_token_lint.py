@@ -22,7 +22,6 @@ PIXEL_SIZE_RE = re.compile(r"pixelSize:\s*\d+")
 ALLOWED_FILES = {
     "components/CollectionEditorSection.qml",
     "components/CollectionItem.qml",
-    "components/CollectionsSidePanel.qml",
     "components/ConfirmDialog.qml",
     "components/EdgeTab.qml",
     "components/HoverTooltip.qml",
