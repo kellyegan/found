@@ -44,6 +44,27 @@ Item {
                     }
                 }
             }
+
+            AppText {
+                variant: "label"
+                text: "Mode"
+            }
+
+            Row {
+                spacing: Theme.spacingSm
+
+                Repeater {
+                    id: modeRepeater
+                    model: ["light", "dark", "system"]
+
+                    AppButton {
+                        required property var modelData
+                        objectName: "modeOption_" + modelData
+                        text: modelData
+                        onClicked: Theme.setMode(modelData)
+                    }
+                }
+            }
         }
     }
 }

@@ -3158,3 +3158,18 @@ def test_settings_view_theme_picker_calls_set_theme_name(theme_qml_engine):
     expr.evaluate()
 
     assert active_theme.themeName == "Found"
+
+
+def test_settings_view_mode_picker_calls_set_mode(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    assert active_theme.mode == "system"
+
+    obj = load_component(theme_qml_engine, "views/SettingsView.qml")
+
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "modeRepeater.itemAt(1).clicked()")
+    expr.evaluate()
+
+    assert active_theme.mode == "dark"
