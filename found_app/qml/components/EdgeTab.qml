@@ -21,20 +21,22 @@ Rectangle {
         spacing: 4
 
         Text {
+            objectName: "edgeTabIcon"
             visible: root.icon !== ""
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.icon
-            font.pixelSize: 11
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeSm
+            color: Theme.textMuted
         }
 
         Text {
+            objectName: "edgeTabArrow"
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.edge === "right"
                   ? (root.open ? "▶" : "◀")
                   : (root.open ? "◀" : "▶")
-            font.pixelSize: 10
-            color: "#888888"
+            font.pixelSize: Theme.fontSizeSm
+            color: Theme.textMuted
         }
     }
 

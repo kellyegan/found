@@ -2613,3 +2613,27 @@ def test_hover_tooltip_uses_theme_tokens(theme_qml_engine):
     assert label is not None
     assert label.property("color") == QColor(active_theme.text)
     assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# EdgeTab — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_edge_tab_icon_and_arrow_use_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/EdgeTab.qml")
+    obj.setProperty("icon", "☰")
+
+    icon = obj.findChild(QObject, "edgeTabIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+    arrow = obj.findChild(QObject, "edgeTabArrow")
+    assert arrow is not None
+    assert arrow.property("color") == QColor(active_theme.textMuted)
+    assert arrow.property("font").pixelSize() == active_theme.fontSizeSm
