@@ -25,8 +25,9 @@ Item {
 
     // Backdrop
     Rectangle {
+        objectName: "backdrop"
         anchors.fill: parent
-        color: "#000000"
+        color: Theme.background
         opacity: 0.55
 
         MouseArea {
@@ -38,12 +39,13 @@ Item {
     // Centered modal
     Rectangle {
         id: sheet
+        objectName: "sheet"
         anchors.centerIn: parent
         width: Math.min(parent.width - 80, 680)
         height: root.loadingState === "Previewing"
                 ? Math.min(parent.height - 80, 560)
                 : 180
-        color: "#1c1c1c"
+        color: Theme.surface
         radius: 10
 
         // ── Scanning ──────────────────────────────────────────────────
@@ -54,28 +56,31 @@ Item {
             width: parent.width - 80
 
             Text {
+                objectName: "scanText"
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: root.scanTotal > 0
                       ? "Evaluating " + root.scanTotal + " " + (root.scanTotal === 1 ? "item" : "items") + " for import…"
                       : "Evaluating files for import…"
-                color: "#cccccc"
-                font.pixelSize: 15
+                color: Theme.text
+                font.pixelSize: Theme.fontSizeMd
             }
 
             Rectangle {
                 id: scanTrack
+                objectName: "scanTrack"
                 width: parent.width
                 height: 4
                 radius: 2
-                color: "#333333"
+                color: Theme.border
                 clip: true
 
                 Rectangle {
                     id: scanBar
+                    objectName: "scanBar"
                     width: scanTrack.width * 0.35
                     height: scanTrack.height
                     radius: scanTrack.radius
-                    color: "#88cc88"
+                    color: Theme.success
 
                     SequentialAnimation on x {
                         loops: Animation.Infinite
@@ -115,9 +120,10 @@ Item {
                         visible: root.alreadyImportedFiles.length > 0
 
                         Text {
+                            objectName: "alreadyImportedText"
                             text: root.alreadyImportedFiles.length + " image" + (root.alreadyImportedFiles.length === 1 ? "" : "s") + " already in library, skipping."
-                            color: "#888888"
-                            font.pixelSize: 13
+                            color: Theme.textMuted
+                            font.pixelSize: Theme.fontSizeSm
                         }
 
                         ListView {
@@ -130,7 +136,7 @@ Item {
                             delegate: Rectangle {
                                 required property var modelData
                                 width: 60; height: 60
-                                color: "#222222"
+                                color: Theme.surface
                                 radius: 3
                                 clip: true
                                 Image {
@@ -151,9 +157,10 @@ Item {
                         visible: root.pendingFiles.length > 0
 
                         Text {
+                            objectName: "pendingText"
                             text: root.pendingFiles.length + " image" + (root.pendingFiles.length === 1 ? "" : "s") + " ready to import"
-                            color: "#ffffff"
-                            font.pixelSize: 13
+                            color: Theme.text
+                            font.pixelSize: Theme.fontSizeSm
                             font.weight: Font.Medium
                         }
 
@@ -167,7 +174,7 @@ Item {
                             delegate: Rectangle {
                                 required property var modelData
                                 width: 60; height: 60
-                                color: "#222222"
+                                color: Theme.surface
                                 radius: 3
                                 clip: true
 
@@ -190,8 +197,8 @@ Item {
                                     anchors.centerIn: parent
                                     visible: pendingPreview.status === Image.Error
                                     text: "…"
-                                    color: "#555555"
-                                    font.pixelSize: 16
+                                    color: Theme.textMuted
+                                    font.pixelSize: Theme.fontSizeMd
                                 }
                             }
                         }
@@ -204,13 +211,15 @@ Item {
                         visible: root.conflictFiles.length > 0
 
                         Text {
+                            objectName: "duplicatesHeaderText"
                             text: "These images are duplicates"
-                            color: "#ccaa44"
-                            font.pixelSize: 13
+                            color: Theme.error
+                            font.pixelSize: Theme.fontSizeSm
                             font.weight: Font.Medium
                         }
 
                         Repeater {
+                            id: conflictRepeater
                             model: root.conflictFiles
                             delegate: Row {
                                 id: conflictItem
@@ -222,7 +231,7 @@ Item {
                                 // Thumbnail of existing library image
                                 Rectangle {
                                     width: 56; height: 56
-                                    color: "#222222"
+                                    color: Theme.surface
                                     radius: 3
                                     clip: true
                                     Image {
@@ -241,11 +250,14 @@ Item {
                                     Row {
                                         spacing: 8
                                         Rectangle {
+                                            id: keepRadio
+                                            objectName: "keepRadio"
+                                            property alias borderColor: keepRadio.border.color
                                             width: 14; height: 14
                                             radius: 7
                                             anchors.verticalCenter: parent.verticalCenter
-                                            color: conflictItem.currentChoice === "keep" ? "#cc8800" : "transparent"
-                                            border.color: conflictItem.currentChoice === "keep" ? "#cc8800" : "#555555"
+                                            color: conflictItem.currentChoice === "keep" ? Theme.error : "transparent"
+                                            border.color: conflictItem.currentChoice === "keep" ? Theme.error : Theme.border
                                             border.width: 1
                                             MouseArea {
                                                 anchors.fill: parent
@@ -257,10 +269,11 @@ Item {
                                             }
                                         }
                                         Text {
+                                            objectName: "keepLabel"
                                             anchors.verticalCenter: parent.verticalCenter
                                             text: "Keep \"" + (conflictItem.conflict.existing_path || "") + "\""
-                                            color: conflictItem.currentChoice === "keep" ? "#ffffff" : "#888888"
-                                            font.pixelSize: 11
+                                            color: conflictItem.currentChoice === "keep" ? Theme.text : Theme.textMuted
+                                            font.pixelSize: Theme.fontSizeSm
                                             elide: Text.ElideMiddle
                                             width: parent.parent.width - 22
                                         }
@@ -269,11 +282,14 @@ Item {
                                     Row {
                                         spacing: 8
                                         Rectangle {
+                                            id: replaceRadio
+                                            objectName: "replaceRadio"
+                                            property alias borderColor: replaceRadio.border.color
                                             width: 14; height: 14
                                             radius: 7
                                             anchors.verticalCenter: parent.verticalCenter
-                                            color: conflictItem.currentChoice === "update" ? "#cc8800" : "transparent"
-                                            border.color: conflictItem.currentChoice === "update" ? "#cc8800" : "#555555"
+                                            color: conflictItem.currentChoice === "update" ? Theme.error : "transparent"
+                                            border.color: conflictItem.currentChoice === "update" ? Theme.error : Theme.border
                                             border.width: 1
                                             MouseArea {
                                                 anchors.fill: parent
@@ -285,10 +301,11 @@ Item {
                                             }
                                         }
                                         Text {
+                                            objectName: "replaceLabel"
                                             anchors.verticalCenter: parent.verticalCenter
                                             text: "Replace with \"" + (conflictItem.conflict.path || "") + "\""
-                                            color: conflictItem.currentChoice === "update" ? "#ffffff" : "#888888"
-                                            font.pixelSize: 11
+                                            color: conflictItem.currentChoice === "update" ? Theme.text : Theme.textMuted
+                                            font.pixelSize: Theme.fontSizeSm
                                             elide: Text.ElideMiddle
                                             width: parent.parent.width - 22
                                         }
@@ -306,18 +323,22 @@ Item {
                 spacing: 10
 
                 Rectangle {
+                    id: cancelBtn
+                    objectName: "cancelBtn"
+                    property alias borderColor: cancelBtn.border.color
                     width: 80
                     height: 32
-                    color: cancelHover.containsMouse ? "#2a2a2a" : "transparent"
-                    border.color: "#444444"
+                    color: cancelHover.containsMouse ? Theme.border : "transparent"
+                    border.color: Theme.border
                     border.width: 1
                     radius: 4
 
                     Text {
+                        objectName: "cancelBtnText"
                         anchors.centerIn: parent
                         text: "Cancel"
-                        color: "#888888"
-                        font.pixelSize: 13
+                        color: Theme.textMuted
+                        font.pixelSize: Theme.fontSizeSm
                     }
 
                     MouseArea {
@@ -331,14 +352,15 @@ Item {
                 Rectangle {
                     width: 80
                     height: 32
-                    color: importHover.containsMouse ? "#2a5a2a" : "#1e4a1e"
+                    color: Qt.tint(Theme.surface, Qt.rgba(0, 1, 0, importHover.containsMouse ? 0.35 : 0.25))
                     radius: 4
 
                     Text {
+                        objectName: "importBtnText"
                         anchors.centerIn: parent
                         text: "Import"
-                        color: "#88cc88"
-                        font.pixelSize: 13
+                        color: Theme.success
+                        font.pixelSize: Theme.fontSizeSm
                         font.weight: Font.Medium
                     }
 
@@ -360,33 +382,39 @@ Item {
             width: parent.width - 80
 
             Text {
+                objectName: "importingText"
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "Importing…"
-                color: "#cccccc"
-                font.pixelSize: 15
+                color: Theme.text
+                font.pixelSize: Theme.fontSizeMd
             }
 
             Rectangle {
+                id: importingTrack
+                objectName: "importingTrack"
                 width: parent.width
                 height: 4
                 radius: 2
-                color: "#333333"
+                color: Theme.border
 
                 Rectangle {
+                    id: importingBar
+                    objectName: "importingBar"
                     width: parent.width * root.progress
                     height: parent.height
                     radius: parent.radius
-                    color: "#88cc88"
+                    color: Theme.success
 
                     Behavior on width { NumberAnimation { duration: 200 } }
                 }
             }
 
             Text {
+                objectName: "importingPercentText"
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: Math.round(root.progress * 100) + "%"
-                color: "#666666"
-                font.pixelSize: 12
+                color: Theme.textMuted
+                font.pixelSize: Theme.fontSizeSm
             }
         }
 
@@ -400,14 +428,16 @@ Item {
                 spacing: 8
 
                 Text {
+                    objectName: "completeTitle"
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Import complete"
-                    color: "#88cc88"
-                    font.pixelSize: 16
+                    color: Theme.success
+                    font.pixelSize: Theme.fontSizeMd
                     font.weight: Font.Medium
                 }
 
                 Text {
+                    objectName: "completeSummaryText"
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: {
                         var parts = [root.importedCount + " imported"]
@@ -416,23 +446,25 @@ Item {
                         if (root.errorCount > 0) parts.push(root.errorCount + " failed")
                         return parts.join(" · ")
                     }
-                    color: "#888888"
-                    font.pixelSize: 13
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSm
                 }
             }
 
             Rectangle {
+                objectName: "doneBtn"
                 anchors { bottom: parent.bottom; right: parent.right }
                 width: 80
                 height: 32
-                color: closeHover.containsMouse ? "#2a2a2a" : "#252525"
+                color: closeHover.containsMouse ? Theme.border : Theme.surface
                 radius: 4
 
                 Text {
+                    objectName: "doneBtnText"
                     anchors.centerIn: parent
                     text: "Done"
-                    color: "#cccccc"
-                    font.pixelSize: 13
+                    color: Theme.text
+                    font.pixelSize: Theme.fontSizeSm
                 }
 
                 MouseArea {
@@ -454,33 +486,37 @@ Item {
                 spacing: 8
 
                 Text {
+                    objectName: "errorTitle"
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Import failed"
-                    color: "#cc4444"
-                    font.pixelSize: 15
+                    color: Theme.warning
+                    font.pixelSize: Theme.fontSizeMd
                     font.weight: Font.Medium
                 }
 
                 Text {
+                    objectName: "errorSubtext"
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "Check your files and try again."
-                    color: "#888888"
-                    font.pixelSize: 12
+                    color: Theme.textMuted
+                    font.pixelSize: Theme.fontSizeSm
                 }
             }
 
             Rectangle {
+                objectName: "closeBtn"
                 anchors { bottom: parent.bottom; right: parent.right }
                 width: 80
                 height: 32
-                color: "#252525"
+                color: Theme.surface
                 radius: 4
 
                 Text {
+                    objectName: "closeBtnText"
                     anchors.centerIn: parent
                     text: "Close"
-                    color: "#cccccc"
-                    font.pixelSize: 13
+                    color: Theme.text
+                    font.pixelSize: Theme.fontSizeSm
                 }
 
                 MouseArea {

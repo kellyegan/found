@@ -2637,3 +2637,204 @@ def test_edge_tab_icon_and_arrow_use_theme_text_muted_and_font_size_sm(theme_qml
     assert arrow is not None
     assert arrow.property("color") == QColor(active_theme.textMuted)
     assert arrow.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# ImportPanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_import_panel_backdrop_and_sheet_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Scanning")
+
+    backdrop = obj.findChild(QObject, "backdrop")
+    assert backdrop is not None
+    assert backdrop.property("color") == QColor(active_theme.background)
+
+    sheet = obj.findChild(QObject, "sheet")
+    assert sheet is not None
+    assert sheet.property("color") == QColor(active_theme.surface)
+
+
+def test_import_panel_scanning_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Scanning")
+
+    scan_text = obj.findChild(QObject, "scanText")
+    assert scan_text is not None
+    assert scan_text.property("color") == QColor(active_theme.text)
+    assert scan_text.property("font").pixelSize() == active_theme.fontSizeMd
+
+    scan_track = obj.findChild(QObject, "scanTrack")
+    assert scan_track.property("color") == QColor(active_theme.border)
+
+    scan_bar = obj.findChild(QObject, "scanBar")
+    assert scan_bar.property("color") == QColor(active_theme.success)
+
+
+def test_import_panel_already_imported_and_pending_headers_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Previewing")
+    obj.setProperty("alreadyImportedFiles", [{"image_id": "abc"}])
+    obj.setProperty("pendingFiles", ["/tmp/photo.jpg"])
+
+    already_text = obj.findChild(QObject, "alreadyImportedText")
+    assert already_text is not None
+    assert already_text.property("color") == QColor(active_theme.textMuted)
+    assert already_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+    pending_text = obj.findChild(QObject, "pendingText")
+    assert pending_text is not None
+    assert pending_text.property("color") == QColor(active_theme.text)
+    assert pending_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_duplicates_section_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Previewing")
+    obj.setProperty("conflictFiles", [{
+        "path": "/new/photo.jpg",
+        "existing_path": "/old/photo.jpg",
+        "existing_image_id": "xyz",
+    }])
+
+    header = obj.findChild(QObject, "duplicatesHeaderText")
+    assert header is not None
+    assert header.property("color") == QColor(active_theme.error)
+
+    # Repeater-instantiated delegates aren't reachable via findChildren, so
+    # query the live item through the QML context instead.
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "conflictRepeater.itemAt(0)")
+    conflict_item, _ = expr.evaluate()
+
+    keep_radio = conflict_item.findChild(QObject, "keepRadio")
+    replace_radio = conflict_item.findChild(QObject, "replaceRadio")
+    keep_label = conflict_item.findChild(QObject, "keepLabel")
+    replace_label = conflict_item.findChild(QObject, "replaceLabel")
+    assert keep_radio is not None and replace_radio is not None
+    assert keep_label is not None and replace_label is not None
+
+    # "keep" is selected by default
+    assert keep_radio.property("color") == QColor(active_theme.error)
+    assert keep_radio.property("borderColor") == QColor(active_theme.error)
+    assert keep_label.property("color") == QColor(active_theme.text)
+
+    assert replace_radio.property("color") == QColor("transparent")
+    assert replace_radio.property("borderColor") == QColor(active_theme.border)
+    assert replace_label.property("color") == QColor(active_theme.textMuted)
+
+
+def test_import_panel_buttons_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Previewing")
+
+    cancel_btn = obj.findChild(QObject, "cancelBtn")
+    assert cancel_btn is not None
+    assert cancel_btn.property("color") == QColor("transparent")
+    assert cancel_btn.property("borderColor") == QColor(active_theme.border)
+
+    cancel_text = obj.findChild(QObject, "cancelBtnText")
+    assert cancel_text.property("color") == QColor(active_theme.textMuted)
+    assert cancel_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+    import_text = obj.findChild(QObject, "importBtnText")
+    assert import_text.property("color") == QColor(active_theme.success)
+    assert import_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_importing_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Importing")
+    obj.setProperty("progress", 0.5)
+
+    importing_text = obj.findChild(QObject, "importingText")
+    assert importing_text is not None
+    assert importing_text.property("color") == QColor(active_theme.text)
+    assert importing_text.property("font").pixelSize() == active_theme.fontSizeMd
+
+    importing_track = obj.findChild(QObject, "importingTrack")
+    assert importing_track.property("color") == QColor(active_theme.border)
+
+    importing_bar = obj.findChild(QObject, "importingBar")
+    assert importing_bar.property("color") == QColor(active_theme.success)
+
+    percent_text = obj.findChild(QObject, "importingPercentText")
+    assert percent_text.property("color") == QColor(active_theme.textMuted)
+    assert percent_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_complete_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Complete")
+    obj.setProperty("importedCount", 3)
+
+    title = obj.findChild(QObject, "completeTitle")
+    assert title is not None
+    assert title.property("color") == QColor(active_theme.success)
+    assert title.property("font").pixelSize() == active_theme.fontSizeMd
+
+    summary = obj.findChild(QObject, "completeSummaryText")
+    assert summary.property("color") == QColor(active_theme.textMuted)
+    assert summary.property("font").pixelSize() == active_theme.fontSizeSm
+
+    done_btn = obj.findChild(QObject, "doneBtn")
+    assert done_btn.property("color") == QColor(active_theme.surface)
+
+    done_text = obj.findChild(QObject, "doneBtnText")
+    assert done_text.property("color") == QColor(active_theme.text)
+    assert done_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_import_panel_error_state_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ImportPanel.qml")
+    obj.setProperty("loadingState", "Error")
+
+    title = obj.findChild(QObject, "errorTitle")
+    assert title is not None
+    assert title.property("color") == QColor(active_theme.warning)
+    assert title.property("font").pixelSize() == active_theme.fontSizeMd
+
+    subtext = obj.findChild(QObject, "errorSubtext")
+    assert subtext.property("color") == QColor(active_theme.textMuted)
+    assert subtext.property("font").pixelSize() == active_theme.fontSizeSm
+
+    close_btn = obj.findChild(QObject, "closeBtn")
+    assert close_btn.property("color") == QColor(active_theme.surface)
+
+    close_text = obj.findChild(QObject, "closeBtnText")
+    assert close_text.property("color") == QColor(active_theme.text)
+    assert close_text.property("font").pixelSize() == active_theme.fontSizeSm
