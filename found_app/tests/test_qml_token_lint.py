@@ -19,10 +19,7 @@ PIXEL_SIZE_RE = re.compile(r"pixelSize:\s*\d+")
 # Files that still contain hardcoded hex colors and/or pixelSize literals.
 # Each Section 5 rollout commit converts one file to theme tokens/primitives
 # and removes it from this list.
-ALLOWED_FILES = {
-    "views/ImageView.qml",
-    "views/SplashScreen.qml",
-}
+ALLOWED_FILES = set()
 
 
 def _violations():

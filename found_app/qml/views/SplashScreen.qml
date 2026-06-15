@@ -27,11 +27,12 @@ Item {
 
         Text {
             id: titleText
+            objectName: "titleText"
             width: parent.width
             anchors.centerIn: parent
             text: "found"
-            font.pixelSize: 400
-            minimumPixelSize: 48
+            font.pixelSize: Theme.fontSizeXl * 8
+            minimumPixelSize: Theme.fontSizeXl
             fontSizeMode: Text.HorizontalFit
             font.weight: Font.Bold
             font.family: Theme.fontFamily

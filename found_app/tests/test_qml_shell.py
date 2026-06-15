@@ -192,6 +192,21 @@ def test_splash_screen_has_dismissed_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# SplashScreen — theme tokens (Feature 5.10)
+# ---------------------------------------------------------------------------
+
+
+def test_splash_screen_title_text_pixel_size_uses_theme_token(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "views/SplashScreen.qml")
+    title_text = obj.findChild(QObject, "titleText")
+    assert title_text is not None
+    assert title_text.property("font").pixelSize() == active_theme.fontSizeXl * 8
+
+
+# ---------------------------------------------------------------------------
 # MainRouter
 # ---------------------------------------------------------------------------
 
@@ -1078,6 +1093,64 @@ def test_image_view_shortcuts_disabled_when_remove_dialog_open(engine):
 
     obj.setProperty("_removeId", "img-1")
     assert all(s.property("enabled") is False for s in shortcuts)
+
+
+# ---------------------------------------------------------------------------
+# ImageView — theme tokens (Feature 5.10)
+# ---------------------------------------------------------------------------
+
+
+def test_image_view_backgrounds_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "views/ImageView.qml")
+
+    root_background = obj.findChild(QObject, "rootBackground")
+    assert root_background is not None
+    assert root_background.property("color") == QColor(active_theme.background)
+
+    viewport = obj.findChild(QObject, "viewport")
+    assert viewport is not None
+    assert viewport.property("color") == QColor(active_theme.background)
+
+
+def test_image_view_error_icon_uses_theme_token(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "views/ImageView.qml")
+
+    icon = obj.findChild(QObject, "errorIconText")
+    assert icon is not None
+    assert icon.property("font").pixelSize() == active_theme.fontSizeXl
+
+
+def test_image_view_prev_next_badges_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "views/ImageView.qml")
+
+    prev_badge = obj.findChild(QObject, "prevBadge")
+    assert prev_badge is not None
+    assert prev_badge.property("color") == QColor.fromRgbF(0, 0, 0, 0.8)
+
+    prev_arrow = obj.findChild(QObject, "prevArrowText")
+    assert prev_arrow is not None
+    assert prev_arrow.property("color") == QColor(active_theme.text)
+    assert prev_arrow.property("font").pixelSize() == active_theme.fontSizeXl
+
+    next_badge = obj.findChild(QObject, "nextBadge")
+    assert next_badge is not None
+    assert next_badge.property("color") == QColor.fromRgbF(0, 0, 0, 0.8)
+
+    next_arrow = obj.findChild(QObject, "nextArrowText")
+    assert next_arrow is not None
+    assert next_arrow.property("color") == QColor(active_theme.text)
+    assert next_arrow.property("font").pixelSize() == active_theme.fontSizeXl
 
 
 # ---------------------------------------------------------------------------

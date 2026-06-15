@@ -262,10 +262,10 @@ literals) to use tokens and primitives.
 
 ### Feature 5.10 — `theme/05-rollout-views`
 
-- [ ] Convert `ImageView.qml`; remove from lint allowlist.
-- [ ] Convert `SplashScreen.qml`; remove from lint allowlist.
-- [ ] Confirm the lint allowlist is now empty.
-- [ ] Run full suite.
+- [x] Convert `ImageView.qml`; remove from lint allowlist.
+- [x] Convert `SplashScreen.qml`; remove from lint allowlist.
+- [x] Confirm the lint allowlist is now empty.
+- [x] Run full suite.
 
 ---
 
