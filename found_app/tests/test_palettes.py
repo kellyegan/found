@@ -11,7 +11,10 @@ from found_app.theme.palettes import FOUND_DARK, FOUND_LIGHT, THEMES
 from found_app.theme.theme import ThemeManager
 
 
-def test_theme_manager_default_palette_is_found_dark(qapp):
+def test_theme_manager_default_palette_is_found_dark(qapp, monkeypatch):
+    import found_app.theme.theme as theme_module
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Dark")
     theme = ThemeManager()
 
     assert theme._palette == FOUND_DARK

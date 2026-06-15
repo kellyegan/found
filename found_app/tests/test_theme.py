@@ -243,6 +243,36 @@ def test_system_mode_poll_does_nothing_when_os_theme_unchanged(qapp, monkeypatch
     assert received == []
 
 
+def test_poll_timer_runs_in_system_mode(qapp):
+    theme = ThemeManager()  # mode defaults to "system"
+    assert theme._poll_timer.isActive() is True
+
+
+def test_poll_timer_does_not_run_outside_system_mode(qapp, tmp_path):
+    theme = ThemeManager(settings=_app_settings(tmp_path))
+    theme.setMode("dark")
+
+    fresh = ThemeManager(settings=_app_settings(tmp_path))
+    assert fresh.mode == "dark"
+    assert fresh._poll_timer.isActive() is False
+
+
+def test_poll_timer_triggers_poll_on_timeout(qapp, monkeypatch):
+    import found_app.theme.theme as theme_module
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Light")
+    theme = ThemeManager()
+
+    received = []
+    theme.paletteChanged.connect(lambda: received.append(True))
+
+    monkeypatch.setattr(theme_module.darkdetect, "theme", lambda: "Dark")
+    theme._poll_timer.timeout.emit()
+
+    assert received == [True]
+    assert theme.background == FOUND_DARK["background"]
+
+
 def test_set_palette_swaps_active_palette_and_notifies(qapp):
     theme = ThemeManager()
     received = []

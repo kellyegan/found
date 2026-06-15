@@ -1,5 +1,5 @@
 import darkdetect
-from PySide6.QtCore import QObject, Property, Signal, Slot
+from PySide6.QtCore import QObject, Property, QTimer, Signal, Slot
 from PySide6.QtQml import QQmlEngine, qmlRegisterSingletonInstance
 
 from found_app.theme.palettes import THEMES
@@ -9,6 +9,9 @@ class ThemeManager(QObject):
     """Exposes design tokens as Qt properties for use as a QML context property."""
 
     paletteChanged = Signal()
+
+    # How often to re-check darkdetect.theme() while mode == "system".
+    SYSTEM_POLL_INTERVAL_MS = 2000
 
     def __init__(self, parent=None, settings=None):
         super().__init__(parent)
@@ -21,6 +24,12 @@ class ThemeManager(QObject):
         )
         self._system_variant = None
         self._apply_palette()
+
+        self._poll_timer = QTimer(self)
+        self._poll_timer.setInterval(self.SYSTEM_POLL_INTERVAL_MS)
+        self._poll_timer.timeout.connect(self._poll_system_theme)
+        if self._mode == "system":
+            self._poll_timer.start()
 
     def _resolve_variant(self) -> str:
         if self._mode in ("light", "dark"):
