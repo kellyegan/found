@@ -13,7 +13,7 @@ Rectangle {
     color: {
         switch (root.chipState) {
         case "include": return Theme.accent
-        case "exclude": return Theme.warningColor
+        case "exclude": return Theme.warning
         case "mixed": return Theme.surface
         case "drag-hover": return Theme.accent
         default: return Theme.border

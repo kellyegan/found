@@ -48,7 +48,7 @@ def test_chip_loads(qapp, theme_qml_engine):
 CHIP_STATE_TOKENS = [
     ("off", "border"),
     ("include", "accent"),
-    ("exclude", "warningColor"),
+    ("exclude", "warning"),
     ("mixed", "surface"),
     ("drag-hover", "accent"),
 ]

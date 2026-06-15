@@ -1,6 +1,7 @@
 import QtQuick
 import Found.Theme 1.0
 import "../components"
+import "../primitives"
 
 Item {
     id: root
@@ -130,18 +131,20 @@ Item {
                 spacing: 5
 
                 Text {
+                    objectName: "missingIcon"
                     text: "!"
-                    font.pixelSize: 13
+                    font.pixelSize: Theme.fontSizeSm
                     font.weight: Font.Bold
-                    color: "#ff8800"
+                    color: Theme.error
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
+                    objectName: "missingText"
                     text: root.missingCount + " missing"
                     font.pixelSize: Theme.fontSizeSm
                     font.family: Theme.fontFamily
-                    color: "#ff8800"
+                    color: Theme.error
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -152,17 +155,19 @@ Item {
                 spacing: 5
 
                 Rectangle {
+                    objectName: "disconnectedDot"
                     width: 8; height: 8
                     radius: 4
-                    color: "#ff4444"
+                    color: Theme.warning
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
+                    objectName: "disconnectedText"
                     text: "Disconnected"
                     font.pixelSize: Theme.fontSizeSm
                     font.family: Theme.fontFamily
-                    color: "#ff4444"
+                    color: Theme.warning
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -199,9 +204,10 @@ Item {
             anchors { right: parent.right; rightMargin: 8; verticalCenter: parent.verticalCenter }
 
             Text {
+                objectName: "filterIcon"
                 anchors.centerIn: parent
                 text: "⊟"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontSizeMd
                 color: root.filterActive ? Theme.accent : Theme.textMuted
             }
 
@@ -223,6 +229,7 @@ Item {
             spacing: 4
 
             Repeater {
+                id: filterRepeater
                 model: root.activeFilters
 
                 delegate: Item {
@@ -230,36 +237,34 @@ Item {
                     implicitWidth: roChipRow.implicitWidth + 20
                     height: 22
 
-                    Rectangle {
+                    Chip {
+                        objectName: "roChip"
                         anchors.fill: parent
-                        radius: height / 2
-                        color: modelData.mode === "exclude" ? "#2a1515" : "#152030"
-                        border.color: modelData.mode === "exclude" ? "#884444" : "#446688"
-                        border.width: 1
+                        chipState: modelData.mode === "exclude" ? "exclude" : "include"
+                    }
 
-                        Row {
-                            id: roChipRow
-                            anchors {
-                                left: parent.left; leftMargin: 8
-                                right: parent.right; rightMargin: 8
-                                verticalCenter: parent.verticalCenter
-                            }
-                            spacing: 4
+                    Row {
+                        id: roChipRow
+                        anchors {
+                            left: parent.left; leftMargin: 8
+                            right: parent.right; rightMargin: 8
+                            verticalCenter: parent.verticalCenter
+                        }
+                        spacing: 4
 
-                            Text {
-                                text: modelData.mode === "exclude" ? "−" : "+"
-                                font.pixelSize: 10
-                                color: modelData.mode === "exclude" ? "#cc6666" : "#6699cc"
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                        Text {
+                            text: modelData.mode === "exclude" ? "−" : "+"
+                            font.pixelSize: Theme.fontSizeSm
+                            color: Theme.text
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
 
-                            Text {
-                                text: modelData.name ?? ""
-                                font.pixelSize: Theme.fontSizeSm
-                                font.family: Theme.fontFamily
-                                color: Theme.text
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                        Text {
+                            text: modelData.name ?? ""
+                            font.pixelSize: Theme.fontSizeSm
+                            font.family: Theme.fontFamily
+                            color: Theme.text
+                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }

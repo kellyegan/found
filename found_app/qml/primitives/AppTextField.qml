@@ -16,7 +16,7 @@ Rectangle {
     color: Theme.surface
     border.width: 1
     border.color: {
-        if (root.error) return Theme.warningColor
+        if (root.error) return Theme.warning
         if (root.focused) return Theme.accent
         return Theme.border
     }
@@ -31,7 +31,7 @@ Rectangle {
             leftMargin: Theme.spacingSm
             rightMargin: Theme.spacingSm
         }
-        color: root.error ? Theme.warningColor : Theme.text
+        color: root.error ? Theme.warning : Theme.text
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeMd
         clip: true

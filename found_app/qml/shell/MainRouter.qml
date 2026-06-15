@@ -3,6 +3,7 @@ import QtQuick.Dialogs
 import Found.Theme 1.0
 import "../views"
 import "../components"
+import "../primitives"
 
 Item {
     id: root
@@ -561,19 +562,20 @@ Item {
 
             // Drag-over highlight
             Rectangle {
+                objectName: "dragHighlight"
                 anchors.fill: parent
-                color: "#ffffff"
+                color: Theme.text
                 opacity: parent.containsDrag ? 0.08 : 0.0
                 visible: opacity > 0
 
                 Behavior on opacity { NumberAnimation { duration: 100 } }
 
-                Text {
+                AppText {
+                    objectName: "dropHintText"
                     anchors.centerIn: parent
                     visible: parent.parent.containsDrag
                     text: "Drop to import"
-                    color: "#cccccc"
-                    font.pixelSize: 18
+                    variant: "heading"
                     font.weight: Font.Medium
                 }
             }
