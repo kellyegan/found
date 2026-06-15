@@ -3141,3 +3141,20 @@ def test_settings_view_has_appearance_section(engine):
     obj = load_component(engine, "views/SettingsView.qml")
     section = obj.findChild(QObject, "appearanceSection")
     assert section is not None
+
+
+def test_settings_view_theme_picker_calls_set_theme_name(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    active_theme.setThemeName("Bogus")
+
+    obj = load_component(theme_qml_engine, "views/SettingsView.qml")
+
+    # Repeater-instantiated delegates aren't reachable via findChild, so
+    # query the live item through the QML context instead.
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "themeRepeater.itemAt(0).clicked()")
+    expr.evaluate()
+
+    assert active_theme.themeName == "Found"

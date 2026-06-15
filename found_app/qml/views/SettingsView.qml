@@ -12,12 +12,38 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.margins: Theme.spacingLg
-        height: heading.implicitHeight + Theme.spacingMd * 2
+        height: content.implicitHeight + Theme.spacingMd * 2
 
-        AppText {
-            id: heading
-            variant: "heading"
-            text: "Appearance"
+        Column {
+            id: content
+            spacing: Theme.spacingSm
+
+            AppText {
+                id: heading
+                variant: "heading"
+                text: "Appearance"
+            }
+
+            AppText {
+                variant: "label"
+                text: "Theme"
+            }
+
+            Row {
+                spacing: Theme.spacingSm
+
+                Repeater {
+                    id: themeRepeater
+                    model: Theme.availableThemes()
+
+                    AppButton {
+                        required property var modelData
+                        objectName: "themeOption_" + modelData
+                        text: modelData
+                        onClicked: Theme.setThemeName(modelData)
+                    }
+                }
+            }
         }
     }
 }
