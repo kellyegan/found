@@ -2838,3 +2838,102 @@ def test_import_panel_error_state_uses_theme_tokens(theme_qml_engine):
     close_text = obj.findChild(QObject, "closeBtnText")
     assert close_text.property("color") == QColor(active_theme.text)
     assert close_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# CollectionEditorSection — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_collection_editor_section_divider_and_header_use_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+
+    divider = obj.findChild(QObject, "divider")
+    assert divider is not None
+    assert divider.property("color") == QColor(active_theme.border)
+
+    header = obj.findChild(QObject, "collectionsHeaderText")
+    assert header is not None
+    assert header.property("color") == QColor(active_theme.textMuted)
+    assert header.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_collection_editor_section_add_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+
+    row = obj.findChild(QObject, "addToCollectionRow")
+    assert row is not None
+    assert row.property("borderColor") == QColor(active_theme.border)
+
+    obj.setProperty("_dropdownOpen", True)
+    assert row.property("borderColor") == QColor(active_theme.textMuted)
+
+    icon = obj.findChild(QObject, "addIcon")
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+    label = obj.findChild(QObject, "addLabelText")
+    assert label.property("color") == QColor(active_theme.textMuted)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_collection_editor_section_dropdown_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+    obj.setProperty("_dropdownOpen", True)
+
+    box = obj.findChild(QObject, "dropdownBox")
+    assert box is not None
+    assert box.property("color") == QColor(active_theme.surface)
+    assert box.property("borderColor") == QColor(active_theme.border)
+
+
+def test_collection_editor_section_multi_select_note_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+
+    note = obj.findChild(QObject, "multiSelectText")
+    assert note is not None
+    assert note.property("color") == QColor(active_theme.textMuted)
+    assert note.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_collection_editor_section_chip_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/CollectionEditorSection.qml")
+    obj.setProperty("selectionMode", "single")
+    obj.setProperty("collections", [{"id": "c1", "name": "Portraits"}])
+
+    ctx = theme_qml_engine.contextForObject(obj)
+    expr = QQmlExpression(ctx, None, "chipRepeater.itemAt(0)")
+    chip, _ = expr.evaluate()
+    assert chip is not None
+
+    assert chip.property("color") == QColor(active_theme.surface)
+    assert chip.property("borderColor") == QColor(active_theme.border)
+
+    label = chip.findChild(QObject, "collectionChipLabel")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.text)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+    remove = chip.findChild(QObject, "collectionChipRemoveText")
+    assert remove is not None
+    assert remove.property("color") == QColor(active_theme.textMuted)
+    assert remove.property("font").pixelSize() == active_theme.fontSizeSm
