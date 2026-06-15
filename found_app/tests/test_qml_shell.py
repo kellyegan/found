@@ -1760,6 +1760,20 @@ def test_filter_chip_has_remove_requested_signal(engine):
     assert isinstance(received, list)
 
 
+def test_filter_chip_icons_use_theme_font_size_sm(theme_qml_engine):
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/FilterChip.qml")
+
+    mode_icon = obj.findChild(QObject, "modeIcon")
+    remove_icon = obj.findChild(QObject, "removeIcon")
+    assert mode_icon is not None
+    assert remove_icon is not None
+    assert mode_icon.property("font").pixelSize() == active_theme.fontSizeSm
+    assert remove_icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
 # ---------------------------------------------------------------------------
 # FilterDropdown — Commit 7
 # ---------------------------------------------------------------------------
