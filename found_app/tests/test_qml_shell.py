@@ -2986,3 +2986,67 @@ def test_collection_item_drop_border_uses_theme_tokens(theme_qml_engine):
 
     obj.setProperty("isDropTarget", True)
     assert drop_border.property("visible") is True
+
+
+# ThumbnailTile — theme tokens (Feature 5.9)
+# ---------------------------------------------------------------------------
+
+
+def test_thumbnail_tile_failed_placeholder_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ThumbnailTile.qml")
+
+    placeholder = obj.findChild(QObject, "failedPlaceholder")
+    assert placeholder is not None
+    assert placeholder.property("color") == QColor(active_theme.surface)
+
+    text = obj.findChild(QObject, "failedText")
+    assert text is not None
+    assert text.property("color") == QColor(active_theme.textMuted)
+    assert text.property("font").pixelSize() == active_theme.fontSizeMd
+
+
+def test_thumbnail_tile_missing_overlay_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ThumbnailTile.qml")
+
+    overlay = obj.findChild(QObject, "missingOverlay")
+    assert overlay is not None
+    assert overlay.property("color") == QColor(active_theme.background)
+
+    text = obj.findChild(QObject, "missingIconText")
+    assert text is not None
+    assert text.property("color") == QColor(active_theme.error)
+    assert text.property("font").pixelSize() == active_theme.fontSizeMd
+
+
+def test_thumbnail_tile_remove_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ThumbnailTile.qml")
+
+    icon = obj.findChild(QObject, "removeIconText")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.accent)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_thumbnail_tile_locate_button_uses_theme_tokens(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/ThumbnailTile.qml")
+
+    icon = obj.findChild(QObject, "locateIconText")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
