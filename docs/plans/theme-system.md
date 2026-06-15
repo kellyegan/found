@@ -318,6 +318,9 @@ exercise of live switching end-to-end.
 Goal: add further built-in theme families now that the infrastructure is
 data-driven. Each new theme is its own small feature.
 
+Completed presets:
+- [x] Sepia (`theme/08-sepia-preset`)
+
 ### Feature 8.1 — `theme/08-<theme-name>-preset` (repeat per theme)
 
 - [ ] Define `<NAME>_LIGHT`/`<NAME>_DARK` palettes with the full token set
