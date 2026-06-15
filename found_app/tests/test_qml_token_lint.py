@@ -30,7 +30,6 @@ ALLOWED_FILES = {
     "components/MetadataSidePanel.qml",
     "components/MetaRow.qml",
     "components/SidePanel.qml",
-    "components/TagSearchField.qml",
     "components/ThumbnailTile.qml",
     "views/ImageView.qml",
     "views/SplashScreen.qml",

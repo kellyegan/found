@@ -2037,6 +2037,65 @@ def test_tag_search_field_loads(engine):
     load_component(engine, "components/TagSearchField.qml")
 
 
+def test_tag_search_field_input_bg_uses_theme_border_when_unfocused(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    input_bg = obj.findChild(QObject, "inputBg")
+    assert input_bg is not None
+    assert input_bg.property("color") == QColor("transparent")
+    assert input_bg.property("borderColor") == QColor(active_theme.border)
+
+
+def test_tag_search_field_input_bg_uses_theme_surface_and_accent_when_focused(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    window = QQuickWindow()
+    obj.setParentItem(window.contentItem())
+    window.resize(300, 100)
+    window.show()
+
+    input_field = obj.findChild(QObject, "inputField")
+    input_field.forceActiveFocus()
+
+    input_bg = obj.findChild(QObject, "inputBg")
+    assert input_bg.property("color") == QColor(active_theme.surface)
+    assert input_bg.property("borderColor") == QColor(active_theme.accent)
+
+
+def test_tag_search_field_search_icon_uses_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    icon = obj.findChild(QObject, "searchIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.textMuted)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_tag_search_field_submit_icon_uses_theme_success(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
+
+    icon = obj.findChild(QObject, "submitIcon")
+    assert icon is not None
+    assert icon.property("color") == QColor(active_theme.success)
+    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
+
+
 # ---------------------------------------------------------------------------
 # MetadataSidePanel tag editor additions — Commit 11
 # ---------------------------------------------------------------------------
