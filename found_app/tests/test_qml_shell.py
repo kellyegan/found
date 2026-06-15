@@ -2282,3 +2282,56 @@ def test_title_bar_read_only_filter_pills_use_chip_states(theme_qml_engine):
     result, _ = expr.evaluate()
     states = sorted(result.toVariant())
     assert states == ["exclude", "include"]
+
+
+# ---------------------------------------------------------------------------
+# MetaRow — theme tokens (Feature 5.7)
+# ---------------------------------------------------------------------------
+
+
+def test_meta_row_qml_exists():
+    assert (QML_DIR / "components/MetaRow.qml").exists()
+
+
+def test_meta_row_loads(engine):
+    load_component(engine, "components/MetaRow.qml")
+
+
+def test_meta_row_label_uses_theme_text_muted_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetaRow.qml")
+
+    label = obj.findChild(QObject, "labelText")
+    assert label is not None
+    assert label.property("color") == QColor(active_theme.textMuted)
+    assert label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_meta_row_value_uses_theme_text_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetaRow.qml")
+    obj.setProperty("value", "/some/path.jpg")
+
+    value = obj.findChild(QObject, "valueText")
+    assert value is not None
+    assert value.property("color") == QColor(active_theme.text)
+    assert value.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_meta_row_clickable_value_uses_theme_accent(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetaRow.qml")
+    obj.setProperty("value", "example.com")
+    obj.setProperty("linkUrl", "https://example.com")
+
+    value = obj.findChild(QObject, "valueText")
+    assert value.property("color") == QColor(active_theme.accent)
