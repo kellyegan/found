@@ -37,7 +37,6 @@ ALLOWED_FILES = {
     "components/SidePanel.qml",
     "components/TagSearchField.qml",
     "components/ThumbnailTile.qml",
-    "shell/MainRouter.qml",
     "shell/TitleBar.qml",
     "views/ImageView.qml",
     "views/SplashScreen.qml",

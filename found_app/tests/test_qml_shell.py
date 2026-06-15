@@ -222,6 +222,34 @@ def test_main_router_relocation_result_dialog_closed_by_default(engine):
 
 
 # ---------------------------------------------------------------------------
+# MainRouter drag-and-drop overlay — theme tokens (Feature 5.6)
+# ---------------------------------------------------------------------------
+
+
+def test_main_router_drag_highlight_uses_theme_text_color(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "shell/MainRouter.qml")
+    highlight = obj.findChild(QObject, "dragHighlight")
+    assert highlight is not None
+    assert highlight.property("color") == QColor(active_theme.text)
+
+
+def test_main_router_drop_hint_text_uses_heading_variant(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "shell/MainRouter.qml")
+    hint = obj.findChild(QObject, "dropHintText")
+    assert hint is not None
+    assert hint.property("color") == QColor(active_theme.text)
+    assert hint.property("font").pixelSize() == active_theme.fontSizeLg
+
+
+# ---------------------------------------------------------------------------
 # AppWindow & main.qml (integration)
 # ---------------------------------------------------------------------------
 
