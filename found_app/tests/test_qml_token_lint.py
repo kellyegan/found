@@ -26,7 +26,6 @@ ALLOWED_FILES = {
     "components/EdgeTab.qml",
     "components/HoverTooltip.qml",
     "components/ImportPanel.qml",
-    "components/MetadataSidePanel.qml",
     "components/ThumbnailTile.qml",
     "views/ImageView.qml",
     "views/SplashScreen.qml",

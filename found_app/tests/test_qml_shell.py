@@ -2448,3 +2448,41 @@ def test_collections_sidebar_empty_label_uses_theme_text_muted_and_font_size_sm(
     assert empty_label is not None
     assert empty_label.property("color") == QColor(active_theme.textMuted)
     assert empty_label.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+# ---------------------------------------------------------------------------
+# MetadataSidePanel — theme tokens (Feature 5.8)
+# ---------------------------------------------------------------------------
+
+
+def test_metadata_sidebar_error_text_uses_theme_warning_and_font_size_sm(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetadataSidePanel.qml")
+    obj.setProperty("metaLoadingState", "Error")
+
+    error_text = obj.findChild(QObject, "metaErrorText")
+    assert error_text is not None
+    assert error_text.property("color") == QColor(active_theme.warning)
+    assert error_text.property("font").pixelSize() == active_theme.fontSizeSm
+
+
+def test_metadata_sidebar_missing_banner_uses_theme_error(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    from found_app.theme.theme import register_theme_singleton
+
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/MetadataSidePanel.qml")
+    obj.setProperty("metaLoadingState", "Ready")
+    obj.setProperty("metaIsMissing", True)
+
+    banner = obj.findChild(QObject, "missingBanner")
+    assert banner is not None
+    assert banner.property("borderColor") == QColor(active_theme.error)
+
+    banner_text = obj.findChild(QObject, "missingBannerText")
+    assert banner_text is not None
+    assert banner_text.property("color") == QColor(active_theme.error)
+    assert banner_text.property("font").pixelSize() == active_theme.fontSizeSm

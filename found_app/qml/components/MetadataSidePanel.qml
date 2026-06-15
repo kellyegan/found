@@ -81,12 +81,13 @@ SidePanel {
             spacing: 0
 
             Text {
+                objectName: "metaErrorText"
                 visible: root.metaLoadingState === "Error"
                 topPadding: 8
                 width: parent.width
                 text: "Failed to load metadata."
-                color: "#ff4444"
-                font.pixelSize: 12
+                color: Theme.warning
+                font.pixelSize: Theme.fontSizeSm
                 font.family: Theme.fontFamily
             }
 
@@ -96,19 +97,23 @@ SidePanel {
                 spacing: 0
 
                 Rectangle {
+                    id: missingBanner
+                    objectName: "missingBanner"
+                    property alias borderColor: missingBanner.border.color
                     visible: root.metaIsMissing
                     width: parent.width
                     height: 28
                     radius: 4
-                    color: "#2a1515"
-                    border.color: "#884444"
+                    color: Qt.tint(Theme.surface, Qt.rgba(1, 0, 0, 0.15))
+                    border.color: Theme.error
                     border.width: 1
 
                     Text {
+                        objectName: "missingBannerText"
                         anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
                         text: "⚠  File missing"
-                        font.pixelSize: 11
-                        color: "#cc6666"
+                        font.pixelSize: Theme.fontSizeSm
+                        color: Theme.error
                     }
                 }
 
