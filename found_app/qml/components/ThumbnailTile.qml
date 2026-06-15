@@ -110,31 +110,35 @@ Item {
 
         // Failed placeholder — generic dark square when load fails
         Rectangle {
+            objectName: "failedPlaceholder"
             anchors.fill: parent
-            color: "#1e1e1e"
+            color: Theme.surface
             visible: img.status === Image.Error
 
             Text {
+                objectName: "failedText"
                 anchors.centerIn: parent
                 text: "?"
-                font.pixelSize: 18
+                font.pixelSize: Theme.fontSizeMd
                 color: Theme.textMuted
             }
         }
 
         // Missing-image indicator overlay
         Rectangle {
+            objectName: "missingOverlay"
             anchors.fill: parent
-            color: "#000000"
+            color: Theme.background
             opacity: 0.45
             visible: root.fileStatus === "missing"
 
             Text {
+                objectName: "missingIconText"
                 anchors.centerIn: parent
                 text: "!"
-                font.pixelSize: 16
+                font.pixelSize: Theme.fontSizeMd
                 font.weight: Font.Bold
-                color: "#ff8800"
+                color: Theme.error
             }
         }
 
@@ -177,14 +181,15 @@ Item {
         height: 20
         radius: 10
         anchors { top: parent.top; right: parent.right; margins: root.inset + 4 }
-        color: removeArea.containsMouse ? "#cc4444" : "#00000099"
+        color: removeArea.containsMouse ? Theme.warning : Qt.rgba(0, 0, 0, 0.6)
         visible: tileMouseArea.containsMouse
 
         Text {
+            objectName: "removeIconText"
             anchors.centerIn: parent
             text: "✕"
-            color: "#ffffff"
-            font.pixelSize: 11
+            color: Theme.accent
+            font.pixelSize: Theme.fontSizeSm
         }
 
         MouseArea {
@@ -203,14 +208,15 @@ Item {
         height: 22
         radius: 11
         anchors { top: parent.top; left: parent.left; margins: root.inset + 4 }
-        color: locateArea.containsMouse ? "#ffffff" : "#aaffffff"
+        color: locateArea.containsMouse ? Theme.accent : Qt.rgba(1, 1, 1, 0.67)
         visible: root.fileStatus === "missing"
 
         Text {
+            objectName: "locateIconText"
             anchors.centerIn: parent
             text: "⚠"
-            color: "#555555"
-            font.pixelSize: 11
+            color: Theme.textMuted
+            font.pixelSize: Theme.fontSizeSm
         }
 
         MouseArea {
