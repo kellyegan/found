@@ -121,7 +121,7 @@ Item {
     Shortcut { sequence: "0"; enabled: root.visible && !root._dialogOpen; onActivated: root.resetView() }
 
     // Background fills the full root area so the bottom margin strip matches the viewport.
-    Rectangle { anchors.fill: parent; color: "#111111" }
+    Rectangle { objectName: "rootBackground"; anchors.fill: parent; color: Theme.background }
 
     Rectangle {
         id: viewport
@@ -129,7 +129,7 @@ Item {
         anchors.fill: parent
         anchors.bottomMargin: NavigationManager.immersiveMode ? 0 : 48
         anchors.rightMargin: root.rightPanelWidth
-        color: "#111111"
+        color: Theme.background
         clip: true
         enabled: !root._dialogOpen
 
@@ -175,10 +175,11 @@ Item {
             z: 1
 
             Text {
+                objectName: "errorIconText"
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: "!"
                 color: Theme.warning
-                font.pixelSize: 48
+                font.pixelSize: Theme.fontSizeXl
                 font.weight: Font.Bold
             }
             Text {
@@ -260,19 +261,21 @@ Item {
             visible: root.hasPrev
 
             Rectangle {
+                objectName: "prevBadge"
                 anchors.centerIn: parent
                 width: 100
                 height: 100
                 radius: 4
-                color: "#cc000000"
+                color: Qt.rgba(0, 0, 0, 0.8)
                 opacity: prevBtnArea.containsMouse ? 0.75 : 0.0
                 Behavior on opacity { NumberAnimation { duration: 150 } }
 
                 Text {
+                    objectName: "prevArrowText"
                     anchors.centerIn: parent
                     text: "◀"
-                    color: "#d9d9d9"
-                    font.pixelSize: 50
+                    color: Theme.text
+                    font.pixelSize: Theme.fontSizeXl
                 }
             }
 
@@ -293,19 +296,21 @@ Item {
             visible: root.hasNext
 
             Rectangle {
+                objectName: "nextBadge"
                 anchors.centerIn: parent
                 width: 100
                 height: 100
                 radius: 4
-                color: "#cc000000"
+                color: Qt.rgba(0, 0, 0, 0.8)
                 opacity: nextBtnArea.containsMouse ? 0.75 : 0.0
                 Behavior on opacity { NumberAnimation { duration: 150 } }
 
                 Text {
+                    objectName: "nextArrowText"
                     anchors.centerIn: parent
                     text: "▶"
-                    color: "#d9d9d9"
-                    font.pixelSize: 50
+                    color: Theme.text
+                    font.pixelSize: Theme.fontSizeXl
                 }
             }
 
