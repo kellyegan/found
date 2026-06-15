@@ -257,8 +257,8 @@ literals) to use tokens and primitives.
 
 ### Feature 5.9 — `theme/05-rollout-grids`
 
-- [ ] Convert `ThumbnailTile.qml`; remove from lint allowlist.
-- [ ] Run full suite.
+- [x] Convert `ThumbnailTile.qml`; remove from lint allowlist.
+- [x] Run full suite.
 
 ### Feature 5.10 — `theme/05-rollout-views`
 
