@@ -28,7 +28,8 @@ HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$")
 COLOR_PROPS = ["background", "surface", "text", "textMuted", "accent", "border", "warning", "error", "success"]
 FONT_SIZE_PROPS = ["fontSizeSm", "fontSizeMd", "fontSizeLg", "fontSizeXl"]
 TYPOGRAPHY_PROPS = ["fontFamily"] + FONT_SIZE_PROPS
-SPACING_PROPS = ["spacingXs", "spacingSm", "spacingMd", "spacingLg", "spacingXl"]
+SPACING_PROPS = ["spacingXxs", "spacingXs", "spacingSm", "spacingMd", "spacingLg", "spacingXl"]
+COMPUTED_COLOR_PROPS = ["errorBg", "successBg"]
 LAYOUT_PROPS = ["overlayWidth"]
 SPACING_LAYOUT_PROPS = SPACING_PROPS + LAYOUT_PROPS + [
     "horizontalMargin",
@@ -110,12 +111,48 @@ def test_spacing_property_is_positive_int(qapp, prop):
 def test_spacing_values_are_strictly_increasing(qapp):
     theme = ThemeManager()
     assert (
-        theme.spacingXs
+        theme.spacingXxs
+        < theme.spacingXs
         < theme.spacingSm
         < theme.spacingMd
         < theme.spacingLg
         < theme.spacingXl
     )
+
+
+# ---------------------------------------------------------------------------
+# Computed colour properties (not palette-backed)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("prop", COMPUTED_COLOR_PROPS)
+def test_computed_color_is_valid_hex(qapp, prop):
+    theme = ThemeManager()
+    value = getattr(theme, prop)
+    assert isinstance(value, str), f"{prop} should be a string"
+    assert HEX_COLOR.match(value), f"{prop} value {value!r} is not a valid hex color"
+
+
+@pytest.mark.parametrize("prop", COMPUTED_COLOR_PROPS)
+def test_computed_color_differs_from_surface(qapp, prop):
+    theme = ThemeManager()
+    assert getattr(theme, prop) != theme.surface, f"{prop} should differ from surface"
+
+
+def test_error_bg_has_reduced_green_channel(qapp):
+    # Red tint (1,0,0) pulls green toward 0, so errorBg.G < surface.G regardless of palette
+    theme = ThemeManager()
+    surface_g = int(theme.surface[3:5], 16)
+    error_bg_g = int(theme.errorBg[3:5], 16)
+    assert error_bg_g < surface_g, "errorBg green channel should be less than surface green"
+
+
+def test_success_bg_has_reduced_red_channel(qapp):
+    # Green tint (0,1,0) pulls red toward 0, so successBg.R < surface.R regardless of palette
+    theme = ThemeManager()
+    surface_r = int(theme.surface[1:3], 16)
+    success_bg_r = int(theme.successBg[1:3], 16)
+    assert success_bg_r < surface_r, "successBg red channel should be less than surface red"
 
 
 # ---------------------------------------------------------------------------

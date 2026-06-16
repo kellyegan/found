@@ -13,6 +13,7 @@ the existing `Chip` was extended with optional `text`, `removable`, and a new
 `"assigned"` chipState (`Theme.surface` fill / `Theme.border` border).
 
 **API added:**
+
 ```qml
 Chip {
     chipState: "assigned"
@@ -35,6 +36,7 @@ and `TagSearchField`. Extracted to `found_app/qml/components/DropdownList.qml`.
 `TagSearchField` also lost its now-unused `import Found.Theme 1.0`.
 
 **API:**
+
 ```qml
 DropdownList {
     model: someList       // [{ id, name }]
@@ -121,6 +123,7 @@ AppButton {
 `Qt.tint()` colour expressions with named Theme tokens.
 
 **Additions to Theme:**
+
 ```python
 # Spacing
 spacingXxs = 2

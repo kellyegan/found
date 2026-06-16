@@ -83,7 +83,7 @@ Item {
                     onRemoveRequested: root.clearAllRequested()
                 }
 
-                Item { width: 1; height: 4 }
+                Item { width: 1; height: Theme.spacingXs }
             }
             Rectangle { visible: root.importJobActive; width: parent.width; height: 1; color: Theme.border }
             Item    { visible: root.importJobActive; width: 1; height: 6 }
@@ -107,7 +107,7 @@ Item {
                     }
                 }
 
-                Item { width: 1; height: 4 }
+                Item { width: 1; height: Theme.spacingXs }
             }
             Rectangle { visible: root.activeTags.length > 0; width: parent.width; height: 1; color: Theme.border }
             Item    { visible: root.activeTags.length > 0; width: 1; height: 6 }
@@ -131,7 +131,7 @@ Item {
                     }
                 }
 
-                Item { width: 1; height: 4 }
+                Item { width: 1; height: Theme.spacingXs }
             }
             Rectangle { visible: root.activeCategories.length > 0; width: parent.width; height: 1; color: Theme.border }
             Item    { visible: root.activeCategories.length > 0; width: 1; height: 6 }
@@ -150,7 +150,7 @@ Item {
                     width: parent.width
                     height: 28
                     radius: 14
-                    color: root.showMissingOnly ? Qt.tint(Theme.surface, Qt.rgba(1, 0, 0, 0.15)) : "transparent"
+                    color: root.showMissingOnly ? Theme.errorBg : "transparent"
                     border.color: root.showMissingOnly ? Theme.error : Theme.border
                     border.width: 1
 
@@ -171,9 +171,9 @@ Item {
             }
 
             // ── Clear All ────────────────────────────────────────────────────
-            Item      { visible: root._anyFilterActive; width: 1; height: 8 }
+            Item      { visible: root._anyFilterActive; width: 1; height: Theme.spacingSm }
             Rectangle { visible: root._anyFilterActive; width: parent.width; height: 1; color: Theme.border }
-            Item      { visible: root._anyFilterActive; width: 1; height: 8 }
+            Item      { visible: root._anyFilterActive; width: 1; height: Theme.spacingSm }
 
             Text {
                 visible: root._anyFilterActive
@@ -193,7 +193,7 @@ Item {
                 }
             }
 
-            Item { width: 1; height: 4 }
+            Item { width: 1; height: Theme.spacingXs }
         }
     }
 }

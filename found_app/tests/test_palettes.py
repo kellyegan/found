@@ -43,6 +43,7 @@ def test_found_light_typography_and_spacing_match_found_dark():
         "horizontalTextMargin",
         "horizontalTextPadding",
         "horizontalMargin",
+        "spacingXxs",
         "spacingXs",
         "spacingSm",
         "spacingMd",
