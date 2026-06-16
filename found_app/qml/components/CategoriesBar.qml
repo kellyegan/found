@@ -57,33 +57,18 @@ Item {
         Behavior on opacity { NumberAnimation { duration: 150 } }
 
         // Fixed "+" button — always visible on the left, does not scroll
-        Rectangle {
+        AppButton {
             id: addBtn
             anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
             width: 28
             height: 28
-            radius: 14
-            color: addBtnArea.containsMouse ? Theme.border : "transparent"
+            variant: "icon"
+            text: "+"
             z: 2
-
-            Text {
-                objectName: "addBtnIcon"
-                anchors.centerIn: parent
-                text: "+"
-                font.pixelSize: Theme.fontSizeMd
-                color: Theme.textMuted
-            }
-
-            MouseArea {
-                id: addBtnArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    newCategoryField.text = ""
-                    createOverlay.visible = true
-                    newCategoryField.forceActiveFocus()
-                }
+            onClicked: {
+                newCategoryField.text = ""
+                createOverlay.visible = true
+                newCategoryField.forceActiveFocus()
             }
         }
 

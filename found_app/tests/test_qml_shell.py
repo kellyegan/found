@@ -1655,7 +1655,8 @@ def test_categories_bar_add_button_icon_uses_theme_tokens(theme_qml_engine):
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
 
-    icon = obj.findChild(QObject, "addBtnIcon")
+    # addBtn is now AppButton(variant="icon"); its label has objectName "label"
+    icon = obj.findChild(QObject, "label")
     assert icon is not None
     assert icon.property("color") == QColor(active_theme.textMuted)
     assert icon.property("font").pixelSize() == active_theme.fontSizeMd

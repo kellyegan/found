@@ -89,39 +89,29 @@ ChipSection {
 
 ---
 
-## Item 4 — Add icon-only variant to `AppButton`
+## Item 4 — Add icon-only variant to `AppButton` ✅ Done
 
-**What:** ~15 places hand-roll a small interactive icon button:
+**What:** Added `variant: "icon"` to `AppButton`. The icon variant renders a
+pill-shaped (radius = height/2), borderless button with transparent fill →
+`Theme.border` on hover, and a muted label. Also adds `cursorShape:
+Qt.PointingHandCursor` to `HoverHandler` for all variants.
 
-```qml
-Rectangle {
-    color: hoverArea.containsMouse ? Theme.border : "transparent"
-    MouseArea {
-        id: hoverArea
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        onClicked: { ... }
-    }
-}
-```
+Applied to `CategoriesBar`'s `addBtn` (the one clear callsite after Items 1 & 2
+removed other hand-rolled buttons). Dialog cancel/confirm buttons were assessed
+and left as-is — they are labeled text buttons with a different visual contract
+(persistent border, `Theme.accent` hover is wrong), not icon buttons.
 
-Add a compact `"icon"` variant to `AppButton` that handles this pattern:
-
+**API:**
 ```qml
 AppButton {
     variant: "icon"
-    label: "+"
-    size: "sm"
+    text: "+"
+    width: 28; height: 28
     onClicked: { ... }
 }
 ```
 
-**Files changed:** `primitives/AppButton.qml`, then callsites in `CategoriesBar.qml`,
-`ChipSearchSection.qml`, `FilterDropdown.qml`, `CollectionEditorSection.qml`,
-`ConfirmDialog.qml`
-
-**Dependencies:** None — can be done independently. Doing Item 3 first reduces
-the number of callsites to update.
+**Files changed:** `primitives/AppButton.qml`, `CategoriesBar.qml`
 
 ---
 

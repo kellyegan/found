@@ -68,3 +68,29 @@ def test_disabled_state_mutes_label(qapp, theme_qml_engine, theme):
 
     label = obj.findChild(QObject, "label")
     assert label.property("color") == QColor(theme.textMuted)
+
+
+# ---------------------------------------------------------------------------
+# AppButton — variant: "icon"
+# ---------------------------------------------------------------------------
+
+
+def test_app_button_variant_defaults_to_default(qapp, theme_qml_engine):
+    obj = load_component(theme_qml_engine, "primitives/AppButton.qml")
+    assert obj.property("variant") == "default"
+
+
+def test_app_button_icon_variant_default_color_is_transparent(qapp, theme_qml_engine):
+    obj = load_component(theme_qml_engine, "primitives/AppButton.qml", variant="icon")
+    assert obj.property("color") == QColor("transparent")
+
+
+def test_app_button_icon_variant_hover_color_is_border(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppButton.qml", variant="icon", hovered=True)
+    assert obj.property("color") == QColor(theme.border)
+
+
+def test_app_button_icon_variant_label_color_is_muted(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/AppButton.qml", variant="icon")
+    label = obj.findChild(QObject, "label")
+    assert label.property("color") == QColor(theme.textMuted)
