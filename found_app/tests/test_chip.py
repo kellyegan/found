@@ -61,3 +61,47 @@ def test_chip_state_resolves_color_token(qapp, theme_qml_engine, theme, chip_sta
     expected = QColor(getattr(theme, token))
     assert obj.property("color") == expected
     assert obj.property("borderColor") == expected
+
+
+# ---------------------------------------------------------------------------
+# Chip — text / removable / removeRequested / assigned state
+# ---------------------------------------------------------------------------
+
+
+def test_chip_text_defaults_to_empty(qapp, theme_qml_engine):
+    obj = load_component(theme_qml_engine, "primitives/Chip.qml")
+    assert obj.property("text") == ""
+
+
+def test_chip_text_is_writable(qapp, theme_qml_engine):
+    obj = load_component(theme_qml_engine, "primitives/Chip.qml", text="Nature")
+    assert obj.property("text") == "Nature"
+
+
+def test_chip_removable_defaults_to_false(qapp, theme_qml_engine):
+    obj = load_component(theme_qml_engine, "primitives/Chip.qml")
+    assert obj.property("removable") is False
+
+
+def test_chip_removable_is_writable(qapp, theme_qml_engine):
+    obj = load_component(theme_qml_engine, "primitives/Chip.qml", removable=True)
+    assert obj.property("removable") is True
+
+
+def test_chip_has_remove_requested_signal(qapp, theme_qml_engine):
+    obj = load_component(theme_qml_engine, "primitives/Chip.qml")
+    received = []
+    obj.removeRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+def test_chip_assigned_state_fill_is_surface(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/Chip.qml", chipState="assigned")
+    assert obj.property("color") == QColor(theme.surface)
+
+
+def test_chip_assigned_state_border_is_border_token(qapp, theme_qml_engine, theme):
+    obj = load_component(theme_qml_engine, "primitives/Chip.qml", chipState="assigned")
+    assert obj.property("borderColor") == QColor(theme.border)
+
+

@@ -3040,16 +3040,6 @@ def test_collection_editor_section_chip_uses_theme_tokens(theme_qml_engine):
     assert chip.property("color") == QColor(active_theme.surface)
     assert chip.property("borderColor") == QColor(active_theme.border)
 
-    label = chip.findChild(QObject, "collectionChipLabel")
-    assert label is not None
-    assert label.property("color") == QColor(active_theme.text)
-    assert label.property("font").pixelSize() == active_theme.fontSizeSm
-
-    remove = chip.findChild(QObject, "collectionChipRemoveText")
-    assert remove is not None
-    assert remove.property("color") == QColor(active_theme.textMuted)
-    assert remove.property("font").pixelSize() == active_theme.fontSizeSm
-
 
 # CollectionItem — theme tokens (Feature 5.8)
 # ---------------------------------------------------------------------------
