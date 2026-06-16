@@ -78,55 +78,21 @@ Item {
         }
 
         // Unassigned collections dropdown
-        Rectangle {
+        DropdownList {
             id: dropdownBox
             objectName: "dropdownBox"
-            property alias borderColor: dropdownBox.border.color
             visible: root._dropdownOpen
             width: secCol.width
-            height: visible ? Math.min(dropList.contentHeight + 8, 160) : 0
-            radius: 4; color: Theme.surface; border.color: Theme.border; border.width: 1; clip: true
-
-            ListView {
-                id: dropList
-                anchors { fill: parent; topMargin: 4; bottomMargin: 4 }
-                model: {
-                    var all = CollectionsState.collections
-                    var assigned = root.collections
-                    var assignedIds = {}
-                    for (var i = 0; i < assigned.length; i++) assignedIds[assigned[i].id] = true
-                    return all.filter(function(c) { return !assignedIds[c.id] })
-                }
-                clip: true
-
-                delegate: Item {
-                    required property var modelData
-                    width: dropList.width; height: 26
-
-                    Rectangle {
-                        objectName: "dropdownItemBg"
-                        anchors.fill: parent
-                        color: dropArea.containsMouse ? Theme.border : "transparent"
-                        radius: 3
-                    }
-
-                    Text {
-                        objectName: "dropdownItemText"
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                        text: modelData.name ?? ""
-                        color: Theme.text; font.pixelSize: Theme.fontSizeSm; font.family: Theme.fontFamily
-                    }
-
-                    MouseArea {
-                        id: dropArea
-                        anchors.fill: parent
-                        hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            root.addToCollectionRequested(modelData.id, modelData.name)
-                            root._dropdownOpen = false
-                        }
-                    }
-                }
+            model: {
+                var all = CollectionsState.collections
+                var assigned = root.collections
+                var assignedIds = {}
+                for (var i = 0; i < assigned.length; i++) assignedIds[assigned[i].id] = true
+                return all.filter(function(c) { return !assignedIds[c.id] })
+            }
+            onItemSelected: function(id, name) {
+                root.addToCollectionRequested(id, name)
+                root._dropdownOpen = false
             }
         }
 
