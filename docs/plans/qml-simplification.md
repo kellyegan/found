@@ -5,23 +5,25 @@ Each item is designed to be completed independently.
 
 ---
 
-## Item 1 — Extract `RemovableChip` primitive
+## Item 1 — Extend `Chip` with removable variant ✅ Done
 
-**What:** The assigned-item chip (label + × button) is coded identically in
-`ChipSearchSection` and `CollectionEditorSection`. Extract it to
-`found_app/qml/primitives/RemovableChip.qml`.
+**What:** The assigned-item chip (label + × button) was coded identically in
+`ChipSearchSection` and `CollectionEditorSection`. Rather than a new primitive,
+the existing `Chip` was extended with optional `text`, `removable`, and a new
+`"assigned"` chipState (`Theme.surface` fill / `Theme.border` border).
 
-**Proposed API:**
+**API added:**
 ```qml
-RemovableChip {
+Chip {
+    chipState: "assigned"
     text: "Nature"
+    removable: true
     onRemoveRequested: { ... }
 }
 ```
 
-**Files changed:** `ChipSearchSection.qml`, `CollectionEditorSection.qml`
-
-**Dependencies:** None — fully standalone.
+**Files changed:** `primitives/Chip.qml`, `ChipSearchSection.qml`,
+`CollectionEditorSection.qml`
 
 ---
 

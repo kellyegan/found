@@ -182,28 +182,12 @@ Item {
 
             Repeater {
                 model: root.selectionMode === "single" ? root.items : []
-                delegate: Rectangle {
+                delegate: Chip {
                     required property var modelData
-                    width: chipLabel.implicitWidth + 28; height: 22; radius: 11
-                    color: Theme.surface; border.color: Theme.border; border.width: 1
-
-                    Text {
-                        id: chipLabel
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                        text: modelData.name ?? ""; font.pixelSize: Theme.fontSizeSm; font.family: Theme.fontFamily; color: Theme.text
-                    }
-
-                    Text {
-                        anchors { right: parent.right; rightMargin: 6; verticalCenter: parent.verticalCenter }
-                        text: "×"; font.pixelSize: Theme.fontSizeSm
-                        color: chipRemoveArea.containsMouse ? Theme.text : Theme.textMuted
-
-                        MouseArea {
-                            id: chipRemoveArea
-                            anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
-                            onClicked: root.removeRequested(modelData.id)
-                        }
-                    }
+                    chipState: "assigned"
+                    text: modelData.name ?? ""
+                    removable: true
+                    onRemoveRequested: root.removeRequested(modelData.id)
                 }
             }
         }
