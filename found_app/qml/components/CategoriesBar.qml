@@ -1,5 +1,6 @@
 import QtQuick
 import Found.Theme 1.0
+import "../primitives"
 
 Item {
     id: root
@@ -79,9 +80,9 @@ Item {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    newCategoryInput.text = ""
+                    newCategoryField.text = ""
                     createOverlay.visible = true
-                    newCategoryInput.forceActiveFocus()
+                    newCategoryField.forceActiveFocus()
                 }
             }
         }
@@ -148,94 +149,29 @@ Item {
                 z: 0
                 onClicked: {
                     createOverlay.visible = false
-                    newCategoryInput.text = ""
+                    newCategoryField.text = ""
                 }
             }
 
-            Rectangle {
-                id: inputContainer
+            AppTextField {
+                id: newCategoryField
                 objectName: "inputContainer"
                 anchors.centerIn: parent
-                property alias borderColor: inputContainer.border.color
                 width: Math.min(320, parent.width - 32)
                 height: 32
-                radius: 16
-                color: Theme.surface
-                border.color: Theme.border
-                border.width: 1
+                pill: true
+                placeholderText: "New category name…"
+                trailingVisible: text.trim().length > 0
                 z: 1
-
-                TextInput {
-                    id: newCategoryInput
-                    objectName: "newCategoryInput"
-                    anchors {
-                        left: parent.left; leftMargin: 14
-                        right: submitBtn.left; rightMargin: 6
-                        verticalCenter: parent.verticalCenter
-                    }
-                    color: Theme.text
-                    font.pixelSize: Theme.fontSizeSm
-                    font.family: Theme.fontFamily
-                    clip: true
-
-                    Text {
-                        anchors.fill: parent
-                        text: "New category name…"
-                        color: Theme.textMuted
-                        font.pixelSize: Theme.fontSizeSm
-                        font.family: Theme.fontFamily
-                        visible: newCategoryInput.text.length === 0
-                    }
-
-                    Keys.priority: Keys.BeforeItem
-                    Keys.onReturnPressed: function(event) {
-                        event.accepted = true
-                        inputContainer._submit()
-                    }
-                    Keys.onEnterPressed: function(event) {
-                        event.accepted = true
-                        inputContainer._submit()
-                    }
-                    Keys.onEscapePressed: function(event) {
-                        event.accepted = true
-                        createOverlay.visible = false
-                        text = ""
-                    }
-                }
-
-                Rectangle {
-                    id: submitBtn
-                    anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
-                    width: 24
-                    height: 24
-                    radius: 12
-                    color: submitBtnArea.containsMouse && newCategoryInput.text.trim().length > 0
-                           ? Theme.border : "transparent"
-
-                    Text {
-                        objectName: "submitIcon"
-                        anchors.centerIn: parent
-                        text: "↵"
-                        font.pixelSize: Theme.fontSizeSm
-                        color: newCategoryInput.text.trim().length > 0 ? Theme.success : Theme.textMuted
-                    }
-
-                    MouseArea {
-                        id: submitBtnArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: inputContainer._submit()
-                    }
-                }
-
-                function _submit() {
-                    var name = newCategoryInput.text.trim()
-                    if (name.length > 0) {
-                        root.createCategoryRequested(name)
-                    }
+                onSubmitted: {
+                    var name = newCategoryField.text.trim()
+                    if (name.length > 0) root.createCategoryRequested(name)
                     createOverlay.visible = false
-                    newCategoryInput.text = ""
+                    newCategoryField.text = ""
+                }
+                onEscaped: {
+                    createOverlay.visible = false
+                    text = ""
                 }
             }
         }

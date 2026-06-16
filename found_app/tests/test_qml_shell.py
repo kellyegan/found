@@ -1521,10 +1521,10 @@ def test_chip_search_section_input_uses_theme_surface_and_border(theme_qml_engin
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/ChipSearchSection.qml")
 
-    input_bg = obj.findChild(QObject, "searchInputBg")
-    assert input_bg is not None
-    assert input_bg.property("color") == QColor(active_theme.surface)
-    assert input_bg.property("borderColor") == QColor(active_theme.border)
+    add_field = obj.findChild(QObject, "addField")
+    assert add_field is not None
+    assert add_field.property("color") == QColor(active_theme.surface)
+    assert add_field.property("borderColor") == QColor(active_theme.border)
 
 
 def test_chip_search_section_input_border_uses_theme_accent_when_focused(theme_qml_engine):
@@ -1539,10 +1539,10 @@ def test_chip_search_section_input_border_uses_theme_accent_when_focused(theme_q
     window.resize(300, 100)
     window.show()
 
-    input_bg = obj.findChild(QObject, "searchInputBg")
-    add_input = obj.findChild(QObject, "addInput")
-    add_input.forceActiveFocus()
-    assert input_bg.property("borderColor") == QColor(active_theme.accent)
+    add_field = obj.findChild(QObject, "addField")
+    inner_input = obj.findChild(QObject, "input")
+    inner_input.forceActiveFocus()
+    assert add_field.property("borderColor") == QColor(active_theme.accent)
 
 
 def test_chip_search_section_add_icon_uses_theme_text_muted(theme_qml_engine):
@@ -1552,7 +1552,7 @@ def test_chip_search_section_add_icon_uses_theme_text_muted(theme_qml_engine):
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/ChipSearchSection.qml")
 
-    icon = obj.findChild(QObject, "addIcon")
+    icon = obj.findChild(QObject, "leadingIconItem")
     assert icon is not None
     assert icon.property("color") == QColor(active_theme.textMuted)
     assert icon.property("font").pixelSize() == active_theme.fontSizeSm
@@ -1681,16 +1681,17 @@ def test_categories_bar_submit_icon_uses_theme_success_when_active(theme_qml_eng
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
 
-    input_field = obj.findChild(QObject, "newCategoryInput")
+    from PySide6.QtQml import QQmlProperty
+    container = obj.findChild(QObject, "inputContainer")
     icon = obj.findChild(QObject, "submitIcon")
-    assert input_field is not None
+    assert container is not None
     assert icon is not None
-
     assert icon.property("font").pixelSize() == active_theme.fontSizeSm
-    assert icon.property("color") == QColor(active_theme.textMuted)
-
-    input_field.setProperty("text", "Nature")
     assert icon.property("color") == QColor(active_theme.success)
+    assert container.property("trailingVisible") is False
+
+    QQmlProperty(container, "text", theme_qml_engine.rootContext()).write("Nature")
+    assert container.property("trailingVisible") is True
 
 
 # ---------------------------------------------------------------------------
@@ -2173,8 +2174,8 @@ def test_tag_search_field_input_bg_uses_theme_surface_and_accent_when_focused(th
     window.resize(300, 100)
     window.show()
 
-    input_field = obj.findChild(QObject, "inputField")
-    input_field.forceActiveFocus()
+    inner_input = obj.findChild(QObject, "input")
+    inner_input.forceActiveFocus()
 
     input_bg = obj.findChild(QObject, "inputBg")
     assert input_bg.property("color") == QColor(active_theme.surface)
@@ -2188,7 +2189,7 @@ def test_tag_search_field_search_icon_uses_theme_text_muted_and_font_size_sm(the
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/TagSearchField.qml")
 
-    icon = obj.findChild(QObject, "searchIcon")
+    icon = obj.findChild(QObject, "leadingIconItem")
     assert icon is not None
     assert icon.property("color") == QColor(active_theme.textMuted)
     assert icon.property("font").pixelSize() == active_theme.fontSizeSm
@@ -2486,9 +2487,9 @@ def test_collections_sidebar_input_box_uses_theme_surface(theme_qml_engine):
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
 
-    input_box = obj.findChild(QObject, "newCollectionInputBox")
-    assert input_box is not None
-    assert input_box.property("color") == QColor(active_theme.surface)
+    input_field = obj.findChild(QObject, "newCollectionField")
+    assert input_field is not None
+    assert input_field.property("color") == QColor(active_theme.surface)
 
 
 def test_collections_sidebar_input_text_uses_theme_text(theme_qml_engine):
@@ -2498,9 +2499,9 @@ def test_collections_sidebar_input_text_uses_theme_text(theme_qml_engine):
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
 
-    input_field = obj.findChild(QObject, "newCollectionInput")
-    assert input_field is not None
-    assert input_field.property("color") == QColor(active_theme.text)
+    inner_input = obj.findChild(QObject, "input")
+    assert inner_input is not None
+    assert inner_input.property("color") == QColor(active_theme.text)
 
 
 def test_collections_sidebar_add_icon_uses_theme_text_muted(theme_qml_engine):
@@ -2510,7 +2511,7 @@ def test_collections_sidebar_add_icon_uses_theme_text_muted(theme_qml_engine):
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
 
-    icon = obj.findChild(QObject, "addIcon")
+    icon = obj.findChild(QObject, "leadingIconItem")
     assert icon is not None
     assert icon.property("color") == QColor(active_theme.textMuted)
 
@@ -2534,18 +2535,18 @@ def test_collections_sidebar_input_box_border_uses_theme_border_and_accent(theme
     active_theme = register_theme_singleton(ThemeManager())
     obj = load_component(theme_qml_engine, "components/CollectionsSidePanel.qml")
 
-    input_box = obj.findChild(QObject, "newCollectionInputBox")
-    assert input_box is not None
-    assert input_box.property("borderColor") == QColor(active_theme.border)
+    input_field = obj.findChild(QObject, "newCollectionField")
+    assert input_field is not None
+    assert input_field.property("borderColor") == QColor(active_theme.border)
 
     window = QQuickWindow()
     obj.setParentItem(window.contentItem())
     window.resize(300, 400)
     window.show()
 
-    input_field = obj.findChild(QObject, "newCollectionInput")
-    input_field.forceActiveFocus()
-    assert input_box.property("borderColor") == QColor(active_theme.accent)
+    inner_input = obj.findChild(QObject, "input")
+    inner_input.forceActiveFocus()
+    assert input_field.property("borderColor") == QColor(active_theme.accent)
 
 
 def test_collections_sidebar_empty_label_uses_theme_text_muted_and_font_size_sm(theme_qml_engine):
