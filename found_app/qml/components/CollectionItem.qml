@@ -13,7 +13,7 @@ Rectangle {
     signal removeRequested(string collectionId, string collectionName)
 
     implicitHeight: 36
-    color: isDropTarget ? Qt.tint(Theme.surface, Qt.rgba(0, 1, 0, 0.15)) : (hoverArea.containsMouse ? Theme.surface : "transparent")
+    color: isDropTarget ? Theme.successBg : (hoverArea.containsMouse ? Theme.surface : "transparent")
     radius: 4
 
     Behavior on color { ColorAnimation { duration: 100 } }

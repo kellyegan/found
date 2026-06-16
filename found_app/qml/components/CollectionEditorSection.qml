@@ -101,7 +101,7 @@ Item {
             objectName: "multiSelectText"
             visible: root.selectionMode === "multi"
             width: parent.width
-            topPadding: 4; bottomPadding: 4
+            topPadding: Theme.spacingXs; bottomPadding: Theme.spacingXs
             text: root.multiSelectLabel
             color: Theme.textMuted; font.pixelSize: Theme.fontSizeSm; font.family: Theme.fontFamily; wrapMode: Text.WordWrap
         }
@@ -109,7 +109,7 @@ Item {
         // Assigned collection chips — single selection mode only
         Flow {
             visible: root.selectionMode === "single"
-            width: parent.width; spacing: 4; topPadding: 4; bottomPadding: 4
+            width: parent.width; spacing: Theme.spacingXs; topPadding: Theme.spacingXs; bottomPadding: Theme.spacingXs
 
             Repeater {
                 id: chipRepeater
@@ -126,6 +126,6 @@ Item {
             }
         }
 
-        Item { width: parent.width; height: 8 }
+        Item { width: parent.width; height: Theme.spacingSm }
     }
 }

@@ -59,7 +59,7 @@ Item {
         // Fixed "+" button — always visible on the left, does not scroll
         Rectangle {
             id: addBtn
-            anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+            anchors { left: parent.left; leftMargin: Theme.spacingSm; verticalCenter: parent.verticalCenter }
             width: 28
             height: 28
             radius: 14
@@ -91,7 +91,7 @@ Item {
             id: chipList
             anchors {
                 fill: parent
-                leftMargin: addBtn.width + 16
+                leftMargin: addBtn.width + Theme.spacingMd
                 rightMargin: 12
                 topMargin: 6
                 bottomMargin: 6

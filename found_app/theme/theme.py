@@ -128,6 +128,22 @@ class ThemeManager(QObject):
     def border(self) -> str:
         return self._palette["border"]
 
+    @Property(str, notify=paletteChanged)
+    def errorBg(self) -> str:
+        return self._tint(self._palette["surface"], (1, 0, 0), 0.15)
+
+    @Property(str, notify=paletteChanged)
+    def successBg(self) -> str:
+        return self._tint(self._palette["surface"], (0, 1, 0), 0.15)
+
+    @staticmethod
+    def _tint(base_hex: str, tint_rgb: tuple, alpha: float) -> str:
+        """Qt.tint formula: result = base * (1-alpha) + tint * alpha."""
+        r = int(int(base_hex[1:3], 16) * (1 - alpha) + tint_rgb[0] * 255 * alpha)
+        g = int(int(base_hex[3:5], 16) * (1 - alpha) + tint_rgb[1] * 255 * alpha)
+        b = int(int(base_hex[5:7], 16) * (1 - alpha) + tint_rgb[2] * 255 * alpha)
+        return f"#{r:02x}{g:02x}{b:02x}"
+
     # ------------------------------------------------------------------
     # Typography
     # ------------------------------------------------------------------
@@ -175,6 +191,10 @@ class ThemeManager(QObject):
     @Property(int, notify=paletteChanged)
     def horizontalMargin(self) -> int:
         return self._palette["horizontalMargin"]
+
+    @Property(int, notify=paletteChanged)
+    def spacingXxs(self) -> int:
+        return self._palette["spacingXxs"]
 
     @Property(int, notify=paletteChanged)
     def spacingXs(self) -> int:

@@ -75,15 +75,15 @@ SidePanel {
         Column {
             id: contentCol
             width: contentFlickable.width - 32
-            x: 16
-            topPadding: 8
-            bottomPadding: 16
+            x: Theme.spacingMd
+            topPadding: Theme.spacingSm
+            bottomPadding: Theme.spacingMd
             spacing: 0
 
             Text {
                 objectName: "metaErrorText"
                 visible: root.metaLoadingState === "Error"
-                topPadding: 8
+                topPadding: Theme.spacingSm
                 width: parent.width
                 text: "Failed to load metadata."
                 color: Theme.warning
@@ -104,7 +104,7 @@ SidePanel {
                     width: parent.width
                     height: 28
                     radius: 4
-                    color: Qt.tint(Theme.surface, Qt.rgba(1, 0, 0, 0.15))
+                    color: Theme.errorBg
                     border.color: Theme.error
                     border.width: 1
 
