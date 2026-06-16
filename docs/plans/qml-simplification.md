@@ -27,25 +27,24 @@ Chip {
 
 ---
 
-## Item 2 — Extract `DropdownList` component
+## Item 2 — Extract `DropdownList` component ✅ Done
 
 **What:** The suggestion/item list (Surface rectangle → ListView → hover delegate
-with text + click) is repeated in `ChipSearchSection`, `CollectionEditorSection`,
-and `TagSearchField`. Extract to `found_app/qml/components/DropdownList.qml`.
+with text + click) was repeated in `ChipSearchSection`, `CollectionEditorSection`,
+and `TagSearchField`. Extracted to `found_app/qml/components/DropdownList.qml`.
+`TagSearchField` also lost its now-unused `import Found.Theme 1.0`.
 
-**Proposed API:**
+**API:**
 ```qml
 DropdownList {
     model: someList       // [{ id, name }]
-    maxHeight: 160
+    maxHeight: 160        // optional, default 160
     onItemSelected: function(id, name) { ... }
 }
 ```
 
-**Files changed:** `ChipSearchSection.qml`, `CollectionEditorSection.qml`,
-`TagSearchField.qml`
-
-**Dependencies:** None — fully standalone.
+**Files changed:** `components/DropdownList.qml` (new), `ChipSearchSection.qml`,
+`CollectionEditorSection.qml`, `TagSearchField.qml`
 
 ---
 

@@ -1,5 +1,4 @@
 import QtQuick
-import Found.Theme 1.0
 import "../primitives"
 
 Item {
@@ -64,56 +63,17 @@ Item {
     }
 
     // ── Suggestions dropdown — overflows TitleBar bounds via z:100 ───────────
-    Rectangle {
-        id: dropdown
+    DropdownList {
         anchors { top: parent.bottom; left: parent.left; right: parent.right }
         visible: root._showDropdown && TagSearchState.loadingState === "Ready"
-        height: visible ? Math.min(suggestionList.contentHeight + 8, 240) : 0
+        maxHeight: 240
         z: 100
-        color: Theme.surface
-        border.color: Theme.border
-        border.width: 1
-        radius: 4
-        clip: true
-
-        ListView {
-            id: suggestionList
-            anchors { fill: parent; topMargin: 4; bottomMargin: 4 }
-            model: TagSearchState.suggestions
-            clip: true
-
-            delegate: Item {
-                required property var modelData
-                width: suggestionList.width
-                height: 28
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: delegateArea.containsMouse ? Theme.border : "transparent"
-                    radius: 3
-                }
-
-                Text {
-                    anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
-                    text: modelData.name ?? ""
-                    color: Theme.text
-                    font.pixelSize: Theme.fontSizeSm
-                    font.family: Theme.fontFamily
-                }
-
-                MouseArea {
-                    id: delegateArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        hideTimer.stop()
-                        TagSearchState.selectTag(modelData.id, modelData.name)
-                        inputField.text = ""
-                        root._showDropdown = false
-                    }
-                }
-            }
+        model: TagSearchState.suggestions
+        onItemSelected: function(id, name) {
+            hideTimer.stop()
+            TagSearchState.selectTag(id, name)
+            inputField.text = ""
+            root._showDropdown = false
         }
     }
 }

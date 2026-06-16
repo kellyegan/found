@@ -16,7 +16,7 @@ from PySide6.QtCore import QUrl
 from PySide6.QtQml import QQmlEngine, QQmlComponent
 
 import found_app
-from found_app.theme.theme import ThemeManager
+from found_app.theme.theme import ThemeManager, register_theme_singleton
 from found_app.viewmodels.tag_search_view_model import TagSearchViewModel
 from found_app.viewmodels.tag_editor_view_model import TagEditorViewModel
 from found_app.services.filter_state import FilterStateManager
@@ -567,3 +567,67 @@ def test_collection_editor_section_has_remove_from_collection_requested_signal(e
     received = []
     obj.removeFromCollectionRequested.connect(lambda cid: received.append(cid))
     assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# DropdownList
+# ---------------------------------------------------------------------------
+
+
+def test_dropdown_list_qml_exists():
+    assert (QML_DIR / "components/DropdownList.qml").exists()
+
+
+def test_dropdown_list_loads(engine):
+    load_component(engine, "components/DropdownList.qml")
+
+
+def test_dropdown_list_model_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "components/DropdownList.qml")
+    val = obj.property("model")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_dropdown_list_model_is_writable(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "components/DropdownList.qml")
+    obj.setProperty("model", [{"id": "1", "name": "Landscape"}])
+    val = obj.property("model")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val is not None
+
+
+def test_dropdown_list_max_height_defaults_to_160(engine):
+    obj = load_component(engine, "components/DropdownList.qml")
+    assert obj.property("maxHeight") == 160
+
+
+def test_dropdown_list_max_height_is_writable(engine):
+    obj = load_component(engine, "components/DropdownList.qml")
+    obj.setProperty("maxHeight", 240)
+    assert obj.property("maxHeight") == 240
+
+
+def test_dropdown_list_has_item_selected_signal(engine):
+    obj = load_component(engine, "components/DropdownList.qml")
+    received = []
+    obj.itemSelected.connect(lambda id, name: received.append((id, name)))
+    assert isinstance(received, list)
+
+
+def test_dropdown_list_color_is_surface(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/DropdownList.qml")
+    assert obj.property("color") == QColor(active_theme.surface)
+
+
+def test_dropdown_list_border_color_is_border_token(theme_qml_engine):
+    from PySide6.QtGui import QColor
+    active_theme = register_theme_singleton(ThemeManager())
+    obj = load_component(theme_qml_engine, "components/DropdownList.qml")
+    assert obj.property("borderColor") == QColor(active_theme.border)

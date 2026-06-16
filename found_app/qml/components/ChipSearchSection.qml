@@ -126,44 +126,11 @@ Item {
         }
 
         // Suggestions dropdown
-        Rectangle {
+        DropdownList {
             visible: root._searchOpen && root.searchState && root.searchState.loadingState === "Ready"
             width: secCol.width
-            height: visible ? Math.min(suggList.contentHeight + 8, 160) : 0
-            radius: 4
-            color: Theme.surface
-            border.color: Theme.border
-            border.width: 1
-            clip: true
-
-            ListView {
-                id: suggList
-                anchors { fill: parent; topMargin: 4; bottomMargin: 4 }
-                model: root.searchState ? root.searchState.suggestions : []
-                clip: true
-
-                delegate: Item {
-                    required property var modelData
-                    width: suggList.width
-                    height: 26
-
-                    Rectangle { anchors.fill: parent; color: suggArea.containsMouse ? Theme.border : "transparent"; radius: 3 }
-
-                    Text {
-                        anchors { left: parent.left; leftMargin: 10; verticalCenter: parent.verticalCenter }
-                        text: modelData.name ?? ""
-                        color: Theme.text; font.pixelSize: Theme.fontSizeSm; font.family: Theme.fontFamily
-                    }
-
-                    MouseArea {
-                        id: suggArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root._selectSuggestion(modelData.id, modelData.name)
-                    }
-                }
-            }
+            model: root.searchState ? root.searchState.suggestions : []
+            onItemSelected: function(id, name) { root._selectSuggestion(id, name) }
         }
 
         // Multi-select note
