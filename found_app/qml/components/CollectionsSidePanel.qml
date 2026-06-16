@@ -1,5 +1,6 @@
 import QtQuick
 import Found.Theme 1.0
+import "../primitives"
 
 SidePanel {
     id: root
@@ -16,97 +17,35 @@ SidePanel {
     signal imageDropped(string collectionId, string imageId)
     signal removeCollectionRequested(string collectionId, string collectionName)
 
-    // New collection input area — pill input matching ChipSearchSection's
-    // "new tag"/"new category" pattern.
+    // New collection input area
     Item {
         id: newCollectionArea
         anchors { top: parent.top; left: parent.left; right: parent.right }
         height: 48
 
         function _submit() {
-            var name = newCollectionInput.text.trim()
+            var name = newCollectionField.text.trim()
             if (name.length > 0) {
                 root.createCollectionRequested(name)
-                newCollectionInput.text = ""
+                newCollectionField.text = ""
             }
         }
 
-        Rectangle {
-            id: newCollectionInputBox
-            objectName: "newCollectionInputBox"
-            property alias borderColor: newCollectionInputBox.border.color
+        AppTextField {
+            id: newCollectionField
+            objectName: "newCollectionField"
             anchors {
                 left: parent.left; leftMargin: Theme.horizontalMargin
                 right: parent.right; rightMargin: Theme.horizontalMargin
                 verticalCenter: parent.verticalCenter
             }
             height: 26
-            radius: 13
-            color: Theme.surface
-            border.color: newCollectionInput.activeFocus ? Theme.accent : Theme.border
-            border.width: 1
-
-            Text {
-                id: addIcon
-                objectName: "addIcon"
-                anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
-                text: "+"
-                font.pixelSize: Theme.fontSizeSm
-                color: Theme.textMuted
-            }
-
-            Rectangle {
-                id: submitBtn
-                objectName: "submitBtn"
-                visible: newCollectionInput.text.trim().length > 0
-                anchors { right: parent.right; rightMargin: 3; verticalCenter: parent.verticalCenter }
-                width: 20; height: 20; radius: 10
-                color: submitArea.containsMouse ? Theme.border : "transparent"
-
-                Text {
-                    id: submitIcon
-                    objectName: "submitIcon"
-                    anchors.centerIn: parent
-                    text: "↵"
-                    font.pixelSize: Theme.fontSizeSm
-                    color: Theme.success
-                }
-
-                MouseArea {
-                    id: submitArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: newCollectionArea._submit()
-                }
-            }
-
-            TextInput {
-                id: newCollectionInput
-                objectName: "newCollectionInput"
-                anchors {
-                    left: addIcon.right; leftMargin: 4
-                    right: submitBtn.left; rightMargin: 2
-                    verticalCenter: parent.verticalCenter
-                }
-                color: Theme.text
-                font.pixelSize: Theme.fontSizeSm
-                font.family: Theme.fontFamily
-                clip: true
-
-                Text {
-                    anchors.fill: parent
-                    visible: newCollectionInput.text.length === 0
-                    text: "New collection…"
-                    color: Theme.textMuted
-                    font.pixelSize: Theme.fontSizeSm
-                    font.family: Theme.fontFamily
-                }
-
-                Keys.priority: Keys.BeforeItem
-                Keys.onReturnPressed: function(event) { event.accepted = true; newCollectionArea._submit() }
-                Keys.onEnterPressed:  function(event) { event.accepted = true; newCollectionArea._submit() }
-            }
+            pill: true
+            leadingIcon: "+"
+            trailingVisible: text.trim().length > 0
+            placeholderText: "New collection…"
+            onSubmitted: newCollectionArea._submit()
+            onEscaped: { text = ""; blur() }
         }
     }
 

@@ -1,5 +1,6 @@
 import QtQuick
 import Found.Theme 1.0
+import "../primitives"
 
 // Generic search-input + chip-list section used for Tags and Categories.
 // Pass searchState as the relevant context object (TagEditorSearchState or
@@ -25,7 +26,7 @@ Item {
     property bool _searchOpen: false
 
     function _commit() {
-        var text = addInput.text.trim()
+        var text = addField.text.trim()
         if (text.length === 0) return
         var sug = root.searchState ? root.searchState.suggestions : null
         hideTimer.stop()
@@ -35,7 +36,7 @@ Item {
             root.addByNameRequested(text)
         }
         if (root.searchState) root.searchState.clear()
-        addInput.text = ""
+        addField.text = ""
         root._searchOpen = false
     }
 
@@ -43,7 +44,7 @@ Item {
         hideTimer.stop()
         root.addRequested(id, name)
         if (root.searchState) root.searchState.clear()
-        addInput.text = ""
+        addField.text = ""
         root._searchOpen = false
     }
 
@@ -95,89 +96,31 @@ Item {
             width: secCol.width
             height: 32
 
-            Rectangle {
-                id: searchInputBg
-                objectName: "searchInputBg"
-                property alias borderColor: searchInputBg.border.color
+            AppTextField {
+                id: addField
+                objectName: "addField"
                 anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
                 height: 26
-                radius: 13
-                color: Theme.surface
-                border.color: addInput.activeFocus ? Theme.accent : Theme.border
-                border.width: 1
-
-                Text {
-                    id: addIcon
-                    objectName: "addIcon"
-                    anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
-                    text: "+"
-                    font.pixelSize: Theme.fontSizeSm
-                    color: Theme.textMuted
+                pill: true
+                leadingIcon: "+"
+                trailingVisible: text.trim().length > 0
+                placeholderText: root.placeholder
+                onTextChanged: {
+                    if (text.trim().length > 0 && root.searchState)
+                        root.searchState.search(text)
+                    else if (root.searchState)
+                        root.searchState.clear()
                 }
-
-                Rectangle {
-                    id: submitBtn
-                    visible: addInput.text.trim().length > 0
-                    anchors { right: parent.right; rightMargin: 3; verticalCenter: parent.verticalCenter }
-                    width: 20; height: 20; radius: 10
-                    color: submitArea.containsMouse ? Theme.border : "transparent"
-
-                    Text { objectName: "submitIcon"; anchors.centerIn: parent; text: "↵"; font.pixelSize: Theme.fontSizeSm; color: Theme.success }
-
-                    MouseArea {
-                        id: submitArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root._commit()
-                    }
+                onFocusedChanged: {
+                    if (focused) hideTimer.stop()
+                    else hideTimer.start()
                 }
-
-                TextInput {
-                    id: addInput
-                    objectName: "addInput"
-                    anchors {
-                        left: addIcon.right; leftMargin: 4
-                        right: submitBtn.left; rightMargin: 2
-                        verticalCenter: parent.verticalCenter
-                    }
-                    activeFocusOnTab: false
-                    color: Theme.text
-                    font.pixelSize: Theme.fontSizeSm
-                    font.family: Theme.fontFamily
-                    clip: true
-
-                    Text {
-                        anchors.fill: parent
-                        visible: addInput.text.length === 0
-                        text: root.placeholder
-                        color: Theme.textMuted
-                        font.pixelSize: Theme.fontSizeSm
-                        font.family: Theme.fontFamily
-                    }
-
-                    onTextChanged: {
-                        if (text.trim().length > 0 && root.searchState)
-                            root.searchState.search(text)
-                        else if (root.searchState)
-                            root.searchState.clear()
-                    }
-
-                    onActiveFocusChanged: {
-                        if (activeFocus) hideTimer.stop()
-                        else hideTimer.start()
-                    }
-
-                    Keys.priority: Keys.BeforeItem
-                    Keys.onReturnPressed: function(event) { event.accepted = true; root._commit() }
-                    Keys.onEnterPressed:  function(event) { event.accepted = true; root._commit() }
-                    Keys.onEscapePressed: function(event) {
-                        event.accepted = true
-                        text = ""
-                        if (root.searchState) root.searchState.clear()
-                        root._searchOpen = false
-                        focus = false
-                    }
+                onSubmitted: root._commit()
+                onEscaped: {
+                    text = ""
+                    if (root.searchState) root.searchState.clear()
+                    root._searchOpen = false
+                    blur()
                 }
             }
         }

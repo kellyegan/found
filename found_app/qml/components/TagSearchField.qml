@@ -1,5 +1,6 @@
 import QtQuick
 import Found.Theme 1.0
+import "../primitives"
 
 Item {
     id: root
@@ -35,109 +36,30 @@ Item {
     }
 
     // ── Input field ──────────────────────────────────────────────────────────
-    Rectangle {
-        id: inputBg
+    AppTextField {
+        id: inputField
         objectName: "inputBg"
-        property alias borderColor: inputBg.border.color
         anchors.fill: parent
-        color: inputField.activeFocus ? Theme.surface : "transparent"
-        border.color: inputField.activeFocus ? Theme.accent : Theme.border
-        border.width: 1
-        radius: 4
-
-        Text {
-            id: searchIcon
-            objectName: "searchIcon"
-            anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
-            text: "⌕"
-            font.pixelSize: Theme.fontSizeSm
-            color: Theme.textMuted
-        }
-
-        // Submit button — visible when suggestions are ready
-        Rectangle {
-            id: submitBtn
-            visible: root._showDropdown && TagSearchState.loadingState === "Ready"
-            anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
-            width: 22
-            height: 22
-            radius: 11
-            color: submitBtnArea.containsMouse ? Theme.border : "transparent"
-
-            Text {
-                objectName: "submitIcon"
-                anchors.centerIn: parent
-                text: "↵"
-                font.pixelSize: Theme.fontSizeSm
-                color: Theme.success
-            }
-
-            MouseArea {
-                id: submitBtnArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root._commitFirstSuggestion()
-            }
-        }
-
-        TextInput {
-            id: inputField
-            objectName: "inputField"
-            anchors {
-                left: searchIcon.right; leftMargin: 4
-                right: submitBtn.left
-                rightMargin: 2
-                verticalCenter: parent.verticalCenter
-            }
-            color: Theme.text
-            font.pixelSize: Theme.fontSizeSm
-            font.family: Theme.fontFamily
-            clip: true
-
-            Text {
-                anchors.fill: parent
-                visible: inputField.text.length === 0
-                text: "Search tags…"
-                color: Theme.textMuted
-                font.pixelSize: Theme.fontSizeSm
-                font.family: Theme.fontFamily
-            }
-
-            onTextChanged: {
-                if (text.trim().length > 0)
-                    TagSearchState.search(text)
-                else
-                    TagSearchState.clear()
-            }
-
-            onActiveFocusChanged: {
-                if (activeFocus) {
-                    hideTimer.stop()
-                } else {
-                    hideTimer.start()
-                }
-            }
-
-            Keys.priority: Keys.BeforeItem
-
-            Keys.onReturnPressed: function(event) {
-                event.accepted = true
-                root._commitFirstSuggestion()
-            }
-
-            Keys.onEnterPressed: function(event) {
-                event.accepted = true
-                root._commitFirstSuggestion()
-            }
-
-            Keys.onEscapePressed: function(event) {
-                event.accepted = true
-                text = ""
+        backgroundColor: "transparent"
+        leadingIcon: "⌕"
+        trailingVisible: root._showDropdown && TagSearchState.loadingState === "Ready"
+        placeholderText: "Search tags…"
+        onTextChanged: {
+            if (text.trim().length > 0)
+                TagSearchState.search(text)
+            else
                 TagSearchState.clear()
-                root._showDropdown = false
-                focus = false
-            }
+        }
+        onFocusedChanged: {
+            if (focused) hideTimer.stop()
+            else hideTimer.start()
+        }
+        onSubmitted: root._commitFirstSuggestion()
+        onEscaped: {
+            text = ""
+            TagSearchState.clear()
+            root._showDropdown = false
+            blur()
         }
     }
 
