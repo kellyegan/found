@@ -40,6 +40,8 @@ SidePanel {
                 verticalCenter: parent.verticalCenter
             }
             height: 36
+            fontSize: Theme.fontSizeMd
+            fontCapitalization: Font.AllUppercase
             pill: false
             leadingIcon: "+"
             trailingVisible: text.trim().length > 0

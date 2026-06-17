@@ -41,12 +41,13 @@ Rectangle {
     Text {
         objectName: "collectionNameText"
         anchors {
-            left: parent.left; leftMargin: 12
+            left: parent.left; leftMargin: 18
             right: removeBtn.left; rightMargin: Theme.spacingMd
             verticalCenter: parent.verticalCenter
         }
         text: root.collectionName
         color: root.isDropTarget ? Theme.success : Theme.text
+        font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeMd
         font.weight: Font.DemiBold
         font.capitalization: Font.AllUppercase
@@ -67,6 +68,8 @@ Rectangle {
             objectName: "removeIconText"
             anchors.centerIn: parent
             text: "×"
+            font.family: Theme.fontFamily
+            font.weight: Font.DemiBold
             font.pixelSize: Theme.fontSizeMd
             color: removeArea.containsMouse ? Theme.warning : Theme.textMuted
         }
