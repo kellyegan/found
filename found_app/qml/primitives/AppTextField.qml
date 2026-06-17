@@ -40,7 +40,7 @@ Rectangle {
         id: leadingIconItem
         objectName: "leadingIconItem"
         visible: root.leadingIcon !== ""
-        anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+        anchors { left: parent.left; leftMargin: 4; verticalCenter: parent.verticalCenter }
         text: root.leadingIcon
         font.pixelSize: root.fontSize
         color: Theme.textMuted
