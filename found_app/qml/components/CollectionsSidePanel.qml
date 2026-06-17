@@ -6,7 +6,7 @@ SidePanel {
     id: root
 
     edge: "left"
-    title: "Collections"
+    title: ""
     panelIcon: "☰"
     dragOpenKeys: ["found/image"]
 
