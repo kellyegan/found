@@ -45,7 +45,7 @@ SidePanel {
             pill: false
             leadingIcon: "+"
             trailingVisible: text.trim().length > 0
-            placeholderText: "New collection…"
+            placeholderText: "Add collection…"
             onSubmitted: newCollectionArea._submit()
             onEscaped: { text = ""; blur() }
         }
