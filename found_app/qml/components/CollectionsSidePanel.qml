@@ -39,8 +39,8 @@ SidePanel {
                 right: parent.right; rightMargin: Theme.horizontalMargin
                 verticalCenter: parent.verticalCenter
             }
-            height: 26
-            pill: true
+            height: 36
+            pill: false
             leadingIcon: "+"
             trailingVisible: text.trim().length > 0
             placeholderText: "New collection…"

@@ -27,7 +27,7 @@ Rectangle {
 
     implicitWidth: 160
     implicitHeight: input.implicitHeight + Theme.spacingSm * 2
-    radius: pill ? height / 2 : 4
+    radius: pill ? height / 2 : 1
     color: root.focused ? Theme.surface : root.backgroundColor
     border.width: 1
     border.color: {

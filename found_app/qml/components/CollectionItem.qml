@@ -14,7 +14,7 @@ Rectangle {
 
     implicitHeight: 36
     color: isDropTarget ? Theme.successBg : (hoverArea.containsMouse ? Theme.surface : "transparent")
-    radius: 4
+    radius: 0
 
     Behavior on color { ColorAnimation { duration: 100 } }
 
