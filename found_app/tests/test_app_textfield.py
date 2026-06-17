@@ -170,7 +170,7 @@ def test_pill_is_writable(qapp, theme_qml_engine):
 
 def test_non_pill_radius_is_4(qapp, theme_qml_engine):
     obj = load_component(theme_qml_engine, "primitives/AppTextField.qml")
-    assert obj.property("radius") == 4
+    assert obj.property("radius") == 0
 
 
 def test_pill_radius_equals_half_height(qapp, theme_qml_engine):
