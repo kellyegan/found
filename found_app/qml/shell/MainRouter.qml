@@ -40,7 +40,6 @@ Item {
 
         property bool sidebarOpen: false
         property bool categoriesBarOpen: false
-        property bool filterDropdownOpen: false
         property bool metadataSidebarOpen: false
         // Tracks last active view so the navigation handler can save departing state.
         // Initialised to "library" because that is always the starting view.
@@ -186,7 +185,6 @@ Item {
                 return result
             }
             onGoBackRequested: NavigationManager.goBack()
-            onFilterToggleRequested: readyContainer.filterDropdownOpen = !readyContainer.filterDropdownOpen
             onSettingsRequested: NavigationManager.push("settings", {})
         }
 
@@ -296,47 +294,6 @@ Item {
             id: collectionDeleteFlow
             anchors.fill: parent
             z: 25
-        }
-
-        // ── Layer 40: Dropdowns ──────────────────────────────────────────────
-
-        FilterDropdown {
-            id: filterDropdown
-            anchors { top: titleBar.bottom; right: parent.right; rightMargin: Theme.spacingMd }
-            width: 280
-            open: readyContainer.filterDropdownOpen
-            showMissingOnly: FilterState.showMissingOnly
-            importJobActive: FilterState.importJobId !== ""
-            z: 40
-            activeCategories: {
-                var result = []
-                var filters = FilterState.categoryFilters
-                var cats = CategoriesState.categories
-                for (var i = 0; i < cats.length; i++) {
-                    var mode = filters[cats[i].id]
-                    if (mode && mode !== "off")
-                        result.push({id: cats[i].id, name: cats[i].name, mode: mode})
-                }
-                return result
-            }
-            activeTags: {
-                var result = []
-                var tagFilters = FilterState.tagFilters
-                var tagNames = TagSearchState.tagNames
-                for (var tid in tagFilters) {
-                    var mode = tagFilters[tid]
-                    if (mode && mode !== "off")
-                        result.push({id: tid, name: tagNames[tid] ?? tid, mode: mode})
-                }
-                return result
-            }
-            onClearAllRequested: {
-                FilterState.clearAllFilters()
-                readyContainer.filterDropdownOpen = false
-            }
-            onRemoveCategoryFilter: function(catId) { FilterState.setCategoryFilter(catId, "off") }
-            onRemoveTagFilter: function(tagId) { FilterState.setTagFilter(tagId, "off") }
-            onToggleMissingOnlyRequested: FilterState.setShowMissingOnly(!FilterState.showMissingOnly)
         }
 
         // ── Connections ──────────────────────────────────────────────────────

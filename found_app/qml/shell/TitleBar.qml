@@ -17,9 +17,48 @@ Item {
     property int missingCount: 0
     property bool backendConnected: true
 
+    property bool _filterOpen: false
+
     signal goBackRequested()
-    signal filterToggleRequested()
     signal settingsRequested()
+
+    FilterDropdown {
+        objectName: "filterDropdown"
+        anchors { top: parent.bottom; right: parent.right; rightMargin: Theme.spacingMd }
+        width: 280
+        open: root._filterOpen
+        showMissingOnly: FilterState.showMissingOnly
+        importJobActive: FilterState.importJobId !== ""
+        activeCategories: {
+            var result = []
+            var filters = FilterState.categoryFilters
+            var cats = CategoriesState.categories
+            for (var i = 0; i < cats.length; i++) {
+                var mode = filters[cats[i].id]
+                if (mode && mode !== "off")
+                    result.push({ id: cats[i].id, name: cats[i].name, mode: mode })
+            }
+            return result
+        }
+        activeTags: {
+            var result = []
+            var tagFilters = FilterState.tagFilters
+            var tagNames = TagSearchState.tagNames
+            for (var tid in tagFilters) {
+                var mode = tagFilters[tid]
+                if (mode && mode !== "off")
+                    result.push({ id: tid, name: tagNames[tid] ?? tid, mode: mode })
+            }
+            return result
+        }
+        onClearAllRequested: {
+            FilterState.clearAllFilters()
+            root._filterOpen = false
+        }
+        onRemoveCategoryFilter: function(catId) { FilterState.setCategoryFilter(catId, "off") }
+        onRemoveTagFilter: function(tagId) { FilterState.setTagFilter(tagId, "off") }
+        onToggleMissingOnlyRequested: FilterState.setShowMissingOnly(!FilterState.showMissingOnly)
+    }
 
     // ── Title zone (left) ────────────────────────────────────────────────────
     Item {
@@ -216,7 +255,7 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.filterToggleRequested()
+                onClicked: root._filterOpen = !root._filterOpen
             }
         }
 

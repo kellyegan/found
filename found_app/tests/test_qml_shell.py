@@ -2029,11 +2029,15 @@ def test_title_bar_filter_active_is_writable(engine):
     assert obj.property("filterActive") is True
 
 
-def test_title_bar_has_filter_toggle_requested_signal(engine):
+def test_title_bar_has_filter_dropdown_child(engine):
     obj = load_component(engine, "shell/TitleBar.qml")
-    received = []
-    obj.filterToggleRequested.connect(lambda: received.append(1))
-    assert isinstance(received, list)
+    assert obj.findChild(QObject, "filterDropdown") is not None
+
+
+def test_title_bar_filter_dropdown_closed_by_default(engine):
+    obj = load_component(engine, "shell/TitleBar.qml")
+    dropdown = obj.findChild(QObject, "filterDropdown")
+    assert dropdown.property("open") is False
 
 
 def test_title_bar_has_settings_requested_signal(engine):
