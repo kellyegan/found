@@ -191,6 +191,17 @@ def test_splash_screen_has_dismissed_signal(engine):
     assert isinstance(received, list)
 
 
+def test_splash_screen_is_dismissed_defaults_to_false(engine):
+    obj = load_component(engine, "views/SplashScreen.qml")
+    assert obj.property("isDismissed") is False
+
+
+def test_splash_screen_is_dismissed_becomes_true_after_dismissed_signal(engine):
+    obj = load_component(engine, "views/SplashScreen.qml")
+    obj.dismissed.emit()
+    assert obj.property("isDismissed") is True
+
+
 # ---------------------------------------------------------------------------
 # SplashScreen — theme tokens (Feature 5.10)
 # ---------------------------------------------------------------------------
@@ -251,8 +262,8 @@ def test_main_router_routes_to_settings_view(qapp):
     app_state.transition_to(AppState.BackendStarting)
     app_state.transition_to(AppState.Ready)
 
-    main_router = root.findChild(QObject, "mainRouter")
-    main_router.setProperty("splashDismissed", True)
+    splash_screen = root.findChild(QObject, "splashScreen")
+    splash_screen.setProperty("isDismissed", True)
 
     navigation.push("settings")
 
@@ -724,7 +735,8 @@ def test_viewport_verify_requested_bubbles_to_library_state(qapp):
     root = engine.rootObjects()[0]
     main_router = root.findChild(QObject, "mainRouter")
     main_router.setProperty("appState", "Ready")
-    main_router.setProperty("splashDismissed", True)
+    splash_screen = root.findChild(QObject, "splashScreen")
+    splash_screen.setProperty("isDismissed", True)
 
     _wait_until(lambda: verify_calls != [], timeout_ms=2000)
 

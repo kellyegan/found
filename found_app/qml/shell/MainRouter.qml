@@ -18,25 +18,23 @@ Item {
 
     SplashScreen {
         id: splashScreen
+        objectName: "splashScreen"
         anchors.fill: parent
-        visible: !splashDismissed
+        visible: !splashScreen.isDismissed
         statusText: root.statusMessage
         hasError: root.hasError
         appVersion: foundVersion
         appLicense: foundLicense
         isReady: root.appState === "Ready"
-        onDismissed: splashDismissed = true
         z: 1
     }
-
-    property bool splashDismissed: false
 
     // Ready state — navigation bar + view router
     Item {
         id: readyContainer
         objectName: "readyContainer"
         anchors.fill: parent
-        visible: root.appState === "Ready" && splashDismissed
+        visible: root.appState === "Ready" && splashScreen.isDismissed
 
         property bool sidebarOpen: false
         property bool categoriesBarOpen: false
