@@ -463,88 +463,12 @@ Item {
         }
 
 
-        // Deferred scan: show the modal immediately on drop, then build paths and scan
-        // on the next event-loop tick so QML has one cycle to paint before blocking work.
-        Timer {
-            id: scanTimer
-            interval: 0
-            repeat: false
-            property var pendingUrls: null
-            onTriggered: {
-                if (!pendingUrls) return
-                var paths = []
-                for (var i = 0; i < pendingUrls.length; i++) {
-                    // Strip file:// prefix; handle file:///path on macOS/Linux
-                    paths.push(pendingUrls[i].toString().replace(/^file:\/\//, ""))
-                }
-                ImportState.scanPaths(paths)
-                pendingUrls = null
-            }
-        }
-
-        // File drop area — accepts files/directories dragged from Finder/Explorer
-        // Stops at categoriesBar.top so chip DropAreas are not blocked by this higher-z area
-        DropArea {
+        // Import workflow — drop area, deferred scan, and import panel overlay
+        // Stops at categoriesBar.top so chip DropAreas are not blocked
+        ImportHandler {
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: categoriesBar.top }
             visible: NavigationManager.currentView === "library"
             z: 20
-
-            onEntered: function(drag) {
-                drag.accepted = drag.hasUrls
-            }
-
-            onDropped: function(drop) {
-                if (!drop.hasUrls) return
-                // Show the modal now (before any path extraction) so it renders
-                // before the path-building loop and Python bridge call run.
-                ImportState.prepareImport(drop.urls.length)
-                // Capture URLs while the drop event is still valid, then defer.
-                scanTimer.pendingUrls = drop.urls
-                scanTimer.restart()
-            }
-
-            // Drag-over highlight
-            Rectangle {
-                objectName: "dragHighlight"
-                anchors.fill: parent
-                color: Theme.text
-                opacity: parent.containsDrag ? 0.08 : 0.0
-                visible: opacity > 0
-
-                Behavior on opacity { NumberAnimation { duration: 100 } }
-
-                AppText {
-                    objectName: "dropHintText"
-                    anchors.centerIn: parent
-                    visible: parent.parent.containsDrag
-                    text: "Drop to import"
-                    variant: "heading"
-                    font.weight: Font.Medium
-                }
-            }
-        }
-
-        // Import panel overlay
-        ImportPanel {
-            anchors.fill: parent
-            z: 30
-            loadingState: ImportState.loadingState
-            scanTotal: ImportState.scanTotal
-            pendingFiles: ImportState.pendingFiles
-            alreadyImportedFiles: ImportState.duplicateFiles
-            conflictFiles: ImportState.conflictFiles
-            invalidCount: ImportState.invalidFiles.length
-            importedCount: ImportState.importedCount
-            updatedCount: ImportState.updatedCount
-            skippedCount: ImportState.skippedCount
-            errorCount: ImportState.errorCount
-            progress: ImportState.progress
-
-            onConfirmed: ImportState.executeImport()
-            onCancelled: ImportState.cancel()
-            onConflictChoiceChanged: function(path, choice) {
-                ImportState.setConflictChoice(path, choice)
-            }
         }
     }
 

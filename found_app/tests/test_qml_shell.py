@@ -3206,6 +3206,29 @@ def test_settings_view_mode_picker_calls_set_mode(theme_qml_engine):
 
 
 # ---------------------------------------------------------------------------
+# ImportHandler — refactor/main-router-organization Commit 2
+# ---------------------------------------------------------------------------
+
+
+def test_import_handler_qml_exists():
+    assert (QML_DIR / "shell/ImportHandler.qml").exists()
+
+
+def test_import_handler_loads(engine):
+    load_component(engine, "shell/ImportHandler.qml")
+
+
+def test_import_handler_has_drag_highlight_child(engine):
+    obj = load_component(engine, "shell/ImportHandler.qml")
+    assert obj.findChild(QObject, "dragHighlight") is not None
+
+
+def test_import_handler_has_drop_hint_text_child(engine):
+    obj = load_component(engine, "shell/ImportHandler.qml")
+    assert obj.findChild(QObject, "dropHintText") is not None
+
+
+# ---------------------------------------------------------------------------
 # RelocationFlow — refactor/main-router-organization Commit 1
 # ---------------------------------------------------------------------------
 
