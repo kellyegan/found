@@ -9,8 +9,10 @@ Item {
     property string appVersion: ""
     property string appLicense: ""
     property bool isReady: false
+    property bool isDismissed: false
 
     signal dismissed()
+    onDismissed: isDismissed = true
 
     Rectangle {
         anchors.fill: parent

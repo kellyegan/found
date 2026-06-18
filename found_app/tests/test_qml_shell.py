@@ -191,6 +191,17 @@ def test_splash_screen_has_dismissed_signal(engine):
     assert isinstance(received, list)
 
 
+def test_splash_screen_is_dismissed_defaults_to_false(engine):
+    obj = load_component(engine, "views/SplashScreen.qml")
+    assert obj.property("isDismissed") is False
+
+
+def test_splash_screen_is_dismissed_becomes_true_after_dismissed_signal(engine):
+    obj = load_component(engine, "views/SplashScreen.qml")
+    obj.dismissed.emit()
+    assert obj.property("isDismissed") is True
+
+
 # ---------------------------------------------------------------------------
 # SplashScreen — theme tokens (Feature 5.10)
 # ---------------------------------------------------------------------------
@@ -251,8 +262,8 @@ def test_main_router_routes_to_settings_view(qapp):
     app_state.transition_to(AppState.BackendStarting)
     app_state.transition_to(AppState.Ready)
 
-    main_router = root.findChild(QObject, "mainRouter")
-    main_router.setProperty("splashDismissed", True)
+    splash_screen = root.findChild(QObject, "splashScreen")
+    splash_screen.setProperty("isDismissed", True)
 
     navigation.push("settings")
 
@@ -724,7 +735,8 @@ def test_viewport_verify_requested_bubbles_to_library_state(qapp):
     root = engine.rootObjects()[0]
     main_router = root.findChild(QObject, "mainRouter")
     main_router.setProperty("appState", "Ready")
-    main_router.setProperty("splashDismissed", True)
+    splash_screen = root.findChild(QObject, "splashScreen")
+    splash_screen.setProperty("isDismissed", True)
 
     _wait_until(lambda: verify_calls != [], timeout_ms=2000)
 
@@ -1616,6 +1628,19 @@ def test_categories_bar_has_filter_toggled_signal(engine):
     received = []
     obj.filterToggled.connect(lambda cat_id: received.append(cat_id))
     assert isinstance(received, list)
+
+
+def test_categories_bar_has_reserved_height_property(engine):
+    obj = load_component(engine, "components/CategoriesBar.qml")
+    assert obj.property("reservedHeight") is not None
+
+
+def test_categories_bar_reserved_height_equals_tab_plus_strip(engine):
+    obj = load_component(engine, "components/CategoriesBar.qml")
+    reserved = obj.property("reservedHeight")
+    tab = obj.property("_tabHeight")
+    strip = obj.property("_stripHeight")
+    assert reserved == tab + strip
 
 
 # ---------------------------------------------------------------------------
@@ -3203,3 +3228,82 @@ def test_settings_view_mode_picker_calls_set_mode(theme_qml_engine):
     expr.evaluate()
 
     assert active_theme.mode == "dark"
+
+
+# ---------------------------------------------------------------------------
+# ImportHandler — refactor/main-router-organization Commit 2
+# ---------------------------------------------------------------------------
+
+
+def test_import_handler_qml_exists():
+    assert (QML_DIR / "shell/ImportHandler.qml").exists()
+
+
+def test_import_handler_loads(engine):
+    load_component(engine, "shell/ImportHandler.qml")
+
+
+def test_import_handler_has_drag_highlight_child(engine):
+    obj = load_component(engine, "shell/ImportHandler.qml")
+    assert obj.findChild(QObject, "dragHighlight") is not None
+
+
+def test_import_handler_has_drop_hint_text_child(engine):
+    obj = load_component(engine, "shell/ImportHandler.qml")
+    assert obj.findChild(QObject, "dropHintText") is not None
+
+
+# ---------------------------------------------------------------------------
+# CollectionDeleteFlow — refactor/main-router-organization Commit 4
+# ---------------------------------------------------------------------------
+
+
+def test_collection_delete_flow_qml_exists():
+    assert (QML_DIR / "shell/CollectionDeleteFlow.qml").exists()
+
+
+def test_collection_delete_flow_loads(engine):
+    load_component(engine, "shell/CollectionDeleteFlow.qml")
+
+
+def test_collection_delete_flow_open_defaults_to_false(engine):
+    obj = load_component(engine, "shell/CollectionDeleteFlow.qml")
+    assert obj.property("open") is False
+
+
+def test_collection_delete_flow_request_delete_opens_dialog(engine):
+    obj = load_component(engine, "shell/CollectionDeleteFlow.qml")
+    assert obj.property("open") is False
+    obj.requestDelete("col-1", "My Collection")
+    assert obj.property("open") is True
+
+
+def test_collection_delete_flow_cancel_closes_dialog(engine):
+    obj = load_component(engine, "shell/CollectionDeleteFlow.qml")
+    obj.requestDelete("col-1", "My Collection")
+    assert obj.property("open") is True
+    obj.findChild(QObject, "confirmDialog").cancelled.emit()
+    assert obj.property("open") is False
+
+
+# ---------------------------------------------------------------------------
+# RelocationFlow — refactor/main-router-organization Commit 1
+# ---------------------------------------------------------------------------
+
+
+def test_relocation_flow_qml_exists():
+    assert (QML_DIR / "shell/RelocationFlow.qml").exists()
+
+
+def test_relocation_flow_loads(engine):
+    load_component(engine, "shell/RelocationFlow.qml")
+
+
+def test_relocation_flow_prefix_dialog_open_defaults_to_false(engine):
+    obj = load_component(engine, "shell/RelocationFlow.qml")
+    assert obj.property("prefixDialogOpen") is False
+
+
+def test_relocation_flow_result_dialog_open_defaults_to_false(engine):
+    obj = load_component(engine, "shell/RelocationFlow.qml")
+    assert obj.property("resultDialogOpen") is False
