@@ -35,8 +35,9 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                text: "‹"
-                font.pixelSize: Theme.fontSizeLg
+                text: "◀"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSm
                 color: Theme.text
             }
 
@@ -55,7 +56,7 @@ Item {
             text: root.viewTitle
             font.pixelSize: Theme.fontSizeMd
             font.family: Theme.fontFamily
-            font.weight: Font.Bold
+            font.weight: Font.DemiBold
             font.capitalization: Font.AllUppercase
             color: Theme.textMuted
         }

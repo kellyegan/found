@@ -27,7 +27,7 @@ Rectangle {
 
     implicitWidth: 160
     implicitHeight: input.implicitHeight + Theme.spacingSm * 2
-    radius: pill ? height / 2 : 4
+    radius: pill ? height / 2 : 0
     color: root.focused ? Theme.surface : root.backgroundColor
     border.width: 1
     border.color: {
@@ -40,7 +40,7 @@ Rectangle {
         id: leadingIconItem
         objectName: "leadingIconItem"
         visible: root.leadingIcon !== ""
-        anchors { left: parent.left; leftMargin: 8; verticalCenter: parent.verticalCenter }
+        anchors { left: parent.left; leftMargin: 4; verticalCenter: parent.verticalCenter }
         text: root.leadingIcon
         font.pixelSize: root.fontSize
         color: Theme.textMuted

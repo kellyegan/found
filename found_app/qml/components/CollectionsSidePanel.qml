@@ -6,7 +6,7 @@ SidePanel {
     id: root
 
     edge: "left"
-    title: "Collections"
+    title: ""
     panelIcon: "☰"
     dragOpenKeys: ["found/image"]
 
@@ -39,11 +39,13 @@ SidePanel {
                 right: parent.right; rightMargin: Theme.horizontalMargin
                 verticalCenter: parent.verticalCenter
             }
-            height: 26
-            pill: true
+            height: 36
+            fontSize: Theme.fontSizeMd
+            fontCapitalization: Font.AllUppercase
+            pill: false
             leadingIcon: "+"
             trailingVisible: text.trim().length > 0
-            placeholderText: "New collection…"
+            placeholderText: "Add collection…"
             onSubmitted: newCollectionArea._submit()
             onEscaped: { text = ""; blur() }
         }

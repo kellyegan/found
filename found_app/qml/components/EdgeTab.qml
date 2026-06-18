@@ -13,8 +13,12 @@ Rectangle {
 
     width: 16
     height: 72
-    color: Theme.background
+    color: Theme.surface
     radius: 2
+    topLeftRadius: root.edge === "left" ? 0 : 12
+    bottomLeftRadius: root.edge === "left" ? 0 : 12
+    topRightRadius: root.edge === "right" ? 0 : 12
+    bottomRightRadius: root.edge === "right" ? 0 : 12
 
     Column {
         anchors.centerIn: parent
