@@ -70,6 +70,16 @@ Item {
             }
         }
 
+        // MouseArea alone does not prevent DragHandler (a PointerHandler) on
+        // items behind the panel from activating in Qt 6. This TapHandler
+        // takes the exclusive grab away from any DragHandler at the same
+        // cursor position. CanTakeOverFromHandlersOfDifferentType applies to
+        // DragHandler (different type) but not to TapHandlers inside panel
+        // content (same type), so internal interactions are unaffected.
+        TapHandler {
+            grabPermissions: PointerHandler.CanTakeOverFromHandlersOfDifferentType
+        }
+
         // Optional header
         Item {
             id: header
