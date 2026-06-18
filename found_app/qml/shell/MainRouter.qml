@@ -36,11 +36,13 @@ Item {
         anchors.fill: parent
         visible: root.appState === "Ready" && splashScreen.isDismissed
 
+        // ── Properties ───────────────────────────────────────────────────────
+
         property bool sidebarOpen: false
         property bool categoriesBarOpen: false
         property bool filterDropdownOpen: false
         property bool metadataSidebarOpen: false
-        // Tracks last active view so navigation handler can save the departing state.
+        // Tracks last active view so the navigation handler can save departing state.
         // Initialised to "library" because that is always the starting view.
         property string _lastView: "library"
         property var _viewPanelState: ({
@@ -53,16 +55,94 @@ Item {
         readonly property bool prefixDialogOpen: relocationFlow.prefixDialogOpen
         readonly property bool resultDialogOpen: relocationFlow.resultDialogOpen
 
-        // Background click handler — clears selection when the user clicks any
-        // area that no interactive element consumed (title bar background, panel
-        // edges, empty window corners, etc.).  z: -1 places it behind every other
-        // child so higher-z items (tiles, buttons, sidebars) consume their own
-        // events first and this only fires when nothing else did.
+        // ── Layer -1: Background ─────────────────────────────────────────────
+        // Clears selection when the user clicks any area no interactive element
+        // consumed. z: -1 ensures higher-z items consume their own events first.
+
         MouseArea {
             anchors.fill: parent
             z: -1
             onClicked: SelectionManager.clear()
         }
+
+        // ── Layer 0: Content views ───────────────────────────────────────────
+
+        LibraryView {
+            id: libraryView
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar.reservedHeight
+            visible: NavigationManager.currentView === "library"
+            loadingState: root.libraryLoadingState
+            gridModel: LibraryState.gridModel
+            leftPanelOpen: readyContainer.sidebarOpen
+            rightPanelOpen: readyContainer.metadataSidebarOpen
+            onLoadMoreRequested: LibraryState.load_more()
+            onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
+            onLocateRequested: function(imageId) { LibraryState.requestLocate(imageId) }
+            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
+        }
+
+        CollectionView {
+            id: collectionView
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar.reservedHeight
+            visible: NavigationManager.currentView === "collection"
+            collectionName: NavigationManager.currentView === "collection"
+                            ? (NavigationManager.currentEntry.collection_name ?? "") : ""
+            gridModel: CollectionsState.collectionGridModel
+            loadingState: CollectionsState.loadingState
+            leftPanelOpen: readyContainer.sidebarOpen
+            rightPanelOpen: readyContainer.metadataSidebarOpen
+            onRemoveImagesRequested: function(imageIds, alsoFromLibrary) {
+                CollectionsState.removeImagesFromCollection(
+                    NavigationManager.currentEntry.collection_id ?? "",
+                    imageIds,
+                    alsoFromLibrary
+                )
+            }
+            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
+        }
+
+        ImageView {
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "image"
+            imageId:   NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.image_id ?? "") : ""
+            imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
+                           ? baseUrl + "/api/v1/images/" + NavigationManager.currentEntry.image_id + "/file"
+                           : ""
+            filename: {
+                if (NavigationManager.currentView !== "image" || !NavigationManager.currentEntry.image_id) return ""
+                var imgId = NavigationManager.currentEntry.image_id
+                var inCollection = (NavigationManager.currentEntry.collection_id ?? "") !== ""
+                var srcModel = inCollection ? CollectionsState.collectionGridModel : LibraryState.gridModel
+                return srcModel ? srcModel.filenameForId(imgId) : ""
+            }
+            collectionId: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.collection_id ?? "") : ""
+            fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
+            hasNext: NavigationManager.hasNext
+            hasPrev: NavigationManager.hasPrev
+            leftInset: 40
+            rightInset: 40
+            rightPanelWidth: readyContainer.metadataSidebarOpen ? Theme.overlayWidth : 0
+            onPrevRequested: NavigationManager.goPrev()
+            onNextRequested: NavigationManager.goNext()
+            onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
+            onRemoveImageRequested: function(imageId, collectionId, alsoFromLibrary) {
+                if (collectionId !== "")
+                    CollectionsState.removeImagesFromCollection(collectionId, [imageId], alsoFromLibrary)
+                else
+                    LibraryState.removeImages([imageId])
+            }
+        }
+
+        SettingsView {
+            id: settingsView
+            objectName: "settingsView"
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            visible: NavigationManager.currentView === "settings"
+        }
+
+        // ── Layer 0: Chrome ──────────────────────────────────────────────────
 
         TitleBar {
             id: titleBar
@@ -109,7 +189,116 @@ Item {
             onSettingsRequested: NavigationManager.push("settings", {})
         }
 
-        // Filter dropdown — anchored below TitleBar on the right, z above grid
+        // ── Layer 5: Structural bars ─────────────────────────────────────────
+
+        CategoriesBar {
+            id: categoriesBar
+            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+            open: readyContainer.categoriesBarOpen
+            visible: NavigationManager.currentView === "library" || NavigationManager.currentView === "collection"
+            categories: CategoriesState.categories
+            z: 5
+            onToggleRequested: readyContainer.categoriesBarOpen = !readyContainer.categoriesBarOpen
+            onFilterToggled: function(categoryId) { CategoriesState.cycleFilter(categoryId) }
+            onCreateCategoryRequested: function(name) { CategoriesState.createCategory(name) }
+            onImageDropped: function(categoryId, imageId) {
+                var ids = SelectionManager.isSelected(imageId)
+                    ? SelectionManager.selectedIds
+                    : [imageId]
+                CategoriesState.addImagesToCategory(categoryId, ids)
+            }
+        }
+
+        // ── Layer 10: Side panels ────────────────────────────────────────────
+
+        CollectionsSidePanel {
+            anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
+            anchors.bottomMargin: categoriesBar.reservedHeight
+            width: implicitWidth
+            visible: NavigationManager.currentView === "library"
+            open: readyContainer.sidebarOpen
+            collections: CollectionsState.collections
+            z: 10
+            onToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
+            onCollectionClicked: function(collectionId, collectionName) {
+                readyContainer.sidebarOpen = false
+                NavigationManager.push("collection", { "collection_id": collectionId, "collection_name": collectionName })
+                CollectionsState.loadCollectionImages(collectionId)
+            }
+            onCreateCollectionRequested: function(name) {
+                CollectionsState.createCollection(name)
+            }
+            onImageDropped: function(collectionId, imageId) {
+                var ids = SelectionManager.isSelected(imageId)
+                    ? SelectionManager.selectedIds
+                    : [imageId]
+                CollectionsState.addImagesToCollection(collectionId, ids)
+            }
+            onRemoveCollectionRequested: function(collectionId, collectionName) {
+                collectionDeleteFlow.requestDelete(collectionId, collectionName)
+            }
+        }
+
+        MetadataSidePanel {
+            id: metadataSidebar
+            anchors { top: titleBar.bottom; right: parent.right; bottom: parent.bottom }
+            anchors.bottomMargin: (NavigationManager.currentView === "library" || NavigationManager.currentView === "collection")
+                                  ? categoriesBar.reservedHeight : 0
+            width: implicitWidth
+            open: readyContainer.metadataSidebarOpen
+            z: 10
+            metaLoadingState: MetadataState.loadingState
+            metaFilename: MetadataState.filename
+            metaPath: MetadataState.path
+            metaDimensions: MetadataState.dimensions
+            metaFileSize: MetadataState.fileSize
+            metaDateAdded: MetadataState.dateAdded
+            metaIsMissing: MetadataState.isMissing
+            tagEditorTags: TagEditorState.tags
+            tagEditorLoadingState: TagEditorState.loadingState
+            tagEditorSelectionMode: TagEditorState.selectionMode
+            categoryEditorCategories: CategoryEditorState.categories
+            categoryEditorLoadingState: CategoryEditorState.loadingState
+            categoryEditorSelectionMode: CategoryEditorState.selectionMode
+            collectionEditorCollections: CollectionEditorState.collections
+            collectionEditorLoadingState: CollectionEditorState.loadingState
+            collectionEditorSelectionMode: CollectionEditorState.selectionMode
+            onToggleRequested: readyContainer.metadataSidebarOpen = !readyContainer.metadataSidebarOpen
+            onRevealFileRequested: function(path) { PlatformService.revealFile(path) }
+            onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
+            onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
+            onAddTagByNameRequested: function(name) { TagEditorState.addTagByName(name) }
+            onAddCategoryRequested: function(catId, catName) { CategoryEditorState.addCategory(catId, catName) }
+            onRemoveCategoryRequested: function(catId) { CategoryEditorState.removeCategory(catId) }
+            onAddToCollectionRequested: function(colId, colName) { CollectionEditorState.addToCollection(colId, colName) }
+            onRemoveFromCollectionRequested: function(colId) { CollectionEditorState.removeFromCollection(colId) }
+        }
+
+        // ── Layer 20: Import overlay ─────────────────────────────────────────
+        // Anchored above categoriesBar so chip DropAreas are not blocked.
+
+        ImportHandler {
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: categoriesBar.top }
+            visible: NavigationManager.currentView === "library"
+            z: 20
+        }
+
+        // ── Layer 25: Modal flows ────────────────────────────────────────────
+
+        RelocationFlow {
+            id: relocationFlow
+            anchors.fill: parent
+            z: 25
+        }
+
+        CollectionDeleteFlow {
+            id: collectionDeleteFlow
+            anchors.fill: parent
+            z: 25
+        }
+
+        // ── Layer 40: Dropdowns ──────────────────────────────────────────────
+
         FilterDropdown {
             id: filterDropdown
             anchors { top: titleBar.bottom; right: parent.right; rightMargin: Theme.spacingMd }
@@ -117,6 +306,7 @@ Item {
             open: readyContainer.filterDropdownOpen
             showMissingOnly: FilterState.showMissingOnly
             importJobActive: FilterState.importJobId !== ""
+            z: 40
             activeCategories: {
                 var result = []
                 var filters = FilterState.categoryFilters
@@ -146,43 +336,9 @@ Item {
             onRemoveCategoryFilter: function(catId) { FilterState.setCategoryFilter(catId, "off") }
             onRemoveTagFilter: function(tagId) { FilterState.setTagFilter(tagId, "off") }
             onToggleMissingOnlyRequested: FilterState.setShowMissingOnly(!FilterState.showMissingOnly)
-            z: 40
         }
 
-        // Categories bar — structural bottom zone for library/collection views
-        CategoriesBar {
-            id: categoriesBar
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            open: readyContainer.categoriesBarOpen
-            visible: NavigationManager.currentView === "library" || NavigationManager.currentView === "collection"
-            categories: CategoriesState.categories
-            onToggleRequested: readyContainer.categoriesBarOpen = !readyContainer.categoriesBarOpen
-            onFilterToggled: function(categoryId) { CategoriesState.cycleFilter(categoryId) }
-            onCreateCategoryRequested: function(name) { CategoriesState.createCategory(name) }
-            onImageDropped: function(categoryId, imageId) {
-                var ids = SelectionManager.isSelected(imageId)
-                    ? SelectionManager.selectedIds
-                    : [imageId]
-                CategoriesState.addImagesToCategory(categoryId, ids)
-            }
-            z: 5
-        }
-
-        // Library view
-        LibraryView {
-            id: libraryView
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar.reservedHeight
-            visible: NavigationManager.currentView === "library"
-            loadingState: root.libraryLoadingState
-            gridModel: LibraryState.gridModel
-            leftPanelOpen: readyContainer.sidebarOpen
-            rightPanelOpen: readyContainer.metadataSidebarOpen
-            onLoadMoreRequested: LibraryState.load_more()
-            onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
-            onLocateRequested: function(imageId) { LibraryState.requestLocate(imageId) }
-            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
-        }
+        // ── Connections ──────────────────────────────────────────────────────
 
         // Central navigation handler — persists per-view panel states and restores
         // selection/scroll on return to library or collection.
@@ -265,9 +421,8 @@ Item {
         }
 
         // Double-click on an image: save state and push image view.
-        // When opened from within a collection, carry that collection's
-        // identity along and browse its images (not the library's), so
-        // prev/next and the removal dialog stay scoped to that collection.
+        // When opened from within a collection, carry that collection's identity
+        // so prev/next and removal stay scoped to that collection.
         Connections {
             target: SelectionManager
             function onOpenRequested(imageId) {
@@ -288,172 +443,13 @@ Item {
                 })
             }
         }
-
-        // Collection view
-        CollectionView {
-            id: collectionView
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar.reservedHeight
-            visible: NavigationManager.currentView === "collection"
-            collectionName: NavigationManager.currentView === "collection"
-                            ? (NavigationManager.currentEntry.collection_name ?? "") : ""
-            gridModel: CollectionsState.collectionGridModel
-            loadingState: CollectionsState.loadingState
-            leftPanelOpen: readyContainer.sidebarOpen
-            rightPanelOpen: readyContainer.metadataSidebarOpen
-            onRemoveImagesRequested: function(imageIds, alsoFromLibrary) {
-                CollectionsState.removeImagesFromCollection(
-                    NavigationManager.currentEntry.collection_id ?? "",
-                    imageIds,
-                    alsoFromLibrary
-                )
-            }
-            onViewportVerifyRequested: function(imageIds) { LibraryState.verifyBatch(imageIds) }
-        }
-
-        // Image view (Slice 5)
-        ImageView {
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            visible: NavigationManager.currentView === "image"
-            imageId:   NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.image_id ?? "") : ""
-            imageUrl:  NavigationManager.currentView === "image" && NavigationManager.currentEntry.image_id
-                           ? baseUrl + "/api/v1/images/" + NavigationManager.currentEntry.image_id + "/file"
-                           : ""
-            filename: {
-                if (NavigationManager.currentView !== "image" || !NavigationManager.currentEntry.image_id) return ""
-                var imgId = NavigationManager.currentEntry.image_id
-                var inCollection = (NavigationManager.currentEntry.collection_id ?? "") !== ""
-                var srcModel = inCollection ? CollectionsState.collectionGridModel : LibraryState.gridModel
-                return srcModel ? srcModel.filenameForId(imgId) : ""
-            }
-            collectionId: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.collection_id ?? "") : ""
-            fileStatus: NavigationManager.currentView === "image" ? (NavigationManager.currentEntry.file_status ?? "available") : "available"
-            hasNext: NavigationManager.hasNext
-            hasPrev: NavigationManager.hasPrev
-            leftInset: 40
-            rightInset: 40
-            rightPanelWidth: readyContainer.metadataSidebarOpen ? Theme.overlayWidth : 0
-            onPrevRequested: NavigationManager.goPrev()
-            onNextRequested: NavigationManager.goNext()
-            onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
-            onRemoveImageRequested: function(imageId, collectionId, alsoFromLibrary) {
-                if (collectionId !== "")
-                    CollectionsState.removeImagesFromCollection(collectionId, [imageId], alsoFromLibrary)
-                else
-                    LibraryState.removeImages([imageId])
-            }
-        }
-
-        // Settings view
-        SettingsView {
-            id: settingsView
-            objectName: "settingsView"
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            visible: NavigationManager.currentView === "settings"
-        }
-
-        // Sidebar overlay — rendered above content, below nav bar
-        CollectionsSidePanel {
-            anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar.reservedHeight
-            width: implicitWidth
-            visible: NavigationManager.currentView === "library"
-            open: readyContainer.sidebarOpen
-            collections: CollectionsState.collections
-            z: 10
-
-            onToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
-
-            onCollectionClicked: function(collectionId, collectionName) {
-                readyContainer.sidebarOpen = false
-                NavigationManager.push("collection", { "collection_id": collectionId, "collection_name": collectionName })
-                CollectionsState.loadCollectionImages(collectionId)
-            }
-
-            onCreateCollectionRequested: function(name) {
-                CollectionsState.createCollection(name)
-            }
-
-            onImageDropped: function(collectionId, imageId) {
-                var ids = SelectionManager.isSelected(imageId)
-                    ? SelectionManager.selectedIds
-                    : [imageId]
-                CollectionsState.addImagesToCollection(collectionId, ids)
-            }
-
-            onRemoveCollectionRequested: function(collectionId, collectionName) {
-                collectionDeleteFlow.requestDelete(collectionId, collectionName)
-            }
-        }
-
-        // Relocation workflow — locate dialog, prefix bulk-relocate, result summary
-        RelocationFlow {
-            id: relocationFlow
-            anchors.fill: parent
-            z: 25
-        }
-
-        // Collection-deletion confirmation flow
-        CollectionDeleteFlow {
-            id: collectionDeleteFlow
-            anchors.fill: parent
-            z: 25
-        }
-
-
-
-        // Metadata sidebar — right-edge collapsible panel; open by default, collapses in image view
-        MetadataSidePanel {
-            id: metadataSidebar
-            anchors {
-                top: titleBar.bottom
-                right: parent.right
-                bottom: parent.bottom
-            }
-            anchors.bottomMargin: (NavigationManager.currentView === "library" || NavigationManager.currentView === "collection")
-                                  ? (categoriesBar.reservedHeight) : 0
-            width: implicitWidth
-            open: readyContainer.metadataSidebarOpen
-            metaLoadingState: MetadataState.loadingState
-            metaFilename: MetadataState.filename
-            metaPath: MetadataState.path
-            metaDimensions: MetadataState.dimensions
-            metaFileSize: MetadataState.fileSize
-            metaDateAdded: MetadataState.dateAdded
-            metaIsMissing: MetadataState.isMissing
-            tagEditorTags: TagEditorState.tags
-            tagEditorLoadingState: TagEditorState.loadingState
-            tagEditorSelectionMode: TagEditorState.selectionMode
-            categoryEditorCategories: CategoryEditorState.categories
-            categoryEditorLoadingState: CategoryEditorState.loadingState
-            categoryEditorSelectionMode: CategoryEditorState.selectionMode
-            collectionEditorCollections: CollectionEditorState.collections
-            collectionEditorLoadingState: CollectionEditorState.loadingState
-            collectionEditorSelectionMode: CollectionEditorState.selectionMode
-            onToggleRequested: readyContainer.metadataSidebarOpen = !readyContainer.metadataSidebarOpen
-            onRevealFileRequested: function(path) { PlatformService.revealFile(path) }
-            onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
-            onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
-            onAddTagByNameRequested: function(name) { TagEditorState.addTagByName(name) }
-            onAddCategoryRequested: function(catId, catName) { CategoryEditorState.addCategory(catId, catName) }
-            onRemoveCategoryRequested: function(catId) { CategoryEditorState.removeCategory(catId) }
-            onAddToCollectionRequested: function(colId, colName) { CollectionEditorState.addToCollection(colId, colName) }
-            onRemoveFromCollectionRequested: function(colId) { CollectionEditorState.removeFromCollection(colId) }
-            z: 10
-        }
-
-
-        // Import workflow — drop area, deferred scan, and import panel overlay
-        // Stops at categoriesBar.top so chip DropAreas are not blocked
-        ImportHandler {
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: categoriesBar.top }
-            visible: NavigationManager.currentView === "library"
-            z: 20
-        }
     }
 
-    // Propagate image status changes from library verification to the active collection grid,
-    // and refresh the metadata panel's missing-file banner if it's showing the same image.
+    // ── Root-level connections ────────────────────────────────────────────────
+    // These react to app-wide state changes that outlive any single view.
+
+    // Propagate image status changes from library verification to the active
+    // collection grid, and refresh the metadata panel's missing-file banner.
     Connections {
         target: LibraryState
         function onImageStatusChanged(imageId, status) {
