@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Dialogs
 import Found.Theme 1.0
 import "../views"
 import "../components"
@@ -14,8 +13,8 @@ Item {
     property string statusMessage: ""
     property bool hasError: false
     property string libraryLoadingState: "Loading"
-    readonly property bool relocatePrefixDialogOpen: readyContainer._prefixAffectedCount > 0
-    readonly property bool relocationResultDialogOpen: readyContainer._relocationResultMessage !== ""
+    readonly property bool relocatePrefixDialogOpen: readyContainer.prefixDialogOpen
+    readonly property bool relocationResultDialogOpen: readyContainer.resultDialogOpen
 
     SplashScreen {
         id: splashScreen
@@ -56,13 +55,9 @@ Item {
         property string _removeCollectionId: ""
         property string _removeCollectionName: ""
 
-        // Pending locate/prefix-relocation flow
-        property string _pendingLocateImageId: ""
-        property string _pendingLocatedOldPath: ""
-        property int _prefixAffectedCount: 0
-        property string _oldPrefix: ""
-        property string _newPrefix: ""
-        property string _relocationResultMessage: ""
+        // Delegates for the relocation flow — owned by RelocationFlow below
+        readonly property bool prefixDialogOpen: relocationFlow.prefixDialogOpen
+        readonly property bool resultDialogOpen: relocationFlow.resultDialogOpen
 
         // Background click handler — clears selection when the user clicks any
         // area that no interactive element consumed (title bar background, panel
@@ -399,74 +394,11 @@ Item {
             }
         }
 
-        // Locate/prefix-relocation signal handlers
-        Connections {
-            target: LibraryState
-            function onLocateDialogRequested(imageId, imagePath) {
-                readyContainer._pendingLocateImageId = imageId
-                readyContainer._pendingLocatedOldPath = imagePath
-                locateFileDialog.open()
-            }
-            function onImageRelocated(imageId, oldPath, newPath) {
-                LibraryState.previewRelocation(oldPath, newPath)
-            }
-            function onRelocationPreviewReady(count, oldPrefix, newPrefix) {
-                readyContainer._oldPrefix = oldPrefix
-                readyContainer._newPrefix = newPrefix
-                readyContainer._prefixAffectedCount = count
-            }
-            function onRelocationComplete(updated, notFound, conflicts, mismatched) {
-                readyContainer._prefixAffectedCount = 0
-                readyContainer._oldPrefix = ""
-                readyContainer._newPrefix = ""
-                var parts = []
-                if (updated > 0)
-                    parts.push(updated + (updated === 1 ? " image relocated." : " images relocated."))
-                if (notFound > 0)
-                    parts.push(notFound + (notFound === 1 ? " file not found at expected path." : " files not found at expected paths."))
-                if (conflicts > 0)
-                    parts.push(conflicts + (conflicts === 1 ? " file already exists at target path." : " files already exist at target paths."))
-                if (mismatched > 0)
-                    parts.push(mismatched + (mismatched === 1 ? " file did not match expected content." : " files did not match expected content."))
-                if (updated === 0 && notFound === 0 && conflicts === 0 && mismatched === 0)
-                    parts.push("No images were relocated.")
-                readyContainer._relocationResultMessage = parts.join("\n")
-            }
-        }
-
-        // Prefix-relocation confirmation — offer to bulk-relocate images sharing the old prefix
-        ConfirmDialog {
-            id: relocatePrefixDialog
+        // Relocation workflow — locate dialog, prefix bulk-relocate, result summary
+        RelocationFlow {
+            id: relocationFlow
             anchors.fill: parent
             z: 25
-            open: readyContainer._prefixAffectedCount > 0
-            message: {
-                var n = readyContainer._prefixAffectedCount
-                return "Found " + n + (n === 1 ? " other image" : " other images")
-                    + " in the same folder. Relocate them all to the new location?"
-            }
-            confirmLabel: "Relocate All"
-            onConfirmed: {
-                LibraryState.relocateByPrefix(readyContainer._oldPrefix, readyContainer._newPrefix)
-                readyContainer._prefixAffectedCount = 0
-            }
-            onCancelled: {
-                readyContainer._prefixAffectedCount = 0
-                readyContainer._oldPrefix = ""
-                readyContainer._newPrefix = ""
-            }
-        }
-
-        // Relocation result — shows how many images were relocated vs. not found
-        ConfirmDialog {
-            id: relocationResultDialog
-            anchors.fill: parent
-            z: 26
-            open: readyContainer._relocationResultMessage !== ""
-            message: readyContainer._relocationResultMessage
-            confirmLabel: "OK"
-            showCancel: false
-            onConfirmed: readyContainer._relocationResultMessage = ""
         }
 
         // Collection-deletion confirmation — images are kept, only the collection is removed
@@ -613,25 +545,6 @@ Item {
             onConflictChoiceChanged: function(path, choice) {
                 ImportState.setConflictChoice(path, choice)
             }
-        }
-    }
-
-    // File picker for locating a missing image — parented to root so it is
-    // independent of readyContainer visibility.
-    FileDialog {
-        id: locateFileDialog
-        title: {
-            var filename = readyContainer._pendingLocatedOldPath.split("/").pop()
-            return filename ? "Locate “" + filename + "”" : "Locate file"
-        }
-        fileMode: FileDialog.OpenFile
-        onAccepted: {
-            var newPath = selectedFile.toString().replace(/^file:\/\//, "")
-            LibraryState.relocateImage(
-                readyContainer._pendingLocateImageId,
-                readyContainer._pendingLocatedOldPath,
-                newPath
-            )
         }
     }
 

@@ -3203,3 +3203,26 @@ def test_settings_view_mode_picker_calls_set_mode(theme_qml_engine):
     expr.evaluate()
 
     assert active_theme.mode == "dark"
+
+
+# ---------------------------------------------------------------------------
+# RelocationFlow — refactor/main-router-organization Commit 1
+# ---------------------------------------------------------------------------
+
+
+def test_relocation_flow_qml_exists():
+    assert (QML_DIR / "shell/RelocationFlow.qml").exists()
+
+
+def test_relocation_flow_loads(engine):
+    load_component(engine, "shell/RelocationFlow.qml")
+
+
+def test_relocation_flow_prefix_dialog_open_defaults_to_false(engine):
+    obj = load_component(engine, "shell/RelocationFlow.qml")
+    assert obj.property("prefixDialogOpen") is False
+
+
+def test_relocation_flow_result_dialog_open_defaults_to_false(engine):
+    obj = load_component(engine, "shell/RelocationFlow.qml")
+    assert obj.property("resultDialogOpen") is False
