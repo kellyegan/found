@@ -149,6 +149,7 @@ Item {
             anchors { top: parent.top; left: parent.left; right: parent.right }
             height: NavigationManager.immersiveMode ? 0 : 48
             visible: !NavigationManager.immersiveMode
+            z: 15
             canGoBack: NavigationManager.canGoBack
             filterActive: FilterState.hasActiveFilters
             importState: ImportState.loadingState
