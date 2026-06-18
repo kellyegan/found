@@ -49,10 +49,6 @@ Item {
             image:      { metadataOpen: false }
         })
 
-        // Pending collection deletion — drives the confirmation dialog below
-        property string _removeCollectionId: ""
-        property string _removeCollectionName: ""
-
         // Delegates for the relocation flow — owned by RelocationFlow below
         readonly property bool prefixDialogOpen: relocationFlow.prefixDialogOpen
         readonly property bool resultDialogOpen: relocationFlow.resultDialogOpen
@@ -386,9 +382,7 @@ Item {
             }
 
             onRemoveCollectionRequested: function(collectionId, collectionName) {
-                readyContainer._removeCollectionId = collectionId
-                readyContainer._removeCollectionName = collectionName
-                removeCollectionDialog.checkboxChecked = false
+                collectionDeleteFlow.requestDelete(collectionId, collectionName)
             }
         }
 
@@ -399,23 +393,11 @@ Item {
             z: 25
         }
 
-        // Collection-deletion confirmation — images are kept, only the collection is removed
-        ConfirmDialog {
-            id: removeCollectionDialog
+        // Collection-deletion confirmation flow
+        CollectionDeleteFlow {
+            id: collectionDeleteFlow
             anchors.fill: parent
             z: 25
-            open: readyContainer._removeCollectionId !== ""
-            message: "Delete the collection “" + readyContainer._removeCollectionName + "”? Images in it will not be removed from your library."
-            confirmLabel: "Delete"
-            onConfirmed: {
-                CollectionsState.deleteCollection(readyContainer._removeCollectionId)
-                readyContainer._removeCollectionId = ""
-                readyContainer._removeCollectionName = ""
-            }
-            onCancelled: {
-                readyContainer._removeCollectionId = ""
-                readyContainer._removeCollectionName = ""
-            }
         }
 
 

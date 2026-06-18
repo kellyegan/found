@@ -3241,6 +3241,39 @@ def test_import_handler_has_drop_hint_text_child(engine):
 
 
 # ---------------------------------------------------------------------------
+# CollectionDeleteFlow — refactor/main-router-organization Commit 4
+# ---------------------------------------------------------------------------
+
+
+def test_collection_delete_flow_qml_exists():
+    assert (QML_DIR / "shell/CollectionDeleteFlow.qml").exists()
+
+
+def test_collection_delete_flow_loads(engine):
+    load_component(engine, "shell/CollectionDeleteFlow.qml")
+
+
+def test_collection_delete_flow_open_defaults_to_false(engine):
+    obj = load_component(engine, "shell/CollectionDeleteFlow.qml")
+    assert obj.property("open") is False
+
+
+def test_collection_delete_flow_request_delete_opens_dialog(engine):
+    obj = load_component(engine, "shell/CollectionDeleteFlow.qml")
+    assert obj.property("open") is False
+    obj.requestDelete("col-1", "My Collection")
+    assert obj.property("open") is True
+
+
+def test_collection_delete_flow_cancel_closes_dialog(engine):
+    obj = load_component(engine, "shell/CollectionDeleteFlow.qml")
+    obj.requestDelete("col-1", "My Collection")
+    assert obj.property("open") is True
+    obj.findChild(QObject, "confirmDialog").cancelled.emit()
+    assert obj.property("open") is False
+
+
+# ---------------------------------------------------------------------------
 # RelocationFlow — refactor/main-router-organization Commit 1
 # ---------------------------------------------------------------------------
 
