@@ -15,6 +15,7 @@ Item {
 
     readonly property int _stripHeight: 44
     readonly property int _tabHeight: 16
+    readonly property int reservedHeight: _tabHeight + _stripHeight
 
     height: open ? _tabHeight + _stripHeight : _tabHeight
     Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }

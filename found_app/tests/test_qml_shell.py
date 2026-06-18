@@ -1630,6 +1630,19 @@ def test_categories_bar_has_filter_toggled_signal(engine):
     assert isinstance(received, list)
 
 
+def test_categories_bar_has_reserved_height_property(engine):
+    obj = load_component(engine, "components/CategoriesBar.qml")
+    assert obj.property("reservedHeight") is not None
+
+
+def test_categories_bar_reserved_height_equals_tab_plus_strip(engine):
+    obj = load_component(engine, "components/CategoriesBar.qml")
+    reserved = obj.property("reservedHeight")
+    tab = obj.property("_tabHeight")
+    strip = obj.property("_stripHeight")
+    assert reserved == tab + strip
+
+
 # ---------------------------------------------------------------------------
 # CategoriesBar — theme tokens (Feature 5.7)
 # ---------------------------------------------------------------------------

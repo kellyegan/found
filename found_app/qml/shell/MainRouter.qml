@@ -172,7 +172,7 @@ Item {
         LibraryView {
             id: libraryView
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
+            anchors.bottomMargin: categoriesBar.reservedHeight
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
@@ -293,7 +293,7 @@ Item {
         CollectionView {
             id: collectionView
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
+            anchors.bottomMargin: categoriesBar.reservedHeight
             visible: NavigationManager.currentView === "collection"
             collectionName: NavigationManager.currentView === "collection"
                             ? (NavigationManager.currentEntry.collection_name ?? "") : ""
@@ -355,7 +355,7 @@ Item {
         // Sidebar overlay — rendered above content, below nav bar
         CollectionsSidePanel {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar._tabHeight + categoriesBar._stripHeight
+            anchors.bottomMargin: categoriesBar.reservedHeight
             width: implicitWidth
             visible: NavigationManager.currentView === "library"
             open: readyContainer.sidebarOpen
@@ -411,7 +411,7 @@ Item {
                 bottom: parent.bottom
             }
             anchors.bottomMargin: (NavigationManager.currentView === "library" || NavigationManager.currentView === "collection")
-                                  ? (categoriesBar._tabHeight + categoriesBar._stripHeight) : 0
+                                  ? (categoriesBar.reservedHeight) : 0
             width: implicitWidth
             open: readyContainer.metadataSidebarOpen
             metaLoadingState: MetadataState.loadingState
