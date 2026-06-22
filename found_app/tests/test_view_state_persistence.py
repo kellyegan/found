@@ -96,6 +96,15 @@ def test_all_panels_collapsed_on_startup(app_engine):
 # ---------------------------------------------------------------------------
 
 
+def test_library_sidebar_restored_after_collection(app_engine):
+    """Collections sidebar open in library is restored when returning from collection."""
+    _, navigation, container = app_engine
+    container.setProperty("sidebarOpen", True)
+    navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
+    navigation.goBack()
+    assert container.property("sidebarOpen") is True
+
+
 def test_library_metadata_panel_restored_after_collection(app_engine):
     """Metadata panel open in library is restored when returning from collection."""
     _, navigation, container = app_engine
