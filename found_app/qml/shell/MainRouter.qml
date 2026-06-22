@@ -205,6 +205,8 @@ Item {
                     ? SelectionManager.selectedIds
                     : [imageId]
                 CategoriesState.addImagesToCategory(categoryId, ids)
+                if (SelectionManager.isSelected(imageId))
+                    CategoryEditorState.reload()
             }
         }
 
@@ -231,6 +233,8 @@ Item {
                     ? SelectionManager.selectedIds
                     : [imageId]
                 CollectionsState.addImagesToCollection(collectionId, ids)
+                if (SelectionManager.isSelected(imageId))
+                    CollectionEditorState.reload()
             }
             onRemoveCollectionRequested: function(collectionId, collectionName) {
                 collectionDeleteFlow.requestDelete(collectionId, collectionName)

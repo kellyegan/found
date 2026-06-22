@@ -99,6 +99,11 @@ class CollectionEditorViewModel(QObject):
         thread.start()
 
     @Slot()
+    def reload(self) -> None:
+        if self._selection_mode != "multi" and self._primary_id:
+            self.loadImage(self._primary_id)
+
+    @Slot()
     def clear(self) -> None:
         self._collections = []
         self._primary_id = ""

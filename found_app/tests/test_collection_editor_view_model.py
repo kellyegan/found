@@ -270,3 +270,47 @@ def test_modified_not_emitted_on_load(qapp):
     received = _collect_signal(vm.modified)
     _load(vm)
     assert received == []
+
+
+# ---------------------------------------------------------------------------
+# reload
+# ---------------------------------------------------------------------------
+
+def test_reload_re_fetches_for_primary_image(qapp):
+    fetch_calls = []
+    def fetcher(image_id):
+        fetch_calls.append(image_id)
+        return list(SAMPLE_COLLECTIONS)
+    vm = _vm(fetcher=fetcher)
+    _load(vm, "img-1")
+    assert len(fetch_calls) == 1
+    vm.reload()
+    _wait_for_state(vm, "Ready")
+    assert len(fetch_calls) == 2
+    assert fetch_calls[1] == "img-1"
+
+
+def test_reload_is_noop_without_primary_image(qapp):
+    fetch_calls = []
+    vm = _vm(fetcher=lambda image_id: fetch_calls.append(image_id) or list(SAMPLE_COLLECTIONS))
+    vm.reload()
+    _spin()
+    assert fetch_calls == []
+
+
+def test_reload_is_noop_in_multi_selection_mode(qapp):
+    fetch_calls = []
+    sel = SelectionManager()
+    vm = _vm(
+        fetcher=lambda image_id: fetch_calls.append(image_id) or list(SAMPLE_COLLECTIONS),
+        selection_manager=sel,
+    )
+    sel.select("img-1")
+    _wait_for_state(vm, "Ready")
+    sel.toggle("img-2")
+    _wait_for_state(vm, "Idle")
+    assert vm.selectionMode == "multi"
+    count_before = len(fetch_calls)
+    vm.reload()
+    _spin()
+    assert len(fetch_calls) == count_before
