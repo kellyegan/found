@@ -220,7 +220,6 @@ Item {
             z: 10
             onToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
             onCollectionClicked: function(collectionId, collectionName) {
-                readyContainer.sidebarOpen = false
                 NavigationManager.push("collection", { "collection_id": collectionId, "collection_name": collectionName })
                 CollectionsState.loadCollectionImages(collectionId)
             }
