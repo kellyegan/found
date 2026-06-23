@@ -27,7 +27,6 @@ from found_app.core.app_state import AppStateManager
 from found_app.services.filter_state import FilterStateManager
 from found_app.viewmodels.library_view_model import LibraryViewModel, LibraryLoadingState
 from found_app.models.thumbnail_grid_model import ThumbnailGridModel
-from found_app.viewmodels.categories_view_model import CategoriesViewModel
 from found_app.viewmodels.collections_view_model import CollectionsViewModel
 from found_app.viewmodels.import_view_model import ImportViewModel
 from found_app.viewmodels.metadata_view_model import MetadataViewModel
@@ -394,8 +393,6 @@ def test_main_qml_loads_with_app_window(qapp):
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
-    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
-    e.rootContext().setContextProperty("CategoriesState", categories_state)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("FilterState", FilterStateManager())
@@ -442,8 +439,6 @@ def test_open_image_from_collection_carries_collection_context(qapp):
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
-    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
-    e.rootContext().setContextProperty("CategoriesState", categories_state)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("FilterState", FilterStateManager())
@@ -518,7 +513,6 @@ def _build_app_engine(library_state, metadata_state, navigation, selection):
                                   "successful_imports": 0, "duplicate_paths": 0,
                                   "duplicate_hashes": 0, "failed_imports": 0},
     )
-    categories_state = CategoriesViewModel(categories_fetcher=lambda: [])
     filter_state = FilterStateManager()
     tag_search_state = TagSearchViewModel(tags_fetcher=lambda term: [])
     tag_editor_search_state = TagSearchViewModel(tags_fetcher=lambda term: [])
@@ -533,7 +527,6 @@ def _build_app_engine(library_state, metadata_state, navigation, selection):
     e.rootContext().setContextProperty("LibraryState", library_state)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
-    e.rootContext().setContextProperty("CategoriesState", categories_state)
     e.rootContext().setContextProperty("CollectionsState", collections_state)
     e.rootContext().setContextProperty("ImportState", import_state)
     e.rootContext().setContextProperty("FilterState", filter_state)
@@ -552,7 +545,7 @@ def _build_app_engine(library_state, metadata_state, navigation, selection):
     # are garbage collected as soon as this function returns, leaving the QML
     # bindings pointing at null.
     e._context_objects = (
-        theme, app_state, categories_state, collections_state, import_state,
+        theme, app_state, collections_state, import_state,
         filter_state, tag_search_state, tag_editor_search_state, tag_editor_state,
     )
     return e
@@ -1470,33 +1463,6 @@ def test_thumbnail_tile_still_loads_with_drag_support(engine):
 
 
 # ---------------------------------------------------------------------------
-# CategoryChip
-# ---------------------------------------------------------------------------
-
-
-def test_category_chip_qml_exists():
-    assert (QML_DIR / "components/CategoryChip.qml").exists()
-
-
-def test_category_chip_loads(engine):
-    load_component(engine, "components/CategoryChip.qml")
-
-
-def test_category_chip_off_state_color_uses_theme_border(theme_qml_engine):
-    from found_app.theme.palettes import FOUND_LIGHT
-    from found_app.theme.theme import register_theme_singleton
-
-    active_theme = register_theme_singleton(ThemeManager())
-    original_palette = dict(active_theme._palette)
-    active_theme.setPalette(FOUND_LIGHT)
-    try:
-        obj = load_component(theme_qml_engine, "components/CategoryChip.qml")
-        assert obj.property("color").name() == FOUND_LIGHT["border"]
-    finally:
-        active_theme.setPalette(original_palette)
-
-
-# ---------------------------------------------------------------------------
 # ChipSearchSection — theme tokens (Feature 5.7)
 # ---------------------------------------------------------------------------
 
@@ -1581,143 +1547,6 @@ def test_chip_search_section_submit_icon_uses_theme_success(theme_qml_engine):
     assert icon is not None
     assert icon.property("color") == QColor(active_theme.success)
     assert icon.property("font").pixelSize() == active_theme.fontSizeSm
-
-
-# ---------------------------------------------------------------------------
-# CategoriesBar
-# ---------------------------------------------------------------------------
-
-
-def test_categories_bar_qml_exists():
-    assert (QML_DIR / "components/CategoriesBar.qml").exists()
-
-
-def test_categories_bar_loads(engine):
-    load_component(engine, "components/CategoriesBar.qml")
-
-
-def test_categories_bar_open_defaults_to_true(engine):
-    obj = load_component(engine, "components/CategoriesBar.qml")
-    assert obj.property("open") is True  # component default; MainRouter starts it closed
-
-
-def test_categories_bar_open_is_writable(engine):
-    obj = load_component(engine, "components/CategoriesBar.qml")
-    obj.setProperty("open", False)
-    assert obj.property("open") is False
-
-
-def test_categories_bar_categories_defaults_to_empty(engine):
-    obj = load_component(engine, "components/CategoriesBar.qml")
-    from PySide6.QtQml import QJSValue
-    val = obj.property("categories")
-    if isinstance(val, QJSValue):
-        val = val.toVariant() or []
-    assert val == [] or val is None
-
-
-def test_categories_bar_has_toggle_requested_signal(engine):
-    obj = load_component(engine, "components/CategoriesBar.qml")
-    received = []
-    obj.toggleRequested.connect(lambda: received.append(1))
-    assert isinstance(received, list)
-
-
-def test_categories_bar_has_filter_toggled_signal(engine):
-    obj = load_component(engine, "components/CategoriesBar.qml")
-    received = []
-    obj.filterToggled.connect(lambda cat_id: received.append(cat_id))
-    assert isinstance(received, list)
-
-
-def test_categories_bar_has_reserved_height_property(engine):
-    obj = load_component(engine, "components/CategoriesBar.qml")
-    assert obj.property("reservedHeight") is not None
-
-
-def test_categories_bar_reserved_height_equals_tab_plus_strip(engine):
-    obj = load_component(engine, "components/CategoriesBar.qml")
-    reserved = obj.property("reservedHeight")
-    tab = obj.property("_tabHeight")
-    strip = obj.property("_stripHeight")
-    assert reserved == tab + strip
-
-
-# ---------------------------------------------------------------------------
-# CategoriesBar — theme tokens (Feature 5.7)
-# ---------------------------------------------------------------------------
-
-
-def test_categories_bar_toggle_tab_uses_theme_border(theme_qml_engine):
-    from PySide6.QtGui import QColor
-    from found_app.theme.theme import register_theme_singleton
-
-    active_theme = register_theme_singleton(ThemeManager())
-    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
-
-    tab = obj.findChild(QObject, "toggleTab")
-    assert tab is not None
-    assert tab.property("color") == QColor(active_theme.border)
-
-
-def test_categories_bar_toggle_arrow_uses_theme_text_muted(theme_qml_engine):
-    from PySide6.QtGui import QColor
-    from found_app.theme.theme import register_theme_singleton
-
-    active_theme = register_theme_singleton(ThemeManager())
-    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
-
-    arrow = obj.findChild(QObject, "toggleArrow")
-    assert arrow is not None
-    assert arrow.property("color") == QColor(active_theme.textMuted)
-    assert arrow.property("font").pixelSize() == active_theme.fontSizeSm
-
-
-def test_categories_bar_add_button_icon_uses_theme_tokens(theme_qml_engine):
-    from PySide6.QtGui import QColor
-    from found_app.theme.theme import register_theme_singleton
-
-    active_theme = register_theme_singleton(ThemeManager())
-    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
-
-    # addBtn is now AppButton(variant="icon"); its label has objectName "label"
-    icon = obj.findChild(QObject, "label")
-    assert icon is not None
-    assert icon.property("color") == QColor(active_theme.textMuted)
-    assert icon.property("font").pixelSize() == active_theme.fontSizeMd
-
-
-def test_categories_bar_input_container_uses_theme_surface_and_border(theme_qml_engine):
-    from PySide6.QtGui import QColor
-    from found_app.theme.theme import register_theme_singleton
-
-    active_theme = register_theme_singleton(ThemeManager())
-    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
-
-    container = obj.findChild(QObject, "inputContainer")
-    assert container is not None
-    assert container.property("color") == QColor(active_theme.surface)
-    assert container.property("borderColor") == QColor(active_theme.border)
-
-
-def test_categories_bar_submit_icon_uses_theme_success_when_active(theme_qml_engine):
-    from PySide6.QtGui import QColor
-    from found_app.theme.theme import register_theme_singleton
-
-    active_theme = register_theme_singleton(ThemeManager())
-    obj = load_component(theme_qml_engine, "components/CategoriesBar.qml")
-
-    from PySide6.QtQml import QQmlProperty
-    container = obj.findChild(QObject, "inputContainer")
-    icon = obj.findChild(QObject, "submitIcon")
-    assert container is not None
-    assert icon is not None
-    assert icon.property("font").pixelSize() == active_theme.fontSizeSm
-    assert icon.property("color") == QColor(active_theme.success)
-    assert container.property("trailingVisible") is False
-
-    QQmlProperty(container, "text", theme_qml_engine.rootContext()).write("Nature")
-    assert container.property("trailingVisible") is True
 
 
 # ---------------------------------------------------------------------------
@@ -1930,25 +1759,9 @@ def test_filter_dropdown_has_clear_all_requested_signal(engine):
     assert isinstance(received, list)
 
 
-def test_filter_dropdown_active_categories_defaults_to_empty(engine):
-    obj = load_component(engine, "components/FilterDropdown.qml")
-    from PySide6.QtQml import QJSValue
-    val = obj.property("activeCategories")
-    if isinstance(val, QJSValue):
-        val = val.toVariant() or []
-    assert val == [] or val is None
-
-
 def test_filter_dropdown_show_missing_only_defaults_to_false(engine):
     obj = load_component(engine, "components/FilterDropdown.qml")
     assert obj.property("showMissingOnly") is False
-
-
-def test_filter_dropdown_has_remove_category_filter_signal(engine):
-    obj = load_component(engine, "components/FilterDropdown.qml")
-    received = []
-    obj.removeCategoryFilter.connect(lambda cat_id: received.append(cat_id))
-    assert isinstance(received, list)
 
 
 def test_filter_dropdown_has_toggle_missing_only_requested_signal(engine):
@@ -1978,12 +1791,6 @@ def test_filter_dropdown_any_filter_active_when_missing_only(engine):
 def test_filter_dropdown_any_filter_active_when_tags_active(engine):
     obj = load_component(engine, "components/FilterDropdown.qml")
     obj.setProperty("activeTags", [{"id": "t1", "name": "nature", "mode": "include"}])
-    assert obj.property("_anyFilterActive") is True
-
-
-def test_filter_dropdown_any_filter_active_when_categories_active(engine):
-    obj = load_component(engine, "components/FilterDropdown.qml")
-    obj.setProperty("activeCategories", [{"id": "c1", "name": "Architecture", "mode": "include"}])
     assert obj.property("_anyFilterActive") is True
 
 

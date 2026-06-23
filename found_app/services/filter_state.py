@@ -8,9 +8,8 @@ class FilterStateManager(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._category_filters: dict[str, str] = {}  # id -> "include" | "exclude"
-        self._tag_filters: dict[str, str] = {}        # id -> "include" | "exclude"
-        self._tag_names: dict[str, str] = {}           # id -> name, used for query params
+        self._tag_filters: dict[str, str] = {}   # id -> "include" | "exclude"
+        self._tag_names: dict[str, str] = {}      # id -> name, used for query params
         self._show_missing_only: bool = False
         self._import_job: str | None = None
 
@@ -20,14 +19,7 @@ class FilterStateManager(QObject):
 
     @Property(bool, notify=filtersChanged)
     def hasActiveFilters(self) -> bool:
-        return bool(
-            self._category_filters or self._tag_filters
-            or self._show_missing_only or self._import_job
-        )
-
-    @Property("QVariant", notify=filtersChanged)
-    def categoryFilters(self) -> dict:
-        return dict(self._category_filters)
+        return bool(self._tag_filters or self._show_missing_only or self._import_job)
 
     @Property("QVariant", notify=filtersChanged)
     def tagFilters(self) -> dict:
@@ -44,11 +36,6 @@ class FilterStateManager(QObject):
     @Property("QVariant", notify=filtersChanged)
     def queryParams(self) -> dict:
         params: dict = {}
-        for cat_id, mode in self._category_filters.items():
-            if mode == "include":
-                params["category"] = cat_id
-            elif mode == "exclude":
-                params["exclude_category"] = cat_id
         for tag_id, mode in self._tag_filters.items():
             tag_value = self._tag_names.get(tag_id, tag_id)
             if mode == "include":
@@ -60,34 +47,6 @@ class FilterStateManager(QObject):
         if self._import_job:
             params["import_job"] = self._import_job
         return params
-
-    # ------------------------------------------------------------------
-    # Category filter slots
-    # ------------------------------------------------------------------
-
-    @Slot(str, str)
-    def setCategoryFilter(self, category_id: str, mode: str) -> None:
-        if mode == "off":
-            self._category_filters.pop(category_id, None)
-        else:
-            self._category_filters[category_id] = mode
-        self.filtersChanged.emit()
-
-    @Slot(str)
-    def cycleCategoryFilter(self, category_id: str) -> None:
-        current = self._category_filters.get(category_id, "off")
-        nxt = _CYCLE[current]
-        if nxt == "off":
-            self._category_filters.pop(category_id, None)
-        else:
-            self._category_filters[category_id] = nxt
-        self.filtersChanged.emit()
-
-    @Slot()
-    def clearCategoryFilters(self) -> None:
-        if self._category_filters:
-            self._category_filters.clear()
-            self.filtersChanged.emit()
 
     # ------------------------------------------------------------------
     # Tag filter slots
@@ -144,7 +103,6 @@ class FilterStateManager(QObject):
     def clearAllFilters(self) -> None:
         if not self.hasActiveFilters:
             return
-        self._category_filters.clear()
         self._tag_filters.clear()
         self._show_missing_only = False
         self._import_job = None

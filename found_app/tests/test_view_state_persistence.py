@@ -19,7 +19,6 @@ from found_app.core.app_state import AppStateManager
 from found_app.services.filter_state import FilterStateManager
 from found_app.services.navigation import NavigationManager
 from found_app.services.selection import SelectionManager
-from found_app.viewmodels.categories_view_model import CategoriesViewModel
 from found_app.viewmodels.collections_view_model import CollectionsViewModel
 from found_app.viewmodels.import_view_model import ImportViewModel
 from found_app.viewmodels.library_view_model import LibraryViewModel
@@ -40,7 +39,6 @@ def app_engine(qapp):
     e.rootContext().setContextProperty("LibraryState", LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None))
     e.rootContext().setContextProperty("SelectionManager", SelectionManager())
     e.rootContext().setContextProperty("NavigationManager", navigation)
-    e.rootContext().setContextProperty("CategoriesState", CategoriesViewModel(categories_fetcher=lambda: []))
     e.rootContext().setContextProperty("CollectionsState", CollectionsViewModel(
         collections_fetcher=lambda: [],
         collection_creator=lambda name: None,
@@ -88,7 +86,6 @@ def test_all_panels_collapsed_on_startup(app_engine):
     _, _, container = app_engine
     assert container.property("metadataSidebarOpen") is False
     assert container.property("sidebarOpen") is False
-    assert container.property("categoriesBarOpen") is False
 
 
 # ---------------------------------------------------------------------------
@@ -148,24 +145,6 @@ def test_collection_metadata_panel_independent_from_library(app_engine):
     container.setProperty("metadataSidebarOpen", True)
     navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
     assert container.property("metadataSidebarOpen") is False
-
-
-def test_library_categories_bar_restored_after_collection(app_engine):
-    """Categories bar open in library is restored when returning from collection."""
-    _, navigation, container = app_engine
-    container.setProperty("categoriesBarOpen", True)
-    navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
-    navigation.goBack()
-    assert container.property("categoriesBarOpen") is True
-
-
-def test_collection_categories_bar_independent_from_library(app_engine):
-    """Opening categories bar in collection does not carry over to library."""
-    _, navigation, container = app_engine
-    navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
-    container.setProperty("categoriesBarOpen", True)
-    navigation.goBack()
-    assert container.property("categoriesBarOpen") is False
 
 
 def test_collection_metadata_panel_restored_after_image_view(app_engine):

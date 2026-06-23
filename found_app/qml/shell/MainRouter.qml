@@ -39,14 +39,13 @@ Item {
         // ── Properties ───────────────────────────────────────────────────────
 
         property bool sidebarOpen: false
-        property bool categoriesBarOpen: false
         property bool metadataSidebarOpen: false
         // Tracks last active view so the navigation handler can save departing state.
         // Initialised to "library" because that is always the starting view.
         property string _lastView: "library"
         property var _viewPanelState: ({
-            library:    { sidebarOpen: false, categoriesBarOpen: false, metadataOpen: false },
-            collection: { categoriesBarOpen: false, metadataOpen: false },
+            library:    { sidebarOpen: false, metadataOpen: false },
+            collection: { metadataOpen: false },
             image:      { metadataOpen: false }
         })
 
@@ -69,7 +68,6 @@ Item {
         LibraryView {
             id: libraryView
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar.reservedHeight
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
@@ -85,7 +83,6 @@ Item {
             id: collectionView
             objectName: "collectionView"
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar.reservedHeight
             visible: NavigationManager.currentView === "collection"
             collectionName: NavigationManager.currentView === "collection"
                             ? (NavigationManager.currentEntry.collection_name ?? "") : ""
@@ -169,13 +166,6 @@ Item {
             activeFilters: {
                 if (NavigationManager.currentView === "settings") return []
                 var result = []
-                var catFilters = FilterState.categoryFilters
-                var cats = CategoriesState.categories
-                for (var i = 0; i < cats.length; i++) {
-                    var catMode = catFilters[cats[i].id]
-                    if (catMode && catMode !== "off")
-                        result.push({ name: cats[i].name, mode: catMode })
-                }
                 var tagFilters = FilterState.tagFilters
                 var tagNames = TagSearchState.tagNames
                 for (var tid in tagFilters) {
@@ -189,33 +179,10 @@ Item {
             onSettingsRequested: NavigationManager.push("settings", {})
         }
 
-        // ── Layer 5: Structural bars ─────────────────────────────────────────
-
-        CategoriesBar {
-            id: categoriesBar
-            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-            open: readyContainer.categoriesBarOpen
-            visible: NavigationManager.currentView === "library" || NavigationManager.currentView === "collection"
-            categories: CategoriesState.categories
-            z: 5
-            onToggleRequested: readyContainer.categoriesBarOpen = !readyContainer.categoriesBarOpen
-            onFilterToggled: function(categoryId) { CategoriesState.cycleFilter(categoryId) }
-            onCreateCategoryRequested: function(name) { CategoriesState.createCategory(name) }
-            onImageDropped: function(categoryId, imageId) {
-                var ids = SelectionManager.isSelected(imageId)
-                    ? SelectionManager.selectedIds
-                    : [imageId]
-                CategoriesState.addImagesToCategory(categoryId, ids)
-                if (SelectionManager.isSelected(imageId))
-                    CategoryEditorState.reload()
-            }
-        }
-
         // ── Layer 10: Side panels ────────────────────────────────────────────
 
         CollectionsSidePanel {
             anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
-            anchors.bottomMargin: categoriesBar.reservedHeight
             width: implicitWidth
             visible: NavigationManager.currentView === "library"
             open: readyContainer.sidebarOpen
@@ -245,8 +212,6 @@ Item {
         MetadataSidePanel {
             id: metadataSidebar
             anchors { top: titleBar.bottom; right: parent.right; bottom: parent.bottom }
-            anchors.bottomMargin: (NavigationManager.currentView === "library" || NavigationManager.currentView === "collection")
-                                  ? categoriesBar.reservedHeight : 0
             width: implicitWidth
             open: readyContainer.metadataSidebarOpen
             z: 10
@@ -260,9 +225,6 @@ Item {
             tagEditorTags: TagEditorState.tags
             tagEditorLoadingState: TagEditorState.loadingState
             tagEditorSelectionMode: TagEditorState.selectionMode
-            categoryEditorCategories: CategoryEditorState.categories
-            categoryEditorLoadingState: CategoryEditorState.loadingState
-            categoryEditorSelectionMode: CategoryEditorState.selectionMode
             collectionEditorCollections: CollectionEditorState.collections
             collectionEditorLoadingState: CollectionEditorState.loadingState
             collectionEditorSelectionMode: CollectionEditorState.selectionMode
@@ -271,8 +233,6 @@ Item {
             onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
             onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
             onAddTagByNameRequested: function(name) { TagEditorState.addTagByName(name) }
-            onAddCategoryRequested: function(catId, catName) { CategoryEditorState.addCategory(catId, catName) }
-            onRemoveCategoryRequested: function(catId) { CategoryEditorState.removeCategory(catId) }
             onAddToCollectionRequested: function(colId, colName) { CollectionEditorState.addToCollection(colId, colName) }
             onRemoveFromCollectionRequested: function(colId) { CollectionEditorState.removeFromCollection(colId) }
         }
@@ -281,7 +241,7 @@ Item {
         // Anchored above categoriesBar so chip DropAreas are not blocked.
 
         ImportHandler {
-            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: categoriesBar.top }
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "library"
             z: 20
         }
@@ -314,10 +274,8 @@ Item {
                 // Save the departing view's panel state before switching.
                 if (lastView === "library") {
                     readyContainer._viewPanelState.library.sidebarOpen = readyContainer.sidebarOpen
-                    readyContainer._viewPanelState.library.categoriesBarOpen = readyContainer.categoriesBarOpen
                     readyContainer._viewPanelState.library.metadataOpen = readyContainer.metadataSidebarOpen
                 } else if (lastView === "collection") {
-                    readyContainer._viewPanelState.collection.categoriesBarOpen = readyContainer.categoriesBarOpen
                     readyContainer._viewPanelState.collection.metadataOpen = readyContainer.metadataSidebarOpen
                 } else if (lastView === "image") {
                     readyContainer._viewPanelState.image.metadataOpen = readyContainer.metadataSidebarOpen
@@ -327,11 +285,9 @@ Item {
                 if (view === "library") {
                     var libState = readyContainer._viewPanelState.library
                     readyContainer.sidebarOpen = libState.sidebarOpen
-                    readyContainer.categoriesBarOpen = libState.categoriesBarOpen
                     readyContainer.metadataSidebarOpen = libState.metadataOpen
                 } else if (view === "collection") {
                     var colState = readyContainer._viewPanelState.collection
-                    readyContainer.categoriesBarOpen = colState.categoriesBarOpen
                     readyContainer.metadataSidebarOpen = colState.metadataOpen
                 } else if (view === "image") {
                     if (lastView !== "image") {
@@ -371,13 +327,12 @@ Item {
             }
         }
 
-        // Load collections and categories when app becomes ready
+        // Load collections when app becomes ready
         Connections {
             target: AppState
             function onStateNameChanged(name) {
                 if (name === "Ready") {
                     CollectionsState.load()
-                    CategoriesState.load()
                 }
             }
         }

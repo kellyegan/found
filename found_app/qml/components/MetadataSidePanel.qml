@@ -28,11 +28,6 @@ SidePanel {
     property string tagEditorLoadingState: "Idle"
     property string tagEditorSelectionMode: "none"
 
-    // Category editor properties — bound from CategoryEditorState in MainRouter
-    property var categoryEditorCategories: []
-    property string categoryEditorLoadingState: "Idle"
-    property string categoryEditorSelectionMode: "none"
-
     // Collection editor properties — bound from CollectionEditorState in MainRouter
     property var collectionEditorCollections: []
     property string collectionEditorLoadingState: "Idle"
@@ -42,8 +37,6 @@ SidePanel {
     signal addTagRequested(string tagId, string tagName)
     signal removeTagRequested(string tagId)
     signal addTagByNameRequested(string name)
-    signal addCategoryRequested(string categoryId, string categoryName)
-    signal removeCategoryRequested(string categoryId)
     signal addToCollectionRequested(string collectionId, string collectionName)
     signal removeFromCollectionRequested(string collectionId)
 
@@ -149,20 +142,6 @@ SidePanel {
                 onAddRequested: (id, name) => root.addTagRequested(id, name)
                 onRemoveRequested: (id) => root.removeTagRequested(id)
                 onAddByNameRequested: (name) => root.addTagByNameRequested(name)
-            }
-
-            ChipSearchSection {
-                visible: root.categoryEditorSelectionMode !== "none"
-                width: parent.width
-                sectionLabel: "Categories"
-                selectionMode: root.categoryEditorSelectionMode
-                items: root.categoryEditorCategories
-                searchState: CategoryEditorSearchState
-                allowCreateNew: false
-                placeholder: "Add category…"
-                multiSelectLabel: "Adding categories to all selected images"
-                onAddRequested: (id, name) => root.addCategoryRequested(id, name)
-                onRemoveRequested: (id) => root.removeCategoryRequested(id)
             }
 
             CollectionEditorSection {

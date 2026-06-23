@@ -29,17 +29,6 @@ Item {
         open: root._filterOpen
         showMissingOnly: FilterState.showMissingOnly
         importJobActive: FilterState.importJobId !== ""
-        activeCategories: {
-            var result = []
-            var filters = FilterState.categoryFilters
-            var cats = CategoriesState.categories
-            for (var i = 0; i < cats.length; i++) {
-                var mode = filters[cats[i].id]
-                if (mode && mode !== "off")
-                    result.push({ id: cats[i].id, name: cats[i].name, mode: mode })
-            }
-            return result
-        }
         activeTags: {
             var result = []
             var tagFilters = FilterState.tagFilters
@@ -55,7 +44,6 @@ Item {
             FilterState.clearAllFilters()
             root._filterOpen = false
         }
-        onRemoveCategoryFilter: function(catId) { FilterState.setCategoryFilter(catId, "off") }
         onRemoveTagFilter: function(tagId) { FilterState.setTagFilter(tagId, "off") }
         onToggleMissingOnlyRequested: FilterState.setShowMissingOnly(!FilterState.showMissingOnly)
     }

@@ -5,20 +5,17 @@ Item {
     id: root
 
     property bool open: false
-    property var activeCategories: []   // [{id, name, mode}]
-    property var activeTags: []          // [{id, name, mode}]
+    property var activeTags: []   // [{id, name, mode}]
     property bool showMissingOnly: false
     property bool importJobActive: false
 
     signal clearAllRequested()
-    signal removeCategoryFilter(string categoryId)
     signal removeTagFilter(string tagId)
     signal toggleMissingOnlyRequested()
 
     visible: open
 
     readonly property bool _anyFilterActive: activeTags.length > 0
-                                             || activeCategories.length > 0
                                              || showMissingOnly
                                              || importJobActive
 
@@ -111,30 +108,6 @@ Item {
             }
             Rectangle { visible: root.activeTags.length > 0; width: parent.width; height: 1; color: Theme.border }
             Item    { visible: root.activeTags.length > 0; width: 1; height: 6 }
-
-            // ── Categories ───────────────────────────────────────────────────
-            Column {
-                visible: root.activeCategories.length > 0
-                width: parent.width
-                spacing: 6
-
-                GroupHeader { text: "Categories" }
-
-                Repeater {
-                    model: root.activeCategories
-                    delegate: FilterChip {
-                        required property var modelData
-                        width: parent ? parent.width : 0
-                        label: modelData.name
-                        filterMode: modelData.mode
-                        onRemoveRequested: root.removeCategoryFilter(modelData.id)
-                    }
-                }
-
-                Item { width: 1; height: Theme.spacingXs }
-            }
-            Rectangle { visible: root.activeCategories.length > 0; width: parent.width; height: 1; color: Theme.border }
-            Item    { visible: root.activeCategories.length > 0; width: 1; height: 6 }
 
             // ── Missing Images ───────────────────────────────────────────────
             Column {
