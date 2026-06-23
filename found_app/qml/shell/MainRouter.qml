@@ -83,6 +83,7 @@ Item {
 
         CollectionView {
             id: collectionView
+            objectName: "collectionView"
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             anchors.bottomMargin: categoriesBar.reservedHeight
             visible: NavigationManager.currentView === "collection"
@@ -90,7 +91,7 @@ Item {
                             ? (NavigationManager.currentEntry.collection_name ?? "") : ""
             gridModel: CollectionsState.collectionGridModel
             loadingState: CollectionsState.loadingState
-            leftPanelOpen: readyContainer.sidebarOpen
+            leftPanelOpen: false
             rightPanelOpen: readyContainer.metadataSidebarOpen
             onRemoveImagesRequested: function(imageIds, alsoFromLibrary) {
                 CollectionsState.removeImagesFromCollection(

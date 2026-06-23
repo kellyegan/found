@@ -10,7 +10,7 @@ Default state on app open: all panels collapsed.
 
 import pytest
 from pathlib import Path
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, QEventLoop, QTimer
 from PySide6.QtQml import QQmlApplicationEngine
 
 import found_app
@@ -89,6 +89,34 @@ def test_all_panels_collapsed_on_startup(app_engine):
     assert container.property("metadataSidebarOpen") is False
     assert container.property("sidebarOpen") is False
     assert container.property("categoriesBarOpen") is False
+
+
+# ---------------------------------------------------------------------------
+# Panel margin scoping — each view binds only its own panels
+# ---------------------------------------------------------------------------
+
+
+def _spin(ms: int = 50) -> None:
+    loop = QEventLoop()
+    QTimer.singleShot(ms, loop.quit)
+    loop.exec()
+
+
+def test_collection_view_left_panel_open_false_when_library_sidebar_open(app_engine):
+    """CollectionView must not receive a left-panel margin from the library sidebar.
+
+    CollectionsSidePanel is only visible in library view. When navigating to
+    collection with the sidebar open, CollectionView.leftPanelOpen must be False
+    so its ThumbnailGrid does not apply a spurious left margin.
+    """
+    engine, navigation, container = app_engine
+    container.setProperty("sidebarOpen", True)
+    navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
+    _spin()
+    root = engine.rootObjects()[0]
+    collection_view = root.findChild(QObject, "collectionView")
+    assert collection_view is not None, "collectionView objectName not found"
+    assert collection_view.property("leftPanelOpen") is False
 
 
 # ---------------------------------------------------------------------------
