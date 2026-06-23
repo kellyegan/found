@@ -6,8 +6,6 @@ from found_app.core.app_settings import AppSettings
 from found_app.core.app_state import AppStateManager
 from found_app.core.connection_monitor import BackendConnectionManager
 from found_app.core.process_manager import BackendProcessManager
-from found_app.viewmodels.categories_view_model import CategoriesViewModel
-from found_app.viewmodels.category_editor_view_model import CategoryEditorViewModel
 from found_app.viewmodels.collection_editor_view_model import CollectionEditorViewModel
 from found_app.viewmodels.collections_view_model import CollectionsViewModel
 from found_app.viewmodels.import_view_model import ImportViewModel
@@ -55,12 +53,6 @@ class AppContainer:
             image_fetcher=self._api_client.fetch_image,
             preview_relocator=self._api_client.preview_relocation,
         )
-        self._categories_state = CategoriesViewModel(
-            categories_fetcher=self._api_client.list_categories,
-            category_creator=self._api_client.create_category,
-            images_adder=self._api_client.add_images_to_category,
-            filter_state=self._filter_state,
-        )
         self.thumbnail_provider = ThumbnailProvider(base_url=base_url)
         self._selection_manager = SelectionManager()
         self._navigation_manager = NavigationManager()
@@ -96,14 +88,6 @@ class AppContainer:
             tag_creator=self._api_client.create_tag,
             selection_manager=self._selection_manager,
         )
-        self._category_editor_search_state = TagSearchViewModel(
-            tags_fetcher=self._api_client.search_categories,
-        )
-        self._category_editor_state = CategoryEditorViewModel(
-            image_categories_fetcher=self._api_client.fetch_image_categories,
-            category_modifier=self._api_client.bulk_modify_categories,
-            selection_manager=self._selection_manager,
-        )
         self._collection_editor_state = CollectionEditorViewModel(
             image_collections_fetcher=self._api_client.fetch_image_collections,
             collection_adder=self._api_client.add_images_to_collection,
@@ -132,12 +116,7 @@ class AppContainer:
             if self._filter_state.tagFilters:
                 self._library_state.reload()
 
-        def _on_category_modified() -> None:
-            if self._filter_state.categoryFilters:
-                self._library_state.reload()
-
         self._tag_editor_state.modified.connect(_on_tag_modified)
-        self._category_editor_state.modified.connect(_on_category_modified)
         self._collection_editor_state.modified.connect(
             self._collections_state.reloadCollectionImages
         )
@@ -154,7 +133,6 @@ class AppContainer:
         ctx.setContextProperty("LibraryState", self._library_state)
         ctx.setContextProperty("SelectionManager", self._selection_manager)
         ctx.setContextProperty("NavigationManager", self._navigation_manager)
-        ctx.setContextProperty("CategoriesState", self._categories_state)
         ctx.setContextProperty("CollectionsState", self._collections_state)
         ctx.setContextProperty("ImportState", self._import_state)
         ctx.setContextProperty("FilterState", self._filter_state)
@@ -163,8 +141,6 @@ class AppContainer:
         ctx.setContextProperty("TagSearchState", self._tag_search_state)
         ctx.setContextProperty("TagEditorSearchState", self._tag_editor_search_state)
         ctx.setContextProperty("TagEditorState", self._tag_editor_state)
-        ctx.setContextProperty("CategoryEditorSearchState", self._category_editor_search_state)
-        ctx.setContextProperty("CategoryEditorState", self._category_editor_state)
         ctx.setContextProperty("CollectionEditorState", self._collection_editor_state)
         ctx.setContextProperty("baseUrl", self._base_url)
 
