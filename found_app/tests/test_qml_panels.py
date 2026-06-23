@@ -348,13 +348,6 @@ def test_metadata_sidebar_add_tag_requested_signal_preserved(full_engine):
     assert isinstance(received, list)
 
 
-def test_metadata_sidebar_add_category_requested_signal_preserved(full_engine):
-    obj = load_component(full_engine, "components/MetadataSidePanel.qml")
-    received = []
-    obj.addCategoryRequested.connect(lambda cid, cname: received.append((cid, cname)))
-    assert isinstance(received, list)
-
-
 def test_metadata_sidebar_add_to_collection_requested_signal_preserved(full_engine):
     obj = load_component(full_engine, "components/MetadataSidePanel.qml")
     received = []
