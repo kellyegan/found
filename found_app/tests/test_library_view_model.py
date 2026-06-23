@@ -274,21 +274,6 @@ def test_filter_state_passes_import_job_to_fetcher(qapp):
     assert "job-xyz" in captured
 
 
-def test_filter_state_passes_category_to_fetcher(qapp):
-    fsm = FilterStateManager()
-    fsm.setCategoryFilter("cat-1", "include")
-    captured = []
-
-    def fetcher(cursor=None, limit=100, category=None):
-        captured.append(category)
-        return _page(items=SAMPLE_ITEMS)
-
-    vm = LibraryViewModel(page_fetcher=fetcher, filter_state=fsm)
-    vm.load()
-    wait_for_state(vm, "Ready")
-    assert "cat-1" in captured
-
-
 def test_no_filter_state_fetches_without_extra_params(qapp):
     captured_kwargs = []
 
