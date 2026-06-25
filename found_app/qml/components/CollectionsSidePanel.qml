@@ -2,10 +2,10 @@ import QtQuick
 import Found.Theme 1.0
 import "../primitives"
 
-SidePanel {
+SidePanelBody {
     id: root
 
-    edge: "left"
+    panelId: "collections"
     title: ""
     panelIcon: "☰"
     dragOpenKeys: ["found/image"]

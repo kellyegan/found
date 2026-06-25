@@ -4,12 +4,35 @@ import Found.Theme 1.0
 Item {
     id: root
 
-    property string edge: "right"      // "left" | "right"
+    property string panelId: ""
+
+    // Computed from PanelLayout when panelId is set; falls back to "right" when
+    // PanelLayout is unavailable (e.g. offscreen test engines without PanelLayout).
+    property string edge: (PanelLayout && PanelLayout.edges && panelId)
+                          ? (PanelLayout.edges[panelId] ?? "right")
+                          : "right"
+
+    // Open state driven by MainRouter until Commit 5; kept writable for
+    // backward compat while `isOpen` (the PanelLayout-reactive version) is wired in.
     property bool open: false
+
+    // Reactive open flag derived from PanelLayout. Drives the slide animation
+    // once MainRouter is updated in Commit 5.
+    readonly property bool isOpen: (PanelLayout && PanelLayout.openPanels && panelId)
+                                   ? PanelLayout.openPanels[edge] === panelId
+                                   : false
+
     property string title: ""
-    property string panelIcon: ""      // passed through to EdgeTab
-    property int tabIndex: 0           // vertical slot index for stacking tabs on the same edge
-    property var dragOpenKeys: []      // drag mime keys that open this panel on hover when closed
+    property string panelIcon: ""
+    property int tabIndex: {
+        if (!PanelLayout || !PanelLayout.order || !panelId) return 0
+        var peers = PanelLayout.order.filter(function(p) {
+            return PanelLayout.edges[p] === edge
+        })
+        var idx = peers.indexOf(panelId)
+        return idx >= 0 ? idx : 0
+    }
+    property var dragOpenKeys: []
 
     signal toggleRequested()
 
@@ -22,7 +45,6 @@ Item {
             root.forceActiveFocus()
     }
 
-    // Edge tab — pinned to the window edge (left panel → left edge; right panel → right edge)
     EdgeTab {
         id: edgeTab
         anchors.left:  root.edge === "left"  ? parent.left  : undefined
@@ -35,8 +57,6 @@ Item {
         onClicked: root.toggleRequested()
     }
 
-    // Spring-open on drag: hovering over the tab while dragging opens the panel
-    // so the user can drop onto a specific item without releasing first.
     DropArea {
         x: root.edge === "left" ? 0 : (parent.width - edgeTab.width)
         y: edgeTab.y
@@ -48,7 +68,6 @@ Item {
         onEntered: root.toggleRequested()
     }
 
-    // Slide-in panel
     Rectangle {
         id: panel
         width: root.implicitWidth
@@ -59,7 +78,6 @@ Item {
 
         Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
-        // Blocks clicks and scroll events from reaching content behind the panel
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.AllButtons
@@ -70,23 +88,15 @@ Item {
             }
         }
 
-        // MouseArea alone does not prevent DragHandler (a PointerHandler) on
-        // items behind the panel from activating in Qt 6. A TapHandler is
-        // insufficient because it only contests for exclusive grab on tap
-        // completion, not during an active drag. This DragHandler (target: null)
-        // is the same type as the tile DragHandlers, so it wins the exclusive
-        // grab first (higher z, processed first) when the cursor is over the
-        // panel. CanTakeOverFromItems is intentionally omitted so it cannot
-        // steal the grab from a ListView/Flickable inside the panel.
-        // No ApprovesTakeOverBy* flags means the tile DragHandlers cannot
-        // reclaim the grab once the panel holds it.
+        // This DragHandler (target: null) wins the exclusive grab over tile
+        // DragHandlers when the cursor is over the open panel, preventing tiles
+        // behind the panel from being accidentally dragged.
         DragHandler {
             target: null
             grabPermissions: PointerHandler.CanTakeOverFromHandlersOfSameType |
                              PointerHandler.CanTakeOverFromHandlersOfDifferentType
         }
 
-        // Optional header
         Item {
             id: header
             anchors { top: parent.top; left: parent.left; right: parent.right }
@@ -110,7 +120,6 @@ Item {
             color: Theme.border
         }
 
-        // Content slot — children of the extending component land here
         Item {
             id: contentArea
             anchors {

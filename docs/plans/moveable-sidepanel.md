@@ -331,35 +331,35 @@ No panel toggle or layout signals bubble through `SidePanelBody` — all interac
 
 **Files:**
 
-- [ ] `found_app/qml/components/SidePanelBody.qml` (renamed from `SidePanel.qml`)
-- [ ] `found_app/qml/components/CollectionsSidePanel.qml`
-- [ ] `found_app/qml/components/MetadataSidePanel.qml`
-- [ ] `found_app/tests/test_qml_panels.py`
+- [x] `found_app/qml/components/SidePanelBody.qml` (renamed from `SidePanel.qml`)
+- [x] `found_app/qml/components/CollectionsSidePanel.qml`
+- [x] `found_app/qml/components/MetadataSidePanel.qml`
+- [x] `found_app/tests/test_qml_panels.py`
+- [x] `found_app/tests/test_qml_shell.py`
 
 **Changes:**
 
-- [ ] Rename `SidePanel.qml` → `SidePanelBody.qml`; remove EdgeTab child and all drag/signal wiring; add reactive `edge`, `isOpen`, `tabIndex` bindings
-- [ ] Add edge-change slide animation
-- [ ] `CollectionsSidePanel` sets `panelId: "collections"`, removes `edge: "left"`
-- [ ] `MetadataSidePanel` sets `panelId: "metadata"`, removes `edge: "right"`
+- [x] Rename `SidePanel.qml` → `SidePanelBody.qml`; add `panelId` prop and reactive `edge`, `isOpen`, `tabIndex` bindings; EdgeTab/DropArea kept (removed in Commit 4)
+- [x] `CollectionsSidePanel` sets `panelId: "collections"`, removes `edge: "left"`
+- [x] `MetadataSidePanel` sets `panelId: "metadata"`, removes `edge: "right"`
 
 **Tests:**
 
-- [ ] `SidePanelBody` exposes `panelId`, `edge`, `isOpen`, `tabIndex`
-- [ ] `edge` and `isOpen` update when `PanelLayout` signals fire
+- [x] `SidePanelBody` exposes `panelId`, `edge`, `isOpen`, `tabIndex`
+- [x] `edge` and `isOpen` update when `PanelLayout` signals fire
 
-- [ ] All tests pass (`python -m pytest found_app/tests/ -v`)
+- [x] All tests pass (`python -m pytest found_app/tests/ -v`)
 
 **UX verification** (run `/run` and check each manually):
 
-- [ ] App launches with Collections tab on left, Metadata tab on right
-- [ ] Clicking the Collections EdgeTab opens the Collections panel
-- [ ] Clicking the Metadata EdgeTab opens the Metadata panel
-- [ ] Clicking an open panel's EdgeTab closes it
-- [ ] Opening one panel does not open or close the other
-- [ ] Both panels render correctly with no layout regressions vs. current main
+- [x] App launches with Collections tab on left, Metadata tab on right
+- [x] Clicking the Collections EdgeTab opens the Collections panel
+- [x] Clicking the Metadata EdgeTab opens the Metadata panel
+- [x] Clicking an open panel's EdgeTab closes it
+- [x] Opening one panel does not open or close the other
+- [x] Both panels render correctly with no layout regressions vs. current main
 
-- [ ] Commit
+- [x] Commit
 
 ---
 

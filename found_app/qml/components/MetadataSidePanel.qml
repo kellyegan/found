@@ -1,10 +1,10 @@
 import QtQuick
 import Found.Theme 1.0
 
-SidePanel {
+SidePanelBody {
     id: root
 
-    edge: "right"
+    panelId: "metadata"
     title: {
         if (metaLoadingState === "Ready") return "Info"
         if (metaLoadingState === "Loading") return "Loading…"
