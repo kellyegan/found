@@ -286,25 +286,25 @@ No panel toggle or layout signals bubble through `SidePanelBody` — all interac
 
 **Files:**
 
-- [ ] `found_app/services/panel_layout.py` (new)
-- [ ] `found_app/tests/test_panel_layout.py` (new)
+- [x] `found_app/services/panel_layout.py` (new)
+- [x] `found_app/tests/test_panel_layout.py` (new)
 
 **Tests:**
 
-- [ ] Default edge assignments and order when `settings=None`
-- [ ] `edges`, `order`, `openPanels` properties return correct values
-- [ ] `tabIndex` is derivable from `order` filtered by edge
-- [ ] `setLayout` moves panel to new edge at correct side-index
-- [ ] `setLayout` with sideIndex past end of peers appends to that side
-- [ ] `setLayout` on an open panel moving sides: panel stays open on new side, displaces any panel that was open there; emits both `layoutChanged` and `openStateChanged`
-- [ ] `setLayout` on a closed panel moving sides: new side's open state unchanged; emits only `layoutChanged`
-- [ ] `setLayout` reorder within same side: open state unchanged; emits only `layoutChanged`
-- [ ] `togglePanel` opens panel; opening second on same side closes first; toggling open panel closes it; emits `openStateChanged`
-- [ ] `saveViewState` / `restoreViewState` round-trip with available-panel filtering
-- [ ] Edge assignments and order persist through a reconstruct with the same `AppSettings` (uses `tmp_path` + `IniFormat`)
+- [x] Default edge assignments and order when `settings=None`
+- [x] `edges`, `order`, `openPanels` properties return correct values
+- [x] `tabIndex` is derivable from `order` filtered by edge
+- [x] `setLayout` moves panel to new edge at correct side-index
+- [x] `setLayout` with sideIndex past end of peers appends to that side
+- [x] `setLayout` on an open panel moving sides: panel stays open on new side, displaces any panel that was open there; emits both `layoutChanged` and `openStateChanged`
+- [x] `setLayout` on a closed panel moving sides: new side's open state unchanged; emits only `layoutChanged`
+- [x] `setLayout` reorder within same side: open state unchanged; emits only `layoutChanged`
+- [x] `togglePanel` opens panel; opening second on same side closes first; toggling open panel closes it; emits `openStateChanged`
+- [x] `saveViewState` / `restoreViewState` round-trip with available-panel filtering
+- [x] Edge assignments and order persist through a reconstruct with the same `AppSettings` (uses `tmp_path` + `IniFormat`)
 
-- [ ] All tests pass (`python -m pytest found_app/tests/test_panel_layout.py -v`)
-- [ ] Commit
+- [x] All tests pass (`python -m pytest found_app/tests/test_panel_layout.py -v`)
+- [x] Commit
 
 ---
 
