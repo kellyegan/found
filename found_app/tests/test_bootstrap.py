@@ -81,6 +81,7 @@ def test_wire_engine_registers_all_context_properties(container, qapp):
         "TagEditorSearchState",
         "TagEditorState",
         "CollectionEditorState",
+        "PanelLayout",
         "baseUrl",
         "foundVersion",
         "foundLicense",
@@ -137,3 +138,30 @@ def test_library_state_has_batch_verifier_wired(container):
 
 def test_library_state_has_missing_id_fetcher_wired(container):
     assert container._library_state._missing_id_fetcher is not None
+
+
+# ---------------------------------------------------------------------------
+# PanelLayout
+# ---------------------------------------------------------------------------
+
+
+def test_panel_layout_is_registered_in_engine(container, qapp):
+    from found_app.services.panel_layout import PanelLayoutManager
+    engine = QQmlEngine()
+    container.wire_engine(engine)
+    prop = engine.rootContext().contextProperty("PanelLayout")
+    assert isinstance(prop, PanelLayoutManager)
+
+
+def test_panel_layout_uses_provided_app_settings(qapp, tmp_path):
+    from found_app.core.app_container import AppContainer
+    from found_app.services.panel_layout import PanelLayoutManager
+
+    settings_file = tmp_path / "settings.ini"
+    settings = AppSettings(QSettings(str(settings_file), QSettings.Format.IniFormat))
+    container = AppContainer(settings=settings)
+
+    container._panel_layout.setLayout("collections", "right", 0)
+
+    restored_settings = AppSettings(QSettings(str(settings_file), QSettings.Format.IniFormat))
+    assert restored_settings.get("panels/collections/edge") == "right"
