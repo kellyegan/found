@@ -312,17 +312,18 @@ No panel toggle or layout signals bubble through `SidePanelBody` — all interac
 
 **Files:**
 
-- [ ] `found_app/core/app_container.py`
-- [ ] `found_app/tests/test_bootstrap.py`
+- [x] `found_app/core/app_container.py`
+- [x] `found_app/tests/test_bootstrap.py`
 
 **Changes:** `AppContainer.__init__` instantiates `PanelLayoutManager(settings=self._settings)`. `wire_engine` exposes it as `PanelLayout` context property.
 
 **Tests:**
 
-- [ ] `PanelLayout` is accessible as a context property in the QML engine
+- [x] `PanelLayout` is accessible as a context property in the QML engine
+- [x] `PanelLayout` uses the shared `AppSettings` instance (persists across restarts)
 
-- [ ] All tests pass (`python -m pytest found_app/tests/ -v`)
-- [ ] Commit
+- [x] All tests pass (`python -m pytest found_app/tests/ -v`)
+- [x] Commit
 
 ---
 
