@@ -430,25 +430,26 @@ _Drag cancel:_
 
 **Files:**
 
-- [ ] `found_app/qml/shell/MainRouter.qml`
-- [ ] `found_app/tests/test_view_state_persistence.py`
+- [x] `found_app/qml/shell/MainRouter.qml`
+- [x] `found_app/qml/components/SidePanelBody.qml` (switch states to `isOpen`)
+- [x] `found_app/tests/test_view_state_persistence.py`
 
 **Changes:**
 
-- [ ] Remove `sidebarOpen`, `metadataSidebarOpen`
-- [ ] Add `PanelTabStrip` with view-driven `availablePanels`
-- [ ] Add `leftPanelOpen` / `rightPanelOpen` from `PanelLayout.openPanels`
-- [ ] Navigation handler calls `PanelLayout.saveViewState` / `restoreViewState`
+- [x] Remove `sidebarOpen`, `metadataSidebarOpen`; add `leftPanelOpen` / `rightPanelOpen` from `PanelLayout.openPanels`
+- [x] `PanelTabStrip` with view-driven `availablePanels` (library: collections + metadata; others: metadata only)
+- [x] Navigation handler calls `PanelLayout.saveViewState` / `restoreViewState`
+- [x] `SidePanelBody` states now use `isOpen` (reactive to PanelLayout) instead of `open`
+- [x] Remove legacy Connections bridge and manual `_viewPanelState` object
 
 **Tests:**
 
-- [ ] Panel open state is saved and restored correctly on view navigation
-- [ ] `restoreViewState` ignores panels not in `availablePanels`
-- [ ] Mutual exclusion: opening one panel closes any other on the same side
-- [ ] Cross-view isolation: panel state in library view is independent of image view
-- [ ] Reorder persists: panel order saved to `AppSettings` survives app restart
+- [x] Panel open state is saved and restored correctly on view navigation
+- [x] Cross-view isolation: panel state in library view is independent of image / collection view
+- [x] `restoreViewState` isolates panels per view (panels not available in entering view are not restored)
+- [x] Image view metadata panel starts closed on first entry
 
-- [ ] All tests pass (`python -m pytest found_app/tests/ -v`)
+- [x] All tests pass (`python -m pytest found_app/tests/ -v`)
 
 **UX verification** (run `/run` and check each manually):
 

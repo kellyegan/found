@@ -45,15 +45,15 @@ Item {
             root.forceActiveFocus()
     }
 
-    // Open/close animates; edge changes snap instantly (no cross-edge transition).
+    // Open/close animates via isOpen (reactive to PanelLayout); edge changes snap instantly.
     states: [
-        State { name: "openLeft";   when: root.open && root.edge === "left"
+        State { name: "openLeft";   when: root.isOpen && root.edge === "left"
                 PropertyChanges { target: panel; x: 0 } },
-        State { name: "closedLeft"; when: !root.open && root.edge === "left"
+        State { name: "closedLeft"; when: !root.isOpen && root.edge === "left"
                 PropertyChanges { target: panel; x: -panel.width } },
-        State { name: "openRight";  when: root.open && root.edge === "right"
+        State { name: "openRight";  when: root.isOpen && root.edge === "right"
                 PropertyChanges { target: panel; x: 0 } },
-        State { name: "closedRight"; when: !root.open && root.edge === "right"
+        State { name: "closedRight"; when: !root.isOpen && root.edge === "right"
                 PropertyChanges { target: panel; x: panel.width } }
     ]
     transitions: [
