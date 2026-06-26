@@ -21,6 +21,7 @@ from found_app.viewmodels.tag_search_view_model import TagSearchViewModel
 from found_app.viewmodels.tag_editor_view_model import TagEditorViewModel
 from found_app.services.filter_state import FilterStateManager
 from found_app.services.navigation import NavigationManager
+from found_app.services.panel_layout import PanelLayoutManager
 from found_app.services.selection import SelectionManager
 
 QML_DIR = Path(found_app.__file__).parent / "qml"
@@ -28,11 +29,14 @@ QML_DIR = Path(found_app.__file__).parent / "qml"
 
 @pytest.fixture
 def engine(qapp):
-    """Minimal engine for EdgeTab / SidePanel — only Theme required."""
+    """Minimal engine for EdgeTab / SidePanelBody — Theme and PanelLayout required."""
     theme = ThemeManager()
+    panel_layout = PanelLayoutManager()
     e = QQmlEngine()
     e.rootContext().setContextProperty("Theme", theme)
+    e.rootContext().setContextProperty("PanelLayout", panel_layout)
     theme.setParent(e)
+    panel_layout.setParent(e)
     yield e
     e.clearComponentCache()
 
@@ -41,6 +45,7 @@ def engine(qapp):
 def full_engine(qapp):
     """Richer engine for sidebar components that depend on view-model context properties."""
     theme = ThemeManager()
+    panel_layout = PanelLayoutManager()
     selection = SelectionManager()
     navigation = NavigationManager()
     filter_state = FilterStateManager()
@@ -52,13 +57,15 @@ def full_engine(qapp):
     )
     e = QQmlEngine()
     e.rootContext().setContextProperty("Theme", theme)
+    e.rootContext().setContextProperty("PanelLayout", panel_layout)
     e.rootContext().setContextProperty("SelectionManager", selection)
     e.rootContext().setContextProperty("NavigationManager", navigation)
     e.rootContext().setContextProperty("FilterState", filter_state)
     e.rootContext().setContextProperty("TagSearchState", tag_search)
     e.rootContext().setContextProperty("TagEditorSearchState", tag_editor_search)
     e.rootContext().setContextProperty("TagEditorState", tag_editor)
-    for obj in [theme, selection, navigation, filter_state, tag_search, tag_editor_search, tag_editor]:
+    for obj in [theme, panel_layout, selection, navigation, filter_state,
+                tag_search, tag_editor_search, tag_editor]:
         obj.setParent(e)
     yield e
     e.clearComponentCache()
@@ -149,92 +156,209 @@ def test_edge_tab_has_clicked_signal(engine):
 
 
 # ---------------------------------------------------------------------------
-# SidePanel — file existence
+# EdgeTab — Commit 4 additions
 # ---------------------------------------------------------------------------
 
 
-def test_side_panel_qml_exists():
-    assert (QML_DIR / "components/SidePanel.qml").exists()
+def test_edge_tab_panel_id_defaults_to_empty(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    assert obj.property("panelId") == ""
 
 
-# ---------------------------------------------------------------------------
-# SidePanel — loads and has correct properties
-# ---------------------------------------------------------------------------
+def test_edge_tab_panel_id_is_writable(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    obj.setProperty("panelId", "collections")
+    assert obj.property("panelId") == "collections"
 
 
-def test_side_panel_loads(engine):
-    load_component(engine, "components/SidePanel.qml")
+def test_edge_tab_drag_active_defaults_to_false(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    assert obj.property("dragActive") is False
 
 
-def test_side_panel_edge_defaults_to_right(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    assert obj.property("edge") == "right"
+def test_edge_tab_drag_active_is_writable(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    obj.setProperty("dragActive", True)
+    assert obj.property("dragActive") is True
 
 
-def test_side_panel_edge_is_writable(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    obj.setProperty("edge", "left")
-    assert obj.property("edge") == "left"
+def test_edge_tab_has_layout_requested_signal(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    received = []
+    obj.layoutRequested.connect(lambda edge, idx: received.append((edge, idx)))
+    assert isinstance(received, list)
 
 
-def test_side_panel_open_defaults_to_false(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    assert obj.property("open") is False
-
-
-def test_side_panel_open_is_writable(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    obj.setProperty("open", True)
-    assert obj.property("open") is True
-
-
-def test_side_panel_title_defaults_to_empty(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    assert obj.property("title") == ""
-
-
-def test_side_panel_title_is_writable(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    obj.setProperty("title", "Collections")
-    assert obj.property("title") == "Collections"
-
-
-def test_side_panel_panel_icon_defaults_to_empty(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    assert obj.property("panelIcon") == ""
-
-
-def test_side_panel_panel_icon_is_writable(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    obj.setProperty("panelIcon", "☰")
-    assert obj.property("panelIcon") == "☰"
-
-
-def test_side_panel_tab_index_defaults_to_zero(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    assert obj.property("tabIndex") == 0
-
-
-def test_side_panel_tab_index_is_writable(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
-    obj.setProperty("tabIndex", 1)
-    assert obj.property("tabIndex") == 1
-
-
-def test_side_panel_has_toggle_requested_signal(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
+def test_edge_tab_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
     received = []
     obj.toggleRequested.connect(lambda: received.append(1))
     assert isinstance(received, list)
 
 
 # ---------------------------------------------------------------------------
-# SidePanel — dragOpenKeys
+# PanelTabStrip — file existence
 # ---------------------------------------------------------------------------
 
 
-def test_side_panel_drag_open_keys_defaults_to_empty(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
+def test_panel_tab_strip_qml_exists():
+    assert (QML_DIR / "components/PanelTabStrip.qml").exists()
+
+
+# ---------------------------------------------------------------------------
+# PanelTabStrip — loads and has correct properties
+# ---------------------------------------------------------------------------
+
+
+def test_panel_tab_strip_loads(engine):
+    load_component(engine, "components/PanelTabStrip.qml")
+
+
+def test_panel_tab_strip_available_panels_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "components/PanelTabStrip.qml")
+    val = obj.property("availablePanels")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_panel_tab_strip_tab_count_defaults_to_zero(engine, qapp):
+    obj = load_component(engine, "components/PanelTabStrip.qml")
+    qapp.processEvents()
+    assert obj.property("tabCount") == 0
+
+
+def test_panel_tab_strip_tab_count_matches_available_panels(engine, qapp):
+    obj = load_component(engine, "components/PanelTabStrip.qml")
+    obj.setProperty("availablePanels", ["collections", "metadata"])
+    qapp.processEvents()
+    assert obj.property("tabCount") == 2
+
+
+# ---------------------------------------------------------------------------
+# SidePanelBody — file existence
+# ---------------------------------------------------------------------------
+
+
+def test_side_panel_body_qml_exists():
+    assert (QML_DIR / "components/SidePanelBody.qml").exists()
+
+
+# ---------------------------------------------------------------------------
+# SidePanelBody — loads and has correct properties
+# ---------------------------------------------------------------------------
+
+
+def test_side_panel_body_loads(engine):
+    load_component(engine, "components/SidePanelBody.qml")
+
+
+def test_side_panel_body_panel_id_defaults_to_empty(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    assert obj.property("panelId") == ""
+
+
+def test_side_panel_body_panel_id_is_writable(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    obj.setProperty("panelId", "collections")
+    assert obj.property("panelId") == "collections"
+
+
+def test_side_panel_body_edge_defaults_to_right_when_no_panel_id(engine):
+    # panelId="" → PanelLayout.edges[""] is undefined → falls back to "right"
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    assert obj.property("edge") == "right"
+
+
+def test_side_panel_body_edge_reflects_panel_layout_default(engine, qapp):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    obj.setProperty("panelId", "collections")
+    qapp.processEvents()
+    assert obj.property("edge") == "left"
+
+
+def test_side_panel_body_edge_updates_when_layout_changes(engine, qapp):
+    panel_layout = engine.rootContext().contextProperty("PanelLayout")
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    obj.setProperty("panelId", "collections")
+    qapp.processEvents()
+    assert obj.property("edge") == "left"
+
+    panel_layout.setLayout("collections", "right", 0)
+    qapp.processEvents()
+    assert obj.property("edge") == "right"
+
+
+def test_side_panel_body_open_defaults_to_false(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    assert obj.property("open") is False
+
+
+def test_side_panel_body_open_is_writable(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    obj.setProperty("open", True)
+    assert obj.property("open") is True
+
+
+def test_side_panel_body_is_open_defaults_to_false(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    assert obj.property("isOpen") is False
+
+
+def test_side_panel_body_is_open_reflects_panel_layout(engine, qapp):
+    panel_layout = engine.rootContext().contextProperty("PanelLayout")
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    obj.setProperty("panelId", "collections")
+    qapp.processEvents()
+    assert obj.property("isOpen") is False
+
+    panel_layout.togglePanel("collections")
+    qapp.processEvents()
+    assert obj.property("isOpen") is True
+
+
+def test_side_panel_body_title_defaults_to_empty(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    assert obj.property("title") == ""
+
+
+def test_side_panel_body_title_is_writable(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    obj.setProperty("title", "Collections")
+    assert obj.property("title") == "Collections"
+
+
+def test_side_panel_body_panel_icon_defaults_to_empty(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    assert obj.property("panelIcon") == ""
+
+
+def test_side_panel_body_panel_icon_is_writable(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    obj.setProperty("panelIcon", "☰")
+    assert obj.property("panelIcon") == "☰"
+
+
+def test_side_panel_body_tab_index_defaults_to_zero(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    assert obj.property("tabIndex") == 0
+
+
+def test_side_panel_body_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
+    received = []
+    obj.toggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# SidePanelBody — dragOpenKeys
+# ---------------------------------------------------------------------------
+
+
+def test_side_panel_body_drag_open_keys_defaults_to_empty(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
     from PySide6.QtQml import QJSValue
     val = obj.property("dragOpenKeys")
     if isinstance(val, QJSValue):
@@ -242,8 +366,8 @@ def test_side_panel_drag_open_keys_defaults_to_empty(engine):
     assert val == [] or val is None
 
 
-def test_side_panel_drag_open_keys_is_writable(engine):
-    obj = load_component(engine, "components/SidePanel.qml")
+def test_side_panel_body_drag_open_keys_is_writable(engine):
+    obj = load_component(engine, "components/SidePanelBody.qml")
     obj.setProperty("dragOpenKeys", ["found/image"])
     from PySide6.QtQml import QJSValue
     val = obj.property("dragOpenKeys")

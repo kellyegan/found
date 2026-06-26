@@ -1,11 +1,10 @@
 """
 Tests for per-view side panel state persistence.
 
-When switching between views (library, collection, image), each view's panel
-states (sidebar open, categories bar open, metadata panel open) should be
-independently maintained and restored when returning to that view.
-
-Default state on app open: all panels collapsed.
+Panel open state is saved and restored by PanelLayout.saveViewState /
+restoreViewState on every view navigation. Each view maintains its own
+open-panel snapshot, and restoreViewState only applies panels that are
+available in the entering view.
 """
 
 import pytest
@@ -18,6 +17,7 @@ from found_app.theme.theme import ThemeManager
 from found_app.core.app_state import AppStateManager
 from found_app.services.filter_state import FilterStateManager
 from found_app.services.navigation import NavigationManager
+from found_app.services.panel_layout import PanelLayoutManager
 from found_app.services.selection import SelectionManager
 from found_app.viewmodels.collections_view_model import CollectionsViewModel
 from found_app.viewmodels.import_view_model import ImportViewModel
@@ -31,12 +31,17 @@ QML_DIR = Path(found_app.__file__).parent / "qml"
 
 @pytest.fixture
 def app_engine(qapp):
-    """Full QQmlApplicationEngine with MainRouter loaded, navigation exposed."""
+    """Full QQmlApplicationEngine with PanelLayout and NavigationManager exposed."""
     navigation = NavigationManager()
+    panel_layout = PanelLayoutManager()  # settings=None → default edges
+
     e = QQmlApplicationEngine()
+    e.rootContext().setContextProperty("PanelLayout", panel_layout)
     e.rootContext().setContextProperty("Theme", ThemeManager())
     e.rootContext().setContextProperty("AppState", AppStateManager())
-    e.rootContext().setContextProperty("LibraryState", LibraryViewModel(page_fetcher=lambda cursor=None, limit=100: None))
+    e.rootContext().setContextProperty("LibraryState", LibraryViewModel(
+        page_fetcher=lambda cursor=None, limit=100: None,
+    ))
     e.rootContext().setContextProperty("SelectionManager", SelectionManager())
     e.rootContext().setContextProperty("NavigationManager", navigation)
     e.rootContext().setContextProperty("CollectionsState", CollectionsViewModel(
@@ -46,7 +51,9 @@ def app_engine(qapp):
         collection_images_fetcher=lambda cid: [],
     ))
     e.rootContext().setContextProperty("ImportState", ImportViewModel(
-        scanner=lambda paths: {"new": [], "already_imported": [], "conflicts": [], "invalid": []},
+        scanner=lambda paths: {
+            "new": [], "already_imported": [], "conflicts": [], "invalid": []
+        },
         importer=lambda paths: "job-id",
         job_fetcher=lambda jid: {
             "status": "completed", "total_files": 0, "processed_files": 0,
@@ -55,9 +62,15 @@ def app_engine(qapp):
         },
     ))
     e.rootContext().setContextProperty("FilterState", FilterStateManager())
-    e.rootContext().setContextProperty("MetadataState", MetadataViewModel(image_fetcher=lambda image_id: None))
-    e.rootContext().setContextProperty("TagSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
-    e.rootContext().setContextProperty("TagEditorSearchState", TagSearchViewModel(tags_fetcher=lambda term: []))
+    e.rootContext().setContextProperty("MetadataState", MetadataViewModel(
+        image_fetcher=lambda image_id: None,
+    ))
+    e.rootContext().setContextProperty("TagSearchState", TagSearchViewModel(
+        tags_fetcher=lambda term: [],
+    ))
+    e.rootContext().setContextProperty("TagEditorSearchState", TagSearchViewModel(
+        tags_fetcher=lambda term: [],
+    ))
     e.rootContext().setContextProperty("TagEditorState", TagEditorViewModel(
         image_tags_fetcher=lambda image_id: [],
         tag_modifier=lambda image_ids, add_ids, remove_ids: True,
@@ -70,27 +83,12 @@ def app_engine(qapp):
 
     root = e.rootObjects()[0]
     container = root.findChild(QObject, "readyContainer")
-    assert container is not None, "readyContainer not found — ensure objectName is set in MainRouter.qml"
+    assert container is not None, "readyContainer not found"
 
-    yield e, navigation, container
+    panel_layout.setParent(e)
+
+    yield e, navigation, panel_layout, container
     e.clearComponentCache()
-
-
-# ---------------------------------------------------------------------------
-# Default state
-# ---------------------------------------------------------------------------
-
-
-def test_all_panels_collapsed_on_startup(app_engine):
-    """All side panels are closed when the app starts."""
-    _, _, container = app_engine
-    assert container.property("metadataSidebarOpen") is False
-    assert container.property("sidebarOpen") is False
-
-
-# ---------------------------------------------------------------------------
-# Panel margin scoping — each view binds only its own panels
-# ---------------------------------------------------------------------------
 
 
 def _spin(ms: int = 50) -> None:
@@ -99,15 +97,26 @@ def _spin(ms: int = 50) -> None:
     loop.exec()
 
 
-def test_collection_view_left_panel_open_false_when_library_sidebar_open(app_engine):
-    """CollectionView must not receive a left-panel margin from the library sidebar.
+# ---------------------------------------------------------------------------
+# Default state
+# ---------------------------------------------------------------------------
 
-    CollectionsSidePanel is only visible in library view. When navigating to
-    collection with the sidebar open, CollectionView.leftPanelOpen must be False
-    so its ThumbnailGrid does not apply a spurious left margin.
-    """
-    engine, navigation, container = app_engine
-    container.setProperty("sidebarOpen", True)
+
+def test_all_panels_closed_on_startup(app_engine):
+    """All side panels are closed when the app starts."""
+    _, _, panel_layout, _ = app_engine
+    assert panel_layout.openPanels == {"left": "", "right": ""}
+
+
+# ---------------------------------------------------------------------------
+# Panel margin scoping — CollectionView is unaffected by left panel state
+# ---------------------------------------------------------------------------
+
+
+def test_collection_view_left_panel_open_false_when_collections_panel_open(app_engine):
+    """CollectionView.leftPanelOpen is always False — collections panel is library-only."""
+    engine, navigation, panel_layout, _ = app_engine
+    panel_layout.togglePanel("collections")
     navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
     _spin()
     root = engine.rootObjects()[0]
@@ -122,39 +131,39 @@ def test_collection_view_left_panel_open_false_when_library_sidebar_open(app_eng
 
 
 def test_library_sidebar_restored_after_collection(app_engine):
-    """Collections sidebar open in library is restored when returning from collection."""
-    _, navigation, container = app_engine
-    container.setProperty("sidebarOpen", True)
+    """Collections panel open in library is restored when returning from collection."""
+    _, navigation, panel_layout, _ = app_engine
+    panel_layout.togglePanel("collections")
     navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
     navigation.goBack()
-    assert container.property("sidebarOpen") is True
+    assert panel_layout.openPanels["left"] == "collections"
 
 
 def test_library_metadata_panel_restored_after_collection(app_engine):
     """Metadata panel open in library is restored when returning from collection."""
-    _, navigation, container = app_engine
-    container.setProperty("metadataSidebarOpen", True)
+    _, navigation, panel_layout, _ = app_engine
+    panel_layout.togglePanel("metadata")
     navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
     navigation.goBack()
-    assert container.property("metadataSidebarOpen") is True
+    assert panel_layout.openPanels["right"] == "metadata"
 
 
 def test_collection_metadata_panel_independent_from_library(app_engine):
-    """Opening metadata panel in library does not open it in collection view."""
-    _, navigation, container = app_engine
-    container.setProperty("metadataSidebarOpen", True)
+    """Opening metadata panel in library does not carry over to collection view."""
+    _, navigation, panel_layout, _ = app_engine
+    panel_layout.togglePanel("metadata")
     navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
-    assert container.property("metadataSidebarOpen") is False
+    assert panel_layout.openPanels["right"] == ""
 
 
 def test_collection_metadata_panel_restored_after_image_view(app_engine):
     """Metadata panel opened in collection is restored when returning from image view."""
-    _, navigation, container = app_engine
+    _, navigation, panel_layout, _ = app_engine
     navigation.push("collection", {"collection_id": "col-1", "collection_name": "Test"})
-    container.setProperty("metadataSidebarOpen", True)
+    panel_layout.togglePanel("metadata")
     navigation.push("image", {"image_id": "img-1"})
     navigation.goBack()
-    assert container.property("metadataSidebarOpen") is True
+    assert panel_layout.openPanels["right"] == "metadata"
 
 
 # ---------------------------------------------------------------------------
@@ -164,16 +173,16 @@ def test_collection_metadata_panel_restored_after_image_view(app_engine):
 
 def test_library_metadata_panel_restored_after_image_view(app_engine):
     """Metadata panel open in library is restored when returning from image view."""
-    _, navigation, container = app_engine
-    container.setProperty("metadataSidebarOpen", True)
+    _, navigation, panel_layout, _ = app_engine
+    panel_layout.togglePanel("metadata")
     navigation.push("image", {"image_id": "img-1"})
     navigation.goBack()
-    assert container.property("metadataSidebarOpen") is True
+    assert panel_layout.openPanels["right"] == "metadata"
 
 
 def test_image_view_metadata_panel_starts_closed(app_engine):
     """Image view's metadata panel is closed on first entry, independent of library state."""
-    _, navigation, container = app_engine
-    container.setProperty("metadataSidebarOpen", True)
+    _, navigation, panel_layout, _ = app_engine
+    panel_layout.togglePanel("metadata")
     navigation.push("image", {"image_id": "img-1"})
-    assert container.property("metadataSidebarOpen") is False
+    assert panel_layout.openPanels["right"] == ""

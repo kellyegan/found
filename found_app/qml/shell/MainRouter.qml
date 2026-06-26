@@ -38,16 +38,11 @@ Item {
 
         // ── Properties ───────────────────────────────────────────────────────
 
-        property bool sidebarOpen: false
-        property bool metadataSidebarOpen: false
-        // Tracks last active view so the navigation handler can save departing state.
+        readonly property bool leftPanelOpen:  PanelLayout ? PanelLayout.openPanels["left"]  !== "" : false
+        readonly property bool rightPanelOpen: PanelLayout ? PanelLayout.openPanels["right"] !== "" : false
+        // Tracks last active view so the navigation handler can saveViewState on departure.
         // Initialised to "library" because that is always the starting view.
         property string _lastView: "library"
-        property var _viewPanelState: ({
-            library:    { sidebarOpen: false, metadataOpen: false },
-            collection: { metadataOpen: false },
-            image:      { metadataOpen: false }
-        })
 
         // Delegates for the relocation flow — owned by RelocationFlow below
         readonly property bool prefixDialogOpen: relocationFlow.prefixDialogOpen
@@ -71,8 +66,8 @@ Item {
             visible: NavigationManager.currentView === "library"
             loadingState: root.libraryLoadingState
             gridModel: LibraryState.gridModel
-            leftPanelOpen: readyContainer.sidebarOpen
-            rightPanelOpen: readyContainer.metadataSidebarOpen
+            leftPanelOpen: readyContainer.leftPanelOpen
+            rightPanelOpen: readyContainer.rightPanelOpen
             onLoadMoreRequested: LibraryState.load_more()
             onRemoveImagesRequested: function(imageIds) { LibraryState.removeImages(imageIds) }
             onLocateRequested: function(imageId) { LibraryState.requestLocate(imageId) }
@@ -89,7 +84,7 @@ Item {
             gridModel: CollectionsState.collectionGridModel
             loadingState: CollectionsState.loadingState
             leftPanelOpen: false
-            rightPanelOpen: readyContainer.metadataSidebarOpen
+            rightPanelOpen: readyContainer.rightPanelOpen
             onRemoveImagesRequested: function(imageIds, alsoFromLibrary) {
                 CollectionsState.removeImagesFromCollection(
                     NavigationManager.currentEntry.collection_id ?? "",
@@ -120,7 +115,7 @@ Item {
             hasPrev: NavigationManager.hasPrev
             leftInset: 40
             rightInset: 40
-            rightPanelWidth: readyContainer.metadataSidebarOpen ? Theme.overlayWidth : 0
+            rightPanelWidth: readyContainer.rightPanelOpen ? Theme.overlayWidth : 0
             onPrevRequested: NavigationManager.goPrev()
             onNextRequested: NavigationManager.goNext()
             onImageLoadFailed: function(imageId) { LibraryState.verifyImage(imageId) }
@@ -182,13 +177,14 @@ Item {
         // ── Layer 10: Side panels ────────────────────────────────────────────
 
         CollectionsSidePanel {
-            anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
+            anchors.top: titleBar.bottom
+            anchors.bottom: parent.bottom
             width: implicitWidth
+            x: (PanelLayout && PanelLayout.edges["collections"] === "right")
+               ? parent.width - implicitWidth : 0
             visible: NavigationManager.currentView === "library"
-            open: readyContainer.sidebarOpen
             collections: CollectionsState.collections
             z: 10
-            onToggleRequested: readyContainer.sidebarOpen = !readyContainer.sidebarOpen
             onCollectionClicked: function(collectionId, collectionName) {
                 NavigationManager.push("collection", { "collection_id": collectionId, "collection_name": collectionName })
                 CollectionsState.loadCollectionImages(collectionId)
@@ -211,9 +207,11 @@ Item {
 
         MetadataSidePanel {
             id: metadataSidebar
-            anchors { top: titleBar.bottom; right: parent.right; bottom: parent.bottom }
+            anchors.top: titleBar.bottom
+            anchors.bottom: parent.bottom
             width: implicitWidth
-            open: readyContainer.metadataSidebarOpen
+            x: (PanelLayout && PanelLayout.edges["metadata"] === "left")
+               ? 0 : parent.width - implicitWidth
             z: 10
             metaLoadingState: MetadataState.loadingState
             metaFilename: MetadataState.filename
@@ -228,7 +226,6 @@ Item {
             collectionEditorCollections: CollectionEditorState.collections
             collectionEditorLoadingState: CollectionEditorState.loadingState
             collectionEditorSelectionMode: CollectionEditorState.selectionMode
-            onToggleRequested: readyContainer.metadataSidebarOpen = !readyContainer.metadataSidebarOpen
             onRevealFileRequested: function(path) { PlatformService.revealFile(path) }
             onAddTagRequested: function(tagId, tagName) { TagEditorState.addTag(tagId, tagName) }
             onRemoveTagRequested: function(tagId) { TagEditorState.removeTag(tagId) }
@@ -244,6 +241,16 @@ Item {
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "library"
             z: 20
+        }
+
+        // ── Layer 30: Panel tab strip (above panels, never clipped by bodies) ─
+
+        PanelTabStrip {
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            availablePanels: NavigationManager.currentView === "library"
+                             ? ["collections", "metadata"]
+                             : ["metadata"]
+            z: 30
         }
 
         // ── Layer 25: Modal flows ────────────────────────────────────────────
@@ -262,8 +269,8 @@ Item {
 
         // ── Connections ──────────────────────────────────────────────────────
 
-        // Central navigation handler — persists per-view panel states and restores
-        // selection/scroll on return to library or collection.
+        // Central navigation handler — persists per-view panel states via PanelLayout
+        // and restores selection/scroll on return to library or collection.
         Connections {
             target: NavigationManager
             function onNavigationChanged() {
@@ -271,34 +278,16 @@ Item {
                 var lastView = readyContainer._lastView
                 var lastImg = NavigationManager.lastReturnedImageId
 
-                // Save the departing view's panel state before switching.
-                if (lastView === "library") {
-                    readyContainer._viewPanelState.library.sidebarOpen = readyContainer.sidebarOpen
-                    readyContainer._viewPanelState.library.metadataOpen = readyContainer.metadataSidebarOpen
-                } else if (lastView === "collection") {
-                    readyContainer._viewPanelState.collection.metadataOpen = readyContainer.metadataSidebarOpen
-                } else if (lastView === "image") {
-                    readyContainer._viewPanelState.image.metadataOpen = readyContainer.metadataSidebarOpen
-                }
+                // Save departing view's panel state; restore entering view's.
+                if (PanelLayout) PanelLayout.saveViewState(lastView)
+                var available = (view === "library")
+                    ? ["collections", "metadata"] : ["metadata"]
+                if (PanelLayout) PanelLayout.restoreViewState(view, available)
 
-                // Restore the entering view's saved panel state.
-                if (view === "library") {
-                    var libState = readyContainer._viewPanelState.library
-                    readyContainer.sidebarOpen = libState.sidebarOpen
-                    readyContainer.metadataSidebarOpen = libState.metadataOpen
-                } else if (view === "collection") {
-                    var colState = readyContainer._viewPanelState.collection
-                    readyContainer.metadataSidebarOpen = colState.metadataOpen
-                } else if (view === "image") {
-                    if (lastView !== "image") {
-                        // First entry into image view — restore its saved state (closed by default).
-                        readyContainer.metadataSidebarOpen = readyContainer._viewPanelState.image.metadataOpen
-                    } else {
-                        // Navigating to a different image within image view —
-                        // update the active image so the grid tracks it.
-                        var newId = NavigationManager.currentEntry.image_id
-                        if (newId) SelectionManager.select(newId)
-                    }
+                // Same-view image navigation: keep open state, update active selection.
+                if (view === "image" && lastView === "image") {
+                    var newId = NavigationManager.currentEntry.image_id
+                    if (newId) SelectionManager.select(newId)
                 }
 
                 // Restore selection/scroll on return to library or collection.
