@@ -45,38 +45,34 @@ Item {
             root.forceActiveFocus()
     }
 
-    EdgeTab {
-        id: edgeTab
-        anchors.left:  root.edge === "left"  ? parent.left  : undefined
-        anchors.right: root.edge === "right" ? parent.right : undefined
-        y: (parent.height - height) / 2 + root.tabIndex * (height + 8)
-        z: 1
-        edge: root.edge
-        open: root.open
-        icon: root.panelIcon
-        onClicked: root.toggleRequested()
-    }
-
-    DropArea {
-        x: root.edge === "left" ? 0 : (parent.width - edgeTab.width)
-        y: edgeTab.y
-        width: edgeTab.width
-        height: edgeTab.height
-        keys: root.dragOpenKeys
-        enabled: !root.open && root.dragOpenKeys.length > 0
-        z: 2
-        onEntered: root.toggleRequested()
-    }
+    // Open/close animates; edge changes snap instantly (no cross-edge transition).
+    states: [
+        State { name: "openLeft";   when: root.open && root.edge === "left"
+                PropertyChanges { target: panel; x: 0 } },
+        State { name: "closedLeft"; when: !root.open && root.edge === "left"
+                PropertyChanges { target: panel; x: -panel.width } },
+        State { name: "openRight";  when: root.open && root.edge === "right"
+                PropertyChanges { target: panel; x: 0 } },
+        State { name: "closedRight"; when: !root.open && root.edge === "right"
+                PropertyChanges { target: panel; x: panel.width } }
+    ]
+    transitions: [
+        Transition { from: "openLeft";    to: "closedLeft"
+                     NumberAnimation { target: panel; property: "x"; duration: 200; easing.type: Easing.InOutQuad } },
+        Transition { from: "closedLeft";  to: "openLeft"
+                     NumberAnimation { target: panel; property: "x"; duration: 200; easing.type: Easing.InOutQuad } },
+        Transition { from: "openRight";   to: "closedRight"
+                     NumberAnimation { target: panel; property: "x"; duration: 200; easing.type: Easing.InOutQuad } },
+        Transition { from: "closedRight"; to: "openRight"
+                     NumberAnimation { target: panel; property: "x"; duration: 200; easing.type: Easing.InOutQuad } }
+    ]
 
     Rectangle {
         id: panel
         width: root.implicitWidth
         height: parent.height
-        x: root.open ? 0 : (root.edge === "left" ? -width : width)
         color: Theme.background
         clip: true
-
-        Behavior on x { NumberAnimation { duration: 200; easing.type: Easing.InOutQuad } }
 
         MouseArea {
             anchors.fill: parent

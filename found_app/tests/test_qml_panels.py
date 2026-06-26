@@ -156,6 +156,87 @@ def test_edge_tab_has_clicked_signal(engine):
 
 
 # ---------------------------------------------------------------------------
+# EdgeTab — Commit 4 additions
+# ---------------------------------------------------------------------------
+
+
+def test_edge_tab_panel_id_defaults_to_empty(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    assert obj.property("panelId") == ""
+
+
+def test_edge_tab_panel_id_is_writable(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    obj.setProperty("panelId", "collections")
+    assert obj.property("panelId") == "collections"
+
+
+def test_edge_tab_drag_active_defaults_to_false(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    assert obj.property("dragActive") is False
+
+
+def test_edge_tab_drag_active_is_writable(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    obj.setProperty("dragActive", True)
+    assert obj.property("dragActive") is True
+
+
+def test_edge_tab_has_layout_requested_signal(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    received = []
+    obj.layoutRequested.connect(lambda edge, idx: received.append((edge, idx)))
+    assert isinstance(received, list)
+
+
+def test_edge_tab_has_toggle_requested_signal(engine):
+    obj = load_component(engine, "components/EdgeTab.qml")
+    received = []
+    obj.toggleRequested.connect(lambda: received.append(1))
+    assert isinstance(received, list)
+
+
+# ---------------------------------------------------------------------------
+# PanelTabStrip — file existence
+# ---------------------------------------------------------------------------
+
+
+def test_panel_tab_strip_qml_exists():
+    assert (QML_DIR / "components/PanelTabStrip.qml").exists()
+
+
+# ---------------------------------------------------------------------------
+# PanelTabStrip — loads and has correct properties
+# ---------------------------------------------------------------------------
+
+
+def test_panel_tab_strip_loads(engine):
+    load_component(engine, "components/PanelTabStrip.qml")
+
+
+def test_panel_tab_strip_available_panels_defaults_to_empty(engine):
+    from PySide6.QtQml import QJSValue
+    obj = load_component(engine, "components/PanelTabStrip.qml")
+    val = obj.property("availablePanels")
+    if isinstance(val, QJSValue):
+        val = val.toVariant() or []
+    assert val == [] or val is None
+
+
+def test_panel_tab_strip_tab_count_defaults_to_zero(engine, qapp):
+    obj = load_component(engine, "components/PanelTabStrip.qml")
+    qapp.processEvents()
+    assert obj.property("tabCount") == 0
+
+
+def test_panel_tab_strip_tab_count_matches_available_panels(engine, qapp):
+    obj = load_component(engine, "components/PanelTabStrip.qml")
+    obj.setProperty("availablePanels", ["collections", "metadata"])
+    qapp.processEvents()
+    assert obj.property("tabCount") == 2
+
+
+# ---------------------------------------------------------------------------
 # SidePanelBody — file existence
 # ---------------------------------------------------------------------------
 

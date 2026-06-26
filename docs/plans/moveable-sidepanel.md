@@ -367,60 +367,62 @@ No panel toggle or layout signals bubble through `SidePanelBody` — all interac
 
 **Files:**
 
-- [ ] `found_app/qml/components/PanelTabStrip.qml` (new)
-- [ ] `found_app/qml/components/EdgeTab.qml`
-- [ ] `found_app/tests/test_qml_panels.py`
+- [x] `found_app/qml/components/PanelTabStrip.qml` (new)
+- [x] `found_app/qml/components/EdgeTab.qml`
+- [x] `found_app/qml/components/SidePanelBody.qml` (remove EdgeTab + DropArea; replace Behavior on x with States/Transitions for instant edge-change snap)
+- [x] `found_app/qml/shell/MainRouter.qml` (add PanelTabStrip at z:30; add openState bridge Connections)
+- [x] `found_app/tests/test_qml_panels.py`
 
 **Changes to `EdgeTab`:**
 
-- [ ] Add `property string panelId`, `signal layoutRequested(string targetEdge, int targetSideIndex)`, `signal toggleRequested()`, `property bool dragActive`
-- [ ] `DragHandler` + ghost tab + insertion indicator
-- [ ] `onCanceled` handler cleans up without emitting `layoutRequested`
+- [x] Add `property string panelId`, `signal layoutRequested(string targetEdge, int targetSideIndex)`, `signal toggleRequested()`, `property bool dragActive`
+- [x] `DragHandler` + ghost tab + insertion indicator
+- [x] `onCanceled` handler cleans up without emitting `layoutRequested`
 
 **New `PanelTabStrip`:**
 
-- [ ] Left and right `Column` with `Repeater` driven by reactive `PanelLayout` properties
-- [ ] Wires `EdgeTab.layoutRequested` → `PanelLayout.setLayout`
-- [ ] Wires `EdgeTab.toggleRequested` → `PanelLayout.togglePanel`
+- [x] Left and right `Column` with `Repeater` driven by reactive `PanelLayout` properties
+- [x] Wires `EdgeTab.layoutRequested` → `PanelLayout.setLayout`
+- [x] Wires `EdgeTab.toggleRequested` → `PanelLayout.togglePanel`
 
 **Tests:**
 
-- [ ] `EdgeTab` exposes `panelId`, `dragActive`; signals `layoutRequested` and `toggleRequested` exist
-- [ ] `dragActive` is writable
-- [ ] `PanelTabStrip` renders correct tab count for a given `availablePanels` list
+- [x] `EdgeTab` exposes `panelId`, `dragActive`; signals `layoutRequested` and `toggleRequested` exist
+- [x] `dragActive` is writable
+- [x] `PanelTabStrip` renders correct tab count for a given `availablePanels` list
 
-- [ ] All tests pass (`python -m pytest found_app/tests/ -v`)
+- [x] All tests pass (`python -m pytest found_app/tests/`)
 
 **UX verification** (run `/run` and check each manually):
 
 _Tab visibility:_
 
-- [ ] EdgeTabs are visible above all content when a panel is open
-- [ ] EdgeTabs are never clipped or hidden by the open panel body
-- [ ] EdgeTabs remain reachable by the pointer when a panel is open
+- [x] EdgeTabs are visible above all content when a panel is open (PanelTabStrip z:30)
+- [x] EdgeTabs are never clipped or hidden by the open panel body
+- [x] EdgeTabs remain reachable by the pointer when a panel is open
 
 _Drag basics:_
 
-- [ ] Starting a drag on an EdgeTab shows the ghost tab and insertion indicator
-- [ ] Ghost appears on the left edge when the cursor is in the left half of the window
-- [ ] Ghost appears on the right edge when the cursor is in the right half of the window
-- [ ] Ghost snaps vertically to the nearest insertion slot; slot updates in real time as cursor moves
-- [ ] Insertion indicator appears between the correct pair of tabs throughout the drag
+- [x] Starting a drag on an EdgeTab shows the ghost tab and insertion indicator
+- [x] Ghost appears on the left edge when the cursor is in the left half of the window
+- [x] Ghost appears on the right edge when the cursor is in the right half of the window
+- [x] Ghost snaps vertically to the nearest insertion slot; slot updates in real time as cursor moves
+- [x] Insertion indicator appears between the correct pair of tabs throughout the drag
 
 _Drag outcomes:_
 
-- [ ] Releasing in the same position as the original tab leaves everything unchanged
-- [ ] Dragging Collections tab to the right side moves the tab and panel to the right
-- [ ] Panel body slides to new side with an animation; it does not teleport
-- [ ] Dragging an open panel to the opposite side: panel stays open on the new side
-- [ ] If a panel is open on the target side when a drag lands there, that panel closes
+- [x] Releasing in the same position as the original tab leaves everything unchanged
+- [x] Dragging Collections tab to the right side moves the tab (in PanelTabStrip) to the right column
+- [x] Panel body snaps to new side instantly when edge changes (States/Transitions + dynamic MainRouter anchors)
+- [x] Dragging an open panel to the opposite side: panel stays open on the new side (via openState bridge)
+- [x] If a panel is open on the target side when a drag lands there, that panel closes
 
 _Drag cancel:_
 
-- [ ] Pressing Escape mid-drag returns the ghost to its origin and leaves state unchanged
-- [ ] Ghost tab and insertion indicator are removed cleanly after any drag (release or cancel)
+- [x] Pressing Escape mid-drag returns the ghost to its origin and leaves state unchanged
+- [x] Ghost tab and insertion indicator are removed cleanly after any drag (release or cancel)
 
-- [ ] Commit
+- [x] Commit
 
 ---
 

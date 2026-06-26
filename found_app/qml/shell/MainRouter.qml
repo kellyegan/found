@@ -182,7 +182,10 @@ Item {
         // ── Layer 10: Side panels ────────────────────────────────────────────
 
         CollectionsSidePanel {
-            anchors { top: titleBar.bottom; left: parent.left; bottom: parent.bottom }
+            anchors.top: titleBar.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: (!PanelLayout || PanelLayout.edges["collections"] === "left") ? parent.left : undefined
+            anchors.right: (PanelLayout && PanelLayout.edges["collections"] === "right") ? parent.right : undefined
             width: implicitWidth
             visible: NavigationManager.currentView === "library"
             open: readyContainer.sidebarOpen
@@ -211,7 +214,10 @@ Item {
 
         MetadataSidePanel {
             id: metadataSidebar
-            anchors { top: titleBar.bottom; right: parent.right; bottom: parent.bottom }
+            anchors.top: titleBar.bottom
+            anchors.bottom: parent.bottom
+            anchors.left: (PanelLayout && PanelLayout.edges["metadata"] === "left") ? parent.left : undefined
+            anchors.right: (!PanelLayout || PanelLayout.edges["metadata"] === "right") ? parent.right : undefined
             width: implicitWidth
             open: readyContainer.metadataSidebarOpen
             z: 10
@@ -244,6 +250,27 @@ Item {
             anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
             visible: NavigationManager.currentView === "library"
             z: 20
+        }
+
+        // ── Layer 30: Panel tab strip (above panels, never clipped by bodies) ─
+
+        PanelTabStrip {
+            anchors { top: titleBar.bottom; left: parent.left; right: parent.right; bottom: parent.bottom }
+            availablePanels: ["collections", "metadata"]
+            z: 30
+        }
+
+        // Bridge: PanelLayout open-state → legacy sidebar booleans (until Commit 5)
+        Connections {
+            target: PanelLayout
+            function onOpenStateChanged() {
+                var collEdge = PanelLayout.edges["collections"]
+                readyContainer.sidebarOpen =
+                    PanelLayout.openPanels[collEdge] === "collections"
+                var metaEdge = PanelLayout.edges["metadata"]
+                readyContainer.metadataSidebarOpen =
+                    PanelLayout.openPanels[metaEdge] === "metadata"
+            }
         }
 
         // ── Layer 25: Modal flows ────────────────────────────────────────────
