@@ -179,9 +179,9 @@ Item {
         CollectionsSidePanel {
             anchors.top: titleBar.bottom
             anchors.bottom: parent.bottom
-            anchors.left: (!PanelLayout || PanelLayout.edges["collections"] === "left") ? parent.left : undefined
-            anchors.right: (PanelLayout && PanelLayout.edges["collections"] === "right") ? parent.right : undefined
             width: implicitWidth
+            x: (PanelLayout && PanelLayout.edges["collections"] === "right")
+               ? parent.width - implicitWidth : 0
             visible: NavigationManager.currentView === "library"
             collections: CollectionsState.collections
             z: 10
@@ -209,9 +209,9 @@ Item {
             id: metadataSidebar
             anchors.top: titleBar.bottom
             anchors.bottom: parent.bottom
-            anchors.left: (PanelLayout && PanelLayout.edges["metadata"] === "left") ? parent.left : undefined
-            anchors.right: (!PanelLayout || PanelLayout.edges["metadata"] === "right") ? parent.right : undefined
             width: implicitWidth
+            x: (PanelLayout && PanelLayout.edges["metadata"] === "left")
+               ? 0 : parent.width - implicitWidth
             z: 10
             metaLoadingState: MetadataState.loadingState
             metaFilename: MetadataState.filename
