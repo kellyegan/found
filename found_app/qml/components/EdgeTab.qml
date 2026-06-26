@@ -9,7 +9,6 @@ Rectangle {
     property string icon: ""
     property string tooltip: ""
 
-    // Commit 4: panel identity and drag state
     property string panelId: ""
     property bool dragActive: false
     property var dragOpenKeys: []   // MIME keys that spring-open this panel on drag hover
@@ -60,38 +59,62 @@ Rectangle {
         onEntered: root.toggleRequested()
     }
 
-    // Hover gives pointer cursor; TapHandler detects click without blocking DragHandler
-    HoverHandler { cursorShape: Qt.PointingHandCursor }
+    // ── Gesture handling ──────────────────────────────────────────────────────
+    // MouseArea (an Item) consumes the press before the underlying Flickable
+    // ever sees it. DragHandler/TapHandler are passive handlers that can be
+    // stolen by Flickable's item-level grab; MouseArea cannot.
 
-    TapHandler {
-        onTapped: {
-            root.clicked()
-            root.toggleRequested()
-        }
-    }
+    MouseArea {
+        id: gestureArea
+        anchors.fill: parent
+        z: 5
+        cursorShape: Qt.PointingHandCursor
+        hoverEnabled: true
 
-    // ── Drag gesture ─────────────────────────────────────────────────────────
-
-    DragHandler {
-        id: dragHandler
-        target: null
-        grabPermissions: PointerHandler.CanTakeOverFromHandlersOfSameType
-
+        property bool _isDragging: false
         property bool _canceled: false
+        property real _startX: 0
+        property real _startY: 0
 
-        onCanceled: _canceled = true
+        onPressed: function(mouse) {
+            _isDragging = false
+            _canceled = false
+            _startX = mouse.x
+            _startY = mouse.y
+            mouse.accepted = true
+        }
 
-        onActiveChanged: {
-            root.dragActive = active
-            if (!active) {
-                if (!_canceled && root.Window.contentItem) {
-                    var p = root.mapToItem(root.Window.contentItem, centroid.position)
-                    var tEdge = p.x < root.Window.width / 2 ? "left" : "right"
-                    var tIdx = root._calcSlotIndex(tEdge, p.y)
-                    root.layoutRequested(tEdge, tIdx)
+        onPositionChanged: function(mouse) {
+            if (_canceled || !root.Window.contentItem) return
+            if (!_isDragging) {
+                var dx = mouse.x - _startX
+                var dy = mouse.y - _startY
+                if (dx * dx + dy * dy > 9) {   // 3 px threshold
+                    _isDragging = true
+                    root.dragActive = true
                 }
-                _canceled = false
             }
+        }
+
+        onReleased: function(mouse) {
+            if (_isDragging && !_canceled && root.Window.contentItem) {
+                var p = root.mapToItem(root.Window.contentItem, Qt.point(mouse.x, mouse.y))
+                var tEdge = p.x < root.Window.width / 2 ? "left" : "right"
+                var tIdx = root._calcSlotIndex(tEdge, p.y)
+                root.layoutRequested(tEdge, tIdx)
+            } else if (!_isDragging && !_canceled) {
+                root.clicked()
+                root.toggleRequested()
+            }
+            _isDragging = false
+            _canceled = false
+            root.dragActive = false
+        }
+
+        onCanceled: function() {
+            _isDragging = false
+            _canceled = false
+            root.dragActive = false
         }
     }
 
@@ -99,7 +122,7 @@ Rectangle {
     Rectangle {
         id: ghost
         parent: root.Window.contentItem ? root.Window.contentItem : root
-        visible: dragHandler.active && !!root.Window.contentItem
+        visible: gestureArea._isDragging && !!root.Window.contentItem
         width: root.width
         height: root.height
         color: root.color
@@ -109,8 +132,9 @@ Rectangle {
         border.color: Theme.text
 
         readonly property string ghostEdge: {
-            if (!dragHandler.active || !root.Window.contentItem) return root.edge
-            var p = root.mapToItem(root.Window.contentItem, dragHandler.centroid.position)
+            if (!gestureArea._isDragging || !root.Window.contentItem) return root.edge
+            var p = root.mapToItem(root.Window.contentItem,
+                                   Qt.point(gestureArea.mouseX, gestureArea.mouseY))
             return p.x < root.Window.width / 2 ? "left" : "right"
         }
 
@@ -123,8 +147,9 @@ Rectangle {
            : (ghostEdge === "left" ? 0 : root.Window.width - width)
 
         y: {
-            if (!dragHandler.active || !root.Window.contentItem) return 0
-            var p = root.mapToItem(root.Window.contentItem, dragHandler.centroid.position)
+            if (!gestureArea._isDragging || !root.Window.contentItem) return 0
+            var p = root.mapToItem(root.Window.contentItem,
+                                   Qt.point(gestureArea.mouseX, gestureArea.mouseY))
             return root._snapY(ghostEdge, p.y)
         }
 
@@ -150,7 +175,7 @@ Rectangle {
     // Insertion indicator: 2 px accent line just above the ghost
     Rectangle {
         parent: root.Window.contentItem ? root.Window.contentItem : root
-        visible: dragHandler.active && !!root.Window.contentItem
+        visible: gestureArea._isDragging && !!root.Window.contentItem
         width: root.width + 4
         height: 2
         color: Theme.accent
@@ -160,7 +185,6 @@ Rectangle {
 
     // ── Slot-position helpers ─────────────────────────────────────────────────
 
-    // How many peers-above-cursor on targetEdge → that's the insertion index
     function _calcSlotIndex(targetEdge, cursorY) {
         if (!PanelLayout || !PanelLayout.order || !root.Window.contentItem) return 0
         var peers = PanelLayout.order.filter(function(p) {
@@ -177,7 +201,6 @@ Rectangle {
         return peers.length
     }
 
-    // Y position for the ghost at the given slot on targetEdge
     function _snapY(targetEdge, cursorY) {
         var slot = _calcSlotIndex(targetEdge, cursorY)
         if (!PanelLayout || !PanelLayout.order || !root.Window.contentItem) return cursorY
