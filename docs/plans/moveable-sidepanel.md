@@ -455,23 +455,23 @@ _Drag cancel:_
 
 _View-correct tabs:_
 
-- [ ] Library view shows both Collections and Metadata EdgeTabs
-- [ ] Collection/Image view shows only the Metadata EdgeTab
-- [ ] Navigating from library to image view: Collections tab disappears cleanly
-- [ ] Navigating back to library: Collections tab reappears in its correct position
+- [x] Library view shows both Collections and Metadata EdgeTabs
+- [x] Collection/Image view shows only the Metadata EdgeTab
+- [x] Navigating from library to image view: Collections tab disappears cleanly
+- [x] Navigating back to library: Collections tab reappears in its correct position
 
 _State persistence across navigation:_
 
-- [ ] Open a panel in library view, navigate to image view, return — panel is open again
-- [ ] Close a panel in library view, navigate away and back — panel stays closed
-- [ ] Panel open state in library view is unaffected by panel interaction in image view
+- [x] Open a panel in library view, navigate to image view, return — panel is open again
+- [x] Close a panel in library view, navigate away and back — panel stays closed
+- [x] Panel open state in library view is unaffected by panel interaction in image view
 
 _Persistence across sessions:_
 
-- [ ] Drag a panel to the opposite side, quit the app, relaunch — panel is on the new side
-- [ ] Reorder tabs, quit, relaunch — order is preserved
+- [x] Drag a panel to the opposite side, quit the app, relaunch — panel is on the new side
+- [x] Reorder tabs, quit, relaunch — order is preserved
 
-- [ ] Commit
+- [x] Commit
 
 ---
 

@@ -85,7 +85,7 @@ Rectangle {
         }
 
         onPositionChanged: function(mouse) {
-            if (_canceled || !root.Window.contentItem) return
+            if (!pressed || _canceled || !root.Window.contentItem) return
             if (!_isDragging) {
                 var dx = mouse.x - _startX
                 var dy = mouse.y - _startY
