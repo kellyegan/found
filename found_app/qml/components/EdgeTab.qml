@@ -12,6 +12,7 @@ Rectangle {
     // Commit 4: panel identity and drag state
     property string panelId: ""
     property bool dragActive: false
+    property var dragOpenKeys: []   // MIME keys that spring-open this panel on drag hover
 
     signal clicked()
     signal toggleRequested()
@@ -48,6 +49,15 @@ Rectangle {
             font.pixelSize: Theme.fontSizeSm
             color: Theme.textMuted
         }
+    }
+
+    // Spring-open: hovering a compatible drag over the tab opens the panel
+    DropArea {
+        anchors.fill: parent
+        keys: root.dragOpenKeys
+        enabled: root.dragOpenKeys.length > 0 && !root.open
+        z: 3
+        onEntered: root.toggleRequested()
     }
 
     // Hover gives pointer cursor; TapHandler detects click without blocking DragHandler

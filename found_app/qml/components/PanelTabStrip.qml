@@ -32,6 +32,7 @@ Item {
                 panelId: modelData
                 edge: "left"
                 icon: root._iconFor(modelData)
+                dragOpenKeys: root._dragKeysFor(modelData)
                 open: PanelLayout && PanelLayout.openPanels
                       ? PanelLayout.openPanels["left"] === panelId : false
                 onToggleRequested: if (PanelLayout) PanelLayout.togglePanel(panelId)
@@ -62,6 +63,7 @@ Item {
                 panelId: modelData
                 edge: "right"
                 icon: root._iconFor(modelData)
+                dragOpenKeys: root._dragKeysFor(modelData)
                 open: PanelLayout && PanelLayout.openPanels
                       ? PanelLayout.openPanels["right"] === panelId : false
                 onToggleRequested: if (PanelLayout) PanelLayout.togglePanel(panelId)
@@ -75,5 +77,10 @@ Item {
     function _iconFor(panelId) {
         var icons = { "collections": "☰", "metadata": "ⓘ" }
         return icons[panelId] || ""
+    }
+
+    function _dragKeysFor(panelId) {
+        var keys = { "collections": ["found/image"] }
+        return keys[panelId] || []
     }
 }
